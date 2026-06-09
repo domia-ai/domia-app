@@ -1,0 +1,38 @@
+{
+	"name": "domia-app",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Domia App — fleet management console for a mesh of Domias",
+	"author": "kevin Castillo <kecoco16@gmail.com>",
+	"license": "BUSL-1.1",
+	"engines": {
+		"node": ">=24"
+	},
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"build": "npm run build --workspaces --if-present",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"lint:web": "npm run lint --workspace apps/web --if-present",
+		"format": "prettier --check .",
+		"format:fix": "prettier --write .",
+		"prepare": "husky",
+		"lint-staged": "lint-staged"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"eslint": "^10.4.1",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-prettier": "^5.5.6",
+		"globals": "^17.6.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.0.7",
+		"prettier": "^3.8.3",
+		"prettier-plugin-tailwindcss": "^0.8.0",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.60.1"
+	}
+}

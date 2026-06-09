@@ -1,0 +1,19 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"module": "commonjs",
+		"rootDir": "./src",
+		"outDir": "./build",
+		"baseUrl": "./src",
+		"paths": {
+			"@/*": ["./*"]
+		},
+		"ignoreDeprecations": "6.0",
+		"declaration": false
+	},
+	"ts-node": {
+		"files": true
+	},
+	"include": ["src"],
+	"exclude": ["build", "tmp"]
+}

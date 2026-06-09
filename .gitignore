@@ -1,0 +1,41 @@
+# dependencies
+node_modules
+
+# builds / generated
+build
+dist
+.next
+out
+*.tsbuildinfo
+
+# logs
+*.log
+npm-debug.log*
+
+# local data — typed subdirs kept via .gitkeep (like core's data/db); generated db + audio contents are not committed.
+# the drizzle MIGRATIONS in packages/*/drizzle ARE committed.
+/data/*
+!/data/.gitkeep
+!/data/db/
+!/data/db/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# env / secrets (dotenvx). .env.example is committed; raw env + keys are not
+.env
+.env.*
+!.env.example
+.env.keys
+.env.vault
+
+# tooling caches
+.turbo
+.vercel
+.eslintcache
+
+# editor / os
+.DS_Store
+.idea
+.vscode

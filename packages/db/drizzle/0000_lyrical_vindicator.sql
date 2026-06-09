@@ -1,0 +1,122 @@
+CREATE TABLE `audio_asset` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`interaction_id` text NOT NULL,
+	`kind` text NOT NULL,
+	`local_path` text NOT NULL,
+	`bytes` integer,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `audio_asset_source_interaction_idx` ON `audio_asset` (`source_domia_key`,`interaction_id`);--> statement-breakpoint
+CREATE TABLE `domia_registry` (
+	`domia_key` text PRIMARY KEY NOT NULL,
+	`id` text,
+	`name` text NOT NULL,
+	`is_active` integer DEFAULT true NOT NULL,
+	`local_ip` text,
+	`grpc_port` integer,
+	`http_port` integer,
+	`config_snapshot_json` text,
+	`last_interaction_at` text,
+	`first_seen_at` integer NOT NULL,
+	`last_seen_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `domia_registry_last_seen_at_idx` ON `domia_registry` (`last_seen_at`);--> statement-breakpoint
+CREATE TABLE `emotion_event` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`cause` text,
+	`delta` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `emotion_event_source_created_idx` ON `emotion_event` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE TABLE `interaction_label` (
+	`id` text PRIMARY KEY NOT NULL,
+	`interaction_id` text NOT NULL,
+	`rating` text,
+	`correction` text,
+	`tags` text,
+	`author` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `interaction_label_interaction_idx` ON `interaction_label` (`interaction_id`);--> statement-breakpoint
+CREATE TABLE `interaction_session_trace` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`session_id` text,
+	`started_at` text,
+	`last_used_at` text,
+	`session_id_timeout_ms` integer,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `session_trace_source_updated_idx` ON `interaction_session_trace` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE TABLE `interaction_trace` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`interaction_session_trace_id` text,
+	`session_id` text,
+	`input_type` text,
+	`response_type` text,
+	`is_active` integer,
+	`input_raw` text,
+	`input_audio_path` text,
+	`wakeword_used` text,
+	`stt_result` text,
+	`mcp_server_used` text,
+	`mcp_prompt` text,
+	`mcp_response` text,
+	`llm_prompt` text,
+	`llm_response` text,
+	`tts_engine_used` text,
+	`tts_audio_path` text,
+	`final_output` text,
+	`emotion_snapshot` text,
+	`character_snapshot` text,
+	`user_emotion_snapshot` text,
+	`stt_ms` integer,
+	`llm_ms` integer,
+	`tts_ms` integer,
+	`ttfa_ms` integer,
+	`total_ms` integer,
+	`stt_executor_key` text,
+	`llm_executor_key` text,
+	`tts_executor_key` text,
+	`stt_model_used` text,
+	`llm_model_used` text,
+	`tts_voice_used` text,
+	`wake_word_model_used` text,
+	`domia_snapshot` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `interaction_trace_source_created_idx` ON `interaction_trace` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE INDEX `interaction_trace_source_updated_idx` ON `interaction_trace` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE TABLE `memory_fact` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`subject` text,
+	`relation` text,
+	`value` text,
+	`confidence` real,
+	`source_interaction_id` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `memory_fact_source_updated_idx` ON `memory_fact` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE UNIQUE INDEX `memory_fact_source_domia_key_subject_relation_unique` ON `memory_fact` (`source_domia_key`,`subject`,`relation`);--> statement-breakpoint
+CREATE TABLE `sync_cursor` (
+	`domia_key` text PRIMARY KEY NOT NULL,
+	`last_interaction_at` text,
+	`last_synced_at` integer
+);

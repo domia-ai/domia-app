@@ -1,0 +1,24 @@
+{
+	"name": "@domia-app/db",
+	"version": "0.0.1",
+	"private": true,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"build": "rm -rf dist && tsc",
+		"dev": "tsc --watch",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:reset": "rm -f ../../data/db/domia-app.db ../../data/db/domia-app.db-wal ../../data/db/domia-app.db-shm && rm -rf drizzle && npm run db:generate && npm run db:migrate",
+		"db:studio": "drizzle-kit studio"
+	},
+	"dependencies": {
+		"better-sqlite3": "^12.10.0",
+		"drizzle-orm": "^0.45.2"
+	},
+	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.13",
+		"drizzle-kit": "^0.31.10",
+		"typescript": "^6.0.3"
+	}
+}

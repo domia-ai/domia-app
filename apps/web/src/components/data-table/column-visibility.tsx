@@ -1,0 +1,40 @@
+import { SlidersHorizontal } from "lucide-react"
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { ColumnVisibilityProps } from "@/types/table"
+
+export function ColumnVisibility({
+	columns,
+	visibility,
+	onChange,
+}: ColumnVisibilityProps) {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm outline-none">
+				<SlidersHorizontal className="size-3.5" />
+				Columns
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+				<DropdownMenuSeparator />
+				{columns.map((col) => (
+					<DropdownMenuCheckboxItem
+						key={col.id}
+						checked={visibility[col.id] !== false}
+						onCheckedChange={(value) =>
+							onChange({ ...visibility, [col.id]: !!value })
+						}
+					>
+						{col.label}
+					</DropdownMenuCheckboxItem>
+				))}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
