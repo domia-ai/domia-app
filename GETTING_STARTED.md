@@ -7,8 +7,10 @@ How to run the Console locally against a Domia fleet.
 - **Node 24** (see [`.nvmrc`](./.nvmrc) — `nvm use`).
 - An **MQTT broker** the fleet and the collector both reach (dev: a local Mosquitto on
   `localhost:1883`).
-- A **Domia fleet** emitting heartbeats on that broker — in dev, the `smart` + `dump`
-  instances from `domia-core` (`npm run dev:smart` / `npm run dev:dump`).
+- A **Domia fleet** emitting heartbeats on that broker — in dev, two `domia-core`
+  instances launched by env file: `DOMIA_ENV=.env npm run dev` (hub) and
+  `DOMIA_ENV=.env.edge npm run dev` (edge), or the `npm run dev:hub` / `dev:edge`
+  wrappers. Each Domia boots neutral and gets its role from a config template.
 
 ## 1. Install
 

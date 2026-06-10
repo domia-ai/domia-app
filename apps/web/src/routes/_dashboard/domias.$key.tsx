@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { ArrowLeft, MessageSquareText } from "lucide-react"
+import { ArrowLeft, MessageSquareText, SlidersHorizontal } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,7 +11,7 @@ import {
 	SkillsCard,
 } from "@/components/domia/detail-sections"
 import { PerformanceCard } from "@/components/domia/performance-card"
-import { ConfigDialog } from "@/components/domia/config-dialog"
+import { RestartButton } from "@/components/domia/restart-button"
 import { RoleBadge } from "@/components/fleet/columns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -106,7 +106,17 @@ function DomiaDetailPage() {
 					</div>
 				</div>
 				<div className="ml-auto flex items-center gap-2">
-					<ConfigDialog
+					<Button
+						variant="outline"
+						nativeButton={false}
+						render={
+							<Link to="/domias/$key/config" params={{ key: domia.domiaKey }} />
+						}
+					>
+						<SlidersHorizontal className="size-4" />
+						Configure
+					</Button>
+					<RestartButton
 						domiaKey={domia.domiaKey}
 						domiaName={domia.name}
 						online={online}

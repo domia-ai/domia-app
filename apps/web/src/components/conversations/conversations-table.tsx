@@ -61,7 +61,7 @@ export function ConversationsTable() {
 		tp.filters.live === "1" ? LIVE_REFRESH_MS : undefined,
 	)
 
-	const { data: domiaOptions } = useQuery({
+	const domiaOptionsQuery = useQuery({
 		queryKey: ["domia-options"],
 		queryFn: async (): Promise<DomiaOption[]> => {
 			const page = await listFleetFn({
@@ -77,15 +77,16 @@ export function ConversationsTable() {
 		},
 	})
 
-	const { data: snapshotFacets } = useQuery({
+	const facetsQuery = useQuery({
 		queryKey: ["conversation-facets"],
 		queryFn: () => getSnapshotFacetOptionsFn(),
 	})
 
-	const facets = snapshotFacets ?? EMPTY_FACETS
-	const domiaFacetOptions: FilterFacetOption[] = (domiaOptions ?? []).map(
-		(d) => ({ label: d.name ?? d.domiaKey, value: d.domiaKey }),
-	)
+	const facets = facetsQuery.data ?? EMPTY_FACETS
+	const domiaFacetOptions: FilterFacetOption[] = (
+		domiaOptionsQuery.data ?? []
+	).map((d) => ({ label: d.name ?? d.domiaKey, value: d.domiaKey }))
+	const facetsError = domiaOptionsQuery.isError || facetsQuery.isError
 
 	const rows = data?.rows ?? []
 	const selectedRows = rows.filter((r) => rowSelection[r.id])
@@ -122,6 +123,11 @@ export function ConversationsTable() {
 			rowActions={(row) => <RowActions row={row} />}
 			toolbar={
 				<div className="space-y-3">
+					{facetsError && (
+						<p className="text-muted-foreground text-xs">
+							Some filter options couldn't load.
+						</p>
+					)}
 					{selectedRows.length > 0 && (
 						<BulkActions
 							rows={selectedRows}

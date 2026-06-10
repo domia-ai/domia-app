@@ -15,6 +15,13 @@
       "when": 1781042690797,
       "tag": "0001_huge_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781067965801,
+      "tag": "0002_bored_iron_lad",
+      "breakpoints": true
     }
   ]
 }

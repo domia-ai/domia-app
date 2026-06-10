@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { mindSchema } from "@/schemas/mind"
 
 const MAX_SEARCH = 200
 const MAX_FILTER_VALUE = 200
@@ -42,27 +41,38 @@ export const sendMessageInputSchema = z.object({
 	speak: z.boolean(),
 })
 
-export const importMindInputSchema = z.object({
-	domiaKey: z.string().min(1).max(200),
-	mind: mindSchema,
-})
-
 const MAX_NAME = 80
 const MAX_DESCRIPTION = 280
 
-export const createTemplateInputSchema = z.object({
+export const createConfigTemplateInputSchema = z.object({
 	name: z.string().min(1).max(MAX_NAME),
 	description: z.string().max(MAX_DESCRIPTION),
-	mind: mindSchema,
+	config: z.record(z.string().max(64), z.any()),
 })
 
-export const updateTemplateInputSchema = createTemplateInputSchema.extend({
-	id: z.string().min(1).max(200),
-})
+export const updateConfigTemplateInputSchema =
+	createConfigTemplateInputSchema.extend({
+		id: z.string().min(1).max(200),
+	})
 
 export const applyTemplateInputSchema = z.object({
 	templateId: z.string().min(1).max(200),
 	domiaKey: z.string().min(1).max(200),
+})
+
+export const importConfigInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	bundle: z.record(z.string().max(64), z.unknown()),
+})
+
+export const installModelInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	spec: z.record(z.string().max(64), z.unknown()),
+})
+
+export const modelJobInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	jobId: z.string().min(1).max(200),
 })
 
 export const runInteractionInputSchema = z.object({

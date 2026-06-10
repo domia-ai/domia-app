@@ -23,8 +23,11 @@ import { Route as DashboardDomiasIndexRouteImport } from './routes/_dashboard/do
 import { Route as DashboardConversationsIndexRouteImport } from './routes/_dashboard/conversations.index'
 import { Route as ApiConversationsExportRouteImport } from './routes/api/conversations.export'
 import { Route as ApiAudioIdRouteImport } from './routes/api/audio.$id'
+import { Route as DashboardTemplatesNewRouteImport } from './routes/_dashboard/templates_.new'
 import { Route as DashboardDomiasKeyRouteImport } from './routes/_dashboard/domias.$key'
 import { Route as DashboardConversationsIdRouteImport } from './routes/_dashboard/conversations.$id'
+import { Route as DashboardTemplatesIdEditRouteImport } from './routes/_dashboard/templates_.$id.edit'
+import { Route as DashboardDomiasKeyConfigRouteImport } from './routes/_dashboard/domias.$key_.config'
 import { Route as DashboardConversationsSessionIdRouteImport } from './routes/_dashboard/conversations.session.$id'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -97,6 +100,11 @@ const ApiAudioIdRoute = ApiAudioIdRouteImport.update({
   path: '/api/audio/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTemplatesNewRoute = DashboardTemplatesNewRouteImport.update({
+  id: '/templates_/new',
+  path: '/templates/new',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDomiasKeyRoute = DashboardDomiasKeyRouteImport.update({
   id: '/domias/$key',
   path: '/domias/$key',
@@ -106,6 +114,18 @@ const DashboardConversationsIdRoute =
   DashboardConversationsIdRouteImport.update({
     id: '/conversations/$id',
     path: '/conversations/$id',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardTemplatesIdEditRoute =
+  DashboardTemplatesIdEditRouteImport.update({
+    id: '/templates_/$id/edit',
+    path: '/templates/$id/edit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardDomiasKeyConfigRoute =
+  DashboardDomiasKeyConfigRouteImport.update({
+    id: '/domias/$key_/config',
+    path: '/domias/$key/config',
     getParentRoute: () => DashboardRoute,
   } as any)
 const DashboardConversationsSessionIdRoute =
@@ -127,11 +147,14 @@ export interface FileRoutesByFullPath {
   '/api/node-audio': typeof ApiNodeAudioRoute
   '/conversations/$id': typeof DashboardConversationsIdRoute
   '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/templates/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
   '/api/conversations/export': typeof ApiConversationsExportRoute
   '/conversations/': typeof DashboardConversationsIndexRoute
   '/domias/': typeof DashboardDomiasIndexRoute
   '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
+  '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
 }
 export interface FileRoutesByTo {
   '/analytics': typeof DashboardAnalyticsRoute
@@ -145,11 +168,14 @@ export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/conversations/$id': typeof DashboardConversationsIdRoute
   '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/templates/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
   '/api/conversations/export': typeof ApiConversationsExportRoute
   '/conversations': typeof DashboardConversationsIndexRoute
   '/domias': typeof DashboardDomiasIndexRoute
   '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
+  '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,11 +191,14 @@ export interface FileRoutesById {
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/conversations/$id': typeof DashboardConversationsIdRoute
   '/_dashboard/domias/$key': typeof DashboardDomiasKeyRoute
+  '/_dashboard/templates_/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
   '/api/conversations/export': typeof ApiConversationsExportRoute
   '/_dashboard/conversations/': typeof DashboardConversationsIndexRoute
   '/_dashboard/domias/': typeof DashboardDomiasIndexRoute
   '/_dashboard/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/_dashboard/domias/$key_/config': typeof DashboardDomiasKeyConfigRoute
+  '/_dashboard/templates_/$id/edit': typeof DashboardTemplatesIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -185,11 +214,14 @@ export interface FileRouteTypes {
     | '/api/node-audio'
     | '/conversations/$id'
     | '/domias/$key'
+    | '/templates/new'
     | '/api/audio/$id'
     | '/api/conversations/export'
     | '/conversations/'
     | '/domias/'
     | '/conversations/session/$id'
+    | '/domias/$key/config'
+    | '/templates/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/analytics'
@@ -203,11 +235,14 @@ export interface FileRouteTypes {
     | '/'
     | '/conversations/$id'
     | '/domias/$key'
+    | '/templates/new'
     | '/api/audio/$id'
     | '/api/conversations/export'
     | '/conversations'
     | '/domias'
     | '/conversations/session/$id'
+    | '/domias/$key/config'
+    | '/templates/$id/edit'
   id:
     | '__root__'
     | '/_dashboard'
@@ -222,11 +257,14 @@ export interface FileRouteTypes {
     | '/_dashboard/'
     | '/_dashboard/conversations/$id'
     | '/_dashboard/domias/$key'
+    | '/_dashboard/templates_/new'
     | '/api/audio/$id'
     | '/api/conversations/export'
     | '/_dashboard/conversations/'
     | '/_dashboard/domias/'
     | '/_dashboard/conversations/session/$id'
+    | '/_dashboard/domias/$key_/config'
+    | '/_dashboard/templates_/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -336,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAudioIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/templates_/new': {
+      id: '/_dashboard/templates_/new'
+      path: '/templates/new'
+      fullPath: '/templates/new'
+      preLoaderRoute: typeof DashboardTemplatesNewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/domias/$key': {
       id: '/_dashboard/domias/$key'
       path: '/domias/$key'
@@ -348,6 +393,20 @@ declare module '@tanstack/react-router' {
       path: '/conversations/$id'
       fullPath: '/conversations/$id'
       preLoaderRoute: typeof DashboardConversationsIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/templates_/$id/edit': {
+      id: '/_dashboard/templates_/$id/edit'
+      path: '/templates/$id/edit'
+      fullPath: '/templates/$id/edit'
+      preLoaderRoute: typeof DashboardTemplatesIdEditRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/domias/$key_/config': {
+      id: '/_dashboard/domias/$key_/config'
+      path: '/domias/$key/config'
+      fullPath: '/domias/$key/config'
+      preLoaderRoute: typeof DashboardDomiasKeyConfigRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/conversations/session/$id': {
@@ -371,9 +430,12 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardConversationsIdRoute: typeof DashboardConversationsIdRoute
   DashboardDomiasKeyRoute: typeof DashboardDomiasKeyRoute
+  DashboardTemplatesNewRoute: typeof DashboardTemplatesNewRoute
   DashboardConversationsIndexRoute: typeof DashboardConversationsIndexRoute
   DashboardDomiasIndexRoute: typeof DashboardDomiasIndexRoute
   DashboardConversationsSessionIdRoute: typeof DashboardConversationsSessionIdRoute
+  DashboardDomiasKeyConfigRoute: typeof DashboardDomiasKeyConfigRoute
+  DashboardTemplatesIdEditRoute: typeof DashboardTemplatesIdEditRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -387,9 +449,12 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardConversationsIdRoute: DashboardConversationsIdRoute,
   DashboardDomiasKeyRoute: DashboardDomiasKeyRoute,
+  DashboardTemplatesNewRoute: DashboardTemplatesNewRoute,
   DashboardConversationsIndexRoute: DashboardConversationsIndexRoute,
   DashboardDomiasIndexRoute: DashboardDomiasIndexRoute,
   DashboardConversationsSessionIdRoute: DashboardConversationsSessionIdRoute,
+  DashboardDomiasKeyConfigRoute: DashboardDomiasKeyConfigRoute,
+  DashboardTemplatesIdEditRoute: DashboardTemplatesIdEditRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

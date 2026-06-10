@@ -30,17 +30,11 @@ export type {
 	MindSnapshot,
 	MindEmotion,
 	AppTemplate,
-	CreateTemplateInput,
-	UpdateTemplateInput,
 	ApplyTemplateInput,
-	TemplateEditorProps,
 	TemplateCardProps,
 	CharacterEnumKey,
 	CharacterTagKey,
 	EmotionKey,
-	ConfigDialogProps,
-	MindEditorProps,
-	ImportMindInput,
 } from "@/types/mind"
 
 export type ActionResult<T = void> =

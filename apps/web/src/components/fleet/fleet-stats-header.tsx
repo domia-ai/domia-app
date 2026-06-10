@@ -1,15 +1,32 @@
 import { useQuery } from "@tanstack/react-query"
 import { Activity, MessagesSquare, Radio, Zap } from "lucide-react"
 import { StatCard } from "@/components/domia/stat-card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatMs } from "@/utils/format"
 import { fleetStatsQueryOptions } from "@/server/fleet"
 import { LIVE_REFRESH_MS } from "@/constants/conversations"
 
 export function FleetStatsHeader() {
-	const { data } = useQuery({
+	const { data, isLoading, isError } = useQuery({
 		...fleetStatsQueryOptions(),
 		refetchInterval: LIVE_REFRESH_MS,
 	})
+
+	if (isLoading)
+		return (
+			<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+				{[0, 1, 2, 3].map((i) => (
+					<Skeleton key={i} className="h-[88px] w-full" />
+				))}
+			</div>
+		)
+
+	if (isError && !data)
+		return (
+			<div className="border-destructive/30 text-destructive rounded-lg border border-dashed px-4 py-6 text-center text-sm">
+				Couldn't load fleet stats.
+			</div>
+		)
 
 	return (
 		<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

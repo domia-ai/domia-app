@@ -14,6 +14,12 @@ const eslintConfig = defineConfig([
 	]),
 	js.configs.recommended,
 	...tseslint.configs.recommended,
+	{
+		files: ["scripts/**/*.mjs"],
+		languageOptions: {
+			globals: { process: "readonly", console: "readonly" },
+		},
+	},
 ])
 
 export default eslintConfig

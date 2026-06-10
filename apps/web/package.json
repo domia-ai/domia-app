@@ -5,9 +5,11 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && tsc --noEmit",
+		"build": "node scripts/sync-system-templates.mjs --check && vite build && tsc --noEmit",
 		"start": "node .output/server/index.mjs",
-		"lint": "eslint"
+		"lint": "eslint",
+		"sync:templates": "node scripts/sync-system-templates.mjs",
+		"sync:templates:check": "node scripts/sync-system-templates.mjs --check"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.5.0",
