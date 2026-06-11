@@ -51,4 +51,5 @@ export type TurnBubbleProps = {
 	turn: ChatTurn
 	domiaKey: string
 	domiaName: string
+	domiaAvatarId: string | null
 }

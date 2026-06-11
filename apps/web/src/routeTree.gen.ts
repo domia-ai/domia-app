@@ -26,6 +26,7 @@ import { Route as ApiAudioIdRouteImport } from './routes/api/audio.$id'
 import { Route as DashboardTemplatesNewRouteImport } from './routes/_dashboard/templates_.new'
 import { Route as DashboardDomiasKeyRouteImport } from './routes/_dashboard/domias.$key'
 import { Route as DashboardConversationsIdRouteImport } from './routes/_dashboard/conversations.$id'
+import { Route as ApiDomiasKeyAvatarRouteImport } from './routes/api/domias.$key.avatar'
 import { Route as DashboardTemplatesIdEditRouteImport } from './routes/_dashboard/templates_.$id.edit'
 import { Route as DashboardDomiasKeyConfigRouteImport } from './routes/_dashboard/domias.$key_.config'
 import { Route as DashboardConversationsSessionIdRouteImport } from './routes/_dashboard/conversations.session.$id'
@@ -116,6 +117,11 @@ const DashboardConversationsIdRoute =
     path: '/conversations/$id',
     getParentRoute: () => DashboardRoute,
   } as any)
+const ApiDomiasKeyAvatarRoute = ApiDomiasKeyAvatarRouteImport.update({
+  id: '/api/domias/$key/avatar',
+  path: '/api/domias/$key/avatar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardTemplatesIdEditRoute =
   DashboardTemplatesIdEditRouteImport.update({
     id: '/templates_/$id/edit',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
   '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
   '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRoutesByTo {
   '/analytics': typeof DashboardAnalyticsRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
   '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
   '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_dashboard/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
   '/_dashboard/domias/$key_/config': typeof DashboardDomiasKeyConfigRoute
   '/_dashboard/templates_/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/conversations/session/$id'
     | '/domias/$key/config'
     | '/templates/$id/edit'
+    | '/api/domias/$key/avatar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/analytics'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/conversations/session/$id'
     | '/domias/$key/config'
     | '/templates/$id/edit'
+    | '/api/domias/$key/avatar'
   id:
     | '__root__'
     | '/_dashboard'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/_dashboard/conversations/session/$id'
     | '/_dashboard/domias/$key_/config'
     | '/_dashboard/templates_/$id/edit'
+    | '/api/domias/$key/avatar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   ApiNodeAudioRoute: typeof ApiNodeAudioRoute
   ApiAudioIdRoute: typeof ApiAudioIdRoute
   ApiConversationsExportRoute: typeof ApiConversationsExportRoute
+  ApiDomiasKeyAvatarRoute: typeof ApiDomiasKeyAvatarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardConversationsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/domias/$key/avatar': {
+      id: '/api/domias/$key/avatar'
+      path: '/api/domias/$key/avatar'
+      fullPath: '/api/domias/$key/avatar'
+      preLoaderRoute: typeof ApiDomiasKeyAvatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_dashboard/templates_/$id/edit': {
       id: '/_dashboard/templates_/$id/edit'
       path: '/templates/$id/edit'
@@ -466,6 +486,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNodeAudioRoute: ApiNodeAudioRoute,
   ApiAudioIdRoute: ApiAudioIdRoute,
   ApiConversationsExportRoute: ApiConversationsExportRoute,
+  ApiDomiasKeyAvatarRoute: ApiDomiasKeyAvatarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

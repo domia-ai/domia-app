@@ -9,7 +9,7 @@ import { useTableParams } from "@/hooks/use-table-params"
 import { useTableQuery } from "@/hooks/use-table-query"
 import { useViewMode } from "@/hooks/use-view-mode"
 import { listFleetFn } from "@/server/fleet"
-import { LIVE_REFRESH_MS } from "@/constants/conversations"
+import { useConsolePrefs } from "@/components/providers/console-prefs"
 import { FleetStatsHeader } from "./fleet-stats-header"
 import { DomiaCard } from "./domia-card"
 import { fleetColumns } from "./columns"
@@ -30,12 +30,13 @@ export function FleetView() {
 		setSort,
 	} = useTableParams()
 	const [view, setView] = useViewMode("domias", "cards")
+	const { liveRefreshMs } = useConsolePrefs()
 
 	const { data, isLoading } = useTableQuery<FleetRow>(
 		"fleet",
 		(params) => listFleetFn({ data: params }),
 		{ page, pageSize, search, sort, filters },
-		LIVE_REFRESH_MS,
+		liveRefreshMs,
 	)
 
 	const rows = data?.rows ?? []

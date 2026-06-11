@@ -4,7 +4,23 @@ import { accentFor } from "@/utils/accent"
 import { initials } from "@/utils/initials"
 import { isOnline } from "@/utils/presence"
 import { parseConfigSnapshot } from "@/utils/config"
+import {
+	customAvatarSrc,
+	isCustomAvatar,
+	isPresetAvatar,
+	presetSrc,
+} from "@/constants/avatars"
 import type { MeshEdge } from "@/types"
+
+const avatarSrc = (
+	domiaKey: string,
+	avatarId: string | null | undefined,
+): string | null =>
+	isPresetAvatar(avatarId)
+		? presetSrc(avatarId as string)
+		: isCustomAvatar(avatarId)
+			? customAvatarSrc(domiaKey)
+			: null
 
 type MeshNode = {
 	row: DomiaRegistryRow
@@ -138,15 +154,33 @@ export function MeshMap({
 								stroke={selected ? "var(--foreground)" : "var(--card)"}
 								strokeWidth={selected ? 3 : 2}
 							/>
-							<text
-								textAnchor="middle"
-								dy="0.35em"
-								className="pointer-events-none font-semibold"
-								fontSize={node.isHub ? 15 : 12}
-								fill="white"
-							>
-								{initials(node.row.name)}
-							</text>
+							{avatarSrc(node.row.domiaKey, node.row.avatarId) ? (
+								<foreignObject
+									x={-r}
+									y={-r}
+									width={r * 2}
+									height={r * 2}
+									className="pointer-events-none"
+								>
+									<img
+										src={
+											avatarSrc(node.row.domiaKey, node.row.avatarId) as string
+										}
+										alt={node.row.name}
+										className="size-full rounded-full object-cover"
+									/>
+								</foreignObject>
+							) : (
+								<text
+									textAnchor="middle"
+									dy="0.35em"
+									className="pointer-events-none font-semibold"
+									fontSize={node.isHub ? 15 : 12}
+									fill="white"
+								>
+									{initials(node.row.name)}
+								</text>
+							)}
 							<text
 								textAnchor="middle"
 								y={r + 16}

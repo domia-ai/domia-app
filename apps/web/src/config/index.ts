@@ -3,7 +3,8 @@ import { z } from "zod"
 const envSchema = z.object({
 	DATABASE_URL: z.string().default("../../data/db/domia-app.db"),
 	DOMIA_APP_AUDIO_DIR: z.string().default("../../data/audio"),
-	DOMIA_APP_PROPERTY_NAME: z.string().default("Casa Norte"),
+	DOMIA_APP_AVATAR_DIR: z.string().default("../../data/avatars"),
+	DOMIA_APP_PROPERTY_NAME: z.string().default("Domia House"),
 	DOMIA_NODE_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
 })
 

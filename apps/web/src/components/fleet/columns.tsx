@@ -33,6 +33,7 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 				<PersonaAvatar
 					domiaKey={row.original.domiaKey}
 					name={row.original.name}
+					avatarId={row.original.avatarId}
 					size="sm"
 				/>
 				<span className="font-medium">{row.original.name}</span>

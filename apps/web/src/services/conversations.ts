@@ -28,6 +28,7 @@ import type {
 	InteractionDetail,
 	SessionDetail,
 	SnapshotFacetOptions,
+	ConversationFacets,
 } from "@/types/conversations"
 
 const SEARCH_COLUMNS = [
@@ -58,6 +59,7 @@ export const listInteractions = async (
 		.select({
 			...getTableColumns(interactionTrace),
 			domiaName: domiaRegistry.name,
+			domiaAvatarId: domiaRegistry.avatarId,
 			rating: interactionLabel.rating,
 			tags: interactionLabel.tags,
 			correction: interactionLabel.correction,
@@ -99,7 +101,7 @@ export const getInteraction = async (
 	if (!trace) return null
 
 	const [domia] = await db
-		.select({ name: domiaRegistry.name })
+		.select({ name: domiaRegistry.name, avatarId: domiaRegistry.avatarId })
 		.from(domiaRegistry)
 		.where(eq(domiaRegistry.domiaKey, trace.sourceDomiaKey))
 		.limit(1)
@@ -143,6 +145,7 @@ export const getInteraction = async (
 	return {
 		trace,
 		domiaName: domia?.name ?? null,
+		domiaAvatarId: domia?.avatarId ?? null,
 		label: label ?? null,
 		inputAudio: audios.find((a) => a.kind === "input") ?? null,
 		ttsAudio: audios.find((a) => a.kind === "tts") ?? null,
@@ -162,7 +165,7 @@ export const getSessionTurns = async (
 	if (!session) return null
 
 	const [domia] = await db
-		.select({ name: domiaRegistry.name })
+		.select({ name: domiaRegistry.name, avatarId: domiaRegistry.avatarId })
 		.from(domiaRegistry)
 		.where(eq(domiaRegistry.domiaKey, session.sourceDomiaKey))
 		.limit(1)
@@ -172,7 +175,12 @@ export const getSessionTurns = async (
 		.where(eq(interactionTrace.interactionSessionTraceId, sessionId))
 		.orderBy(interactionTrace.createdAt)
 
-	return { session, domiaName: domia?.name ?? null, turns }
+	return {
+		session,
+		domiaName: domia?.name ?? null,
+		domiaAvatarId: domia?.avatarId ?? null,
+		turns,
+	}
 }
 
 export const exportInteractions = async (
@@ -253,3 +261,18 @@ export const getSnapshotFacetOptions =
 		])
 		return { llmModel, sttModel, ttsEngine, ttsVoice }
 	}
+
+export const getConversationFacets = async (): Promise<ConversationFacets> => {
+	const [snapshot, domias] = await Promise.all([
+		getSnapshotFacetOptions(),
+		db
+			.select({ domiaKey: domiaRegistry.domiaKey, name: domiaRegistry.name })
+			.from(domiaRegistry)
+			.orderBy(asc(domiaRegistry.name)),
+	])
+	const domiaOptions: FilterFacetOption[] = domias.map((d) => ({
+		label: d.name ?? d.domiaKey,
+		value: d.domiaKey,
+	}))
+	return { ...snapshot, domiaOptions }
+}

@@ -4,12 +4,13 @@ import { StatCard } from "@/components/domia/stat-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatMs } from "@/utils/format"
 import { fleetStatsQueryOptions } from "@/server/fleet"
-import { LIVE_REFRESH_MS } from "@/constants/conversations"
+import { useConsolePrefs } from "@/components/providers/console-prefs"
 
 export function FleetStatsHeader() {
+	const { liveRefreshMs } = useConsolePrefs()
 	const { data, isLoading, isError } = useQuery({
 		...fleetStatsQueryOptions(),
-		refetchInterval: LIVE_REFRESH_MS,
+		refetchInterval: liveRefreshMs,
 	})
 
 	if (isLoading)

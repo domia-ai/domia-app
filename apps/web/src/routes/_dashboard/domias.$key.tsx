@@ -10,6 +10,7 @@ import {
 	PersonaCard,
 	SkillsCard,
 } from "@/components/domia/detail-sections"
+import { AvatarPicker } from "@/components/domia/avatar-picker"
 import { PerformanceCard } from "@/components/domia/performance-card"
 import { RestartButton } from "@/components/domia/restart-button"
 import { RoleBadge } from "@/components/fleet/columns"
@@ -66,13 +67,11 @@ function DomiaDetailPage() {
 			</Link>
 
 			<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-				<div
-					className="text-background flex size-11 items-center justify-center rounded-full text-lg font-semibold"
-					style={{ backgroundColor: accent }}
-					aria-hidden="true"
-				>
-					{domia.name.charAt(0)}
-				</div>
+				<AvatarPicker
+					domiaKey={domia.domiaKey}
+					name={domia.name}
+					avatarId={domia.avatarId}
+				/>
 				<div className="space-y-1">
 					<div className="flex items-center gap-2.5">
 						<h1 className="text-2xl font-semibold tracking-tight">

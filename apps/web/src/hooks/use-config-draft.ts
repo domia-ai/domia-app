@@ -108,9 +108,10 @@ export function useConfigDraft(config: ConfigSnapshot) {
 		const bundle: Record<string, Record<string, FieldValue>> = {}
 		for (const s of impact.sections) {
 			const cur = draft[s.section] ?? {}
-			const fields: Record<string, FieldValue> = {}
-			for (const key of s.changed) fields[key] = cur[key]
-			bundle[sourceKey(s.section)] = fields
+			const key = sourceKey(s.section)
+			const fields: Record<string, FieldValue> = { ...(bundle[key] ?? {}) }
+			for (const k of s.changed) fields[k] = cur[k]
+			bundle[key] = fields
 		}
 		return bundle
 	}

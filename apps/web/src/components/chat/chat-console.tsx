@@ -177,6 +177,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 								turn={turn}
 								domiaKey={selected.domiaKey}
 								domiaName={selected.name}
+								domiaAvatarId={selected.avatarId}
 							/>
 						))
 					)}
@@ -197,6 +198,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 						<PersonaAvatar
 							domiaKey={selected.domiaKey}
 							name={selected.name}
+							avatarId={selected.avatarId}
 							size="lg"
 						/>
 						<div className="min-w-0 flex-1">

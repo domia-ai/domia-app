@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_dashboard/conversations/session/$id")({
 
 function SessionPage() {
 	const detail = Route.useLoaderData()
-	const { session, domiaName, turns } = detail
+	const { session, domiaName, domiaAvatarId, turns } = detail
 	const name = domiaName ?? session.sourceDomiaKey
 
 	return (
@@ -35,6 +35,7 @@ function SessionPage() {
 				<PersonaAvatar
 					domiaKey={session.sourceDomiaKey}
 					name={name}
+					avatarId={domiaAvatarId}
 					size="lg"
 				/>
 				<div>

@@ -31,7 +31,12 @@ export function DomiaCard({ row }: { row: FleetRow }) {
 		>
 			<Card className="hover:border-foreground/20 h-full transition-colors">
 				<CardHeader className="flex-row items-center gap-3 space-y-0">
-					<PersonaAvatar domiaKey={row.domiaKey} name={row.name} size="md" />
+					<PersonaAvatar
+						domiaKey={row.domiaKey}
+						name={row.name}
+						avatarId={row.avatarId}
+						size="md"
+					/>
 					<div className="min-w-0 flex-1 space-y-1">
 						<div className="flex items-center gap-2">
 							<span className="truncate font-medium">{row.name}</span>

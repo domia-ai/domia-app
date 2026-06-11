@@ -30,6 +30,8 @@ export const domiaRegistry = sqliteTable(
 		grpcPort: integer("grpc_port"),
 		httpPort: integer("http_port"),
 		configSnapshotJson: text("config_snapshot_json"),
+		avatarId: text("avatar_id"),
+		avatarMime: text("avatar_mime"),
 		lastInteractionAt: text("last_interaction_at"),
 		firstSeenAt: integer("first_seen_at").notNull(),
 		lastSeenAt: integer("last_seen_at").notNull(),

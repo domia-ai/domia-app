@@ -18,6 +18,7 @@ export type AdjacentTurns = {
 
 export type ConversationRow = InteractionTraceRow & {
 	domiaName: string | null
+	domiaAvatarId: string | null
 	rating: string | null
 	tags: string[] | null
 	correction: string | null
@@ -63,6 +64,10 @@ export type SnapshotFacetOptions = {
 	ttsVoice: FilterFacetOption[]
 }
 
+export type ConversationFacets = SnapshotFacetOptions & {
+	domiaOptions: FilterFacetOption[]
+}
+
 export type ConversationStats = {
 	total: number
 	avgMs: number | null
@@ -89,6 +94,7 @@ export type BulkActionsProps = {
 export type InteractionDetail = {
 	trace: InteractionTraceRow
 	domiaName: string | null
+	domiaAvatarId: string | null
 	label: InteractionLabelRow | null
 	inputAudio: AudioAssetRow | null
 	ttsAudio: AudioAssetRow | null
@@ -111,6 +117,7 @@ export type MeshJourneyProps = {
 export type SessionDetail = {
 	session: InteractionSessionTraceRow
 	domiaName: string | null
+	domiaAvatarId: string | null
 	turns: InteractionTraceRow[]
 }
 

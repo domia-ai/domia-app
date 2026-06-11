@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start"
 import {
+	getConversationFacets,
 	getInteraction,
 	getSessionTurns,
-	getSnapshotFacetOptions,
 	listInteractions,
 } from "@/services/conversations"
 import { getConversationStats } from "@/services/conversation-stats"
@@ -16,9 +16,9 @@ export const getConversationStatsFn = createServerFn({ method: "GET" })
 	.validator(tableParamsSchema)
 	.handler(({ data }) => getConversationStats(data))
 
-export const getSnapshotFacetOptionsFn = createServerFn({
+export const getConversationFacetsFn = createServerFn({
 	method: "GET",
-}).handler(() => getSnapshotFacetOptions())
+}).handler(() => getConversationFacets())
 
 export const getInteractionFn = createServerFn({ method: "GET" })
 	.validator(idSchema)

@@ -4,17 +4,37 @@ import type { InlineAudioProps } from "@/types/conversations"
 
 export function InlineAudio({ interactionId, kind }: InlineAudioProps) {
 	const ref = useRef<HTMLAudioElement | null>(null)
+	const objectUrl = useRef<string | null>(null)
 	const [mounted, setMounted] = useState(false)
 	const [playing, setPlaying] = useState(false)
 
 	useEffect(() => setMounted(true), [])
+	useEffect(
+		() => () => {
+			if (objectUrl.current) URL.revokeObjectURL(objectUrl.current)
+		},
+		[],
+	)
 
-	const toggle = (e: React.MouseEvent) => {
+	const toggle = async (e: React.MouseEvent) => {
 		e.stopPropagation()
 		const el = ref.current
 		if (!el) return
-		if (playing) el.pause()
-		else void el.play()
+		if (playing) {
+			el.pause()
+			return
+		}
+		try {
+			if (!objectUrl.current) {
+				const res = await fetch(`/api/audio/${interactionId}?kind=${kind}`)
+				if (!res.ok) return
+				objectUrl.current = URL.createObjectURL(await res.blob())
+				el.src = objectUrl.current
+			}
+			await el.play()
+		} catch {
+			setPlaying(false)
+		}
 	}
 
 	return (
@@ -34,7 +54,6 @@ export function InlineAudio({ interactionId, kind }: InlineAudioProps) {
 			{mounted && (
 				<audio
 					ref={ref}
-					src={`/api/audio/${interactionId}?kind=${kind}`}
 					preload="none"
 					className="hidden"
 					onPlay={() => setPlaying(true)}

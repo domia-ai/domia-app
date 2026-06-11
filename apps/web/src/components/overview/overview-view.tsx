@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Bar, BarChart } from "recharts"
+import { Bar, BarChart, XAxis } from "recharts"
 import {
 	Activity,
 	AlertTriangle,
@@ -32,7 +32,7 @@ import { isOnline } from "@/utils/presence"
 import { relativeTime, relativeTimeMs, formatMs } from "@/utils/format"
 import { cn } from "@/lib/utils"
 import { FLOWS } from "@/constants/conversations"
-import { LIVE_REFRESH_MS } from "@/constants/conversations"
+import { useConsolePrefs } from "@/components/providers/console-prefs"
 import { overviewQueryOptions } from "@/server/overview"
 import type { CapabilityKey } from "@/types"
 
@@ -43,9 +43,10 @@ const activityConfig = {
 } satisfies ChartConfig
 
 export function OverviewView() {
+	const { liveRefreshMs } = useConsolePrefs()
 	const { data } = useSuspenseQuery({
 		...overviewQueryOptions(),
-		refetchInterval: LIVE_REFRESH_MS,
+		refetchInterval: liveRefreshMs,
 	})
 
 	const { rows, edges, stats, performance, recent, telemetry } = data
@@ -58,13 +59,8 @@ export function OverviewView() {
 	const delegated = (config?.capabilityDelegations ?? []).map(
 		(d) => d.capability.toLowerCase() as CapabilityKey,
 	)
-	const nameByKey = Object.fromEntries(rows.map((r) => [r.domiaKey, r.name]))
-	const totalConversations = Object.values(telemetry).reduce(
-		(sum, t) => sum + t.count,
-		0,
-	)
 	const selectedTelemetry = selected ? telemetry[selected.domiaKey] : undefined
-	const activity = performance.trend.slice(-14)
+	const activity = performance.activity
 
 	return (
 		<div className="space-y-6">
@@ -128,7 +124,7 @@ export function OverviewView() {
 					/>
 					<StatCard
 						label="Conversations"
-						value={totalConversations}
+						value={stats.conversationsAllTime}
 						icon={MessagesSquare}
 						accent="muted"
 						hint="all time"
@@ -164,6 +160,7 @@ export function OverviewView() {
 								<PersonaAvatar
 									domiaKey={selected.domiaKey}
 									name={selected.name}
+									avatarId={selected.avatarId}
 									size="lg"
 								/>
 								<div className="min-w-0 flex-1">
@@ -258,14 +255,24 @@ export function OverviewView() {
 				)}
 			</div>
 
-			{activity.length > 0 && (
+			{activity.buckets.length > 0 && (
 				<Card>
 					<CardHeader>
-						<CardTitle className="text-base">Activity · last 14 days</CardTitle>
+						<CardTitle className="text-base">
+							Activity · {activity.label}
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<ChartContainer config={activityConfig} className="h-32 w-full">
-							<BarChart data={activity} accessibilityLayer>
+							<BarChart data={activity.buckets} accessibilityLayer>
+								<XAxis
+									dataKey="label"
+									tickLine={false}
+									axisLine={false}
+									tickMargin={8}
+									fontSize={11}
+									interval="preserveStartEnd"
+								/>
 								<ChartTooltip content={<ChartTooltipContent />} />
 								<Bar dataKey="count" fill="var(--color-count)" radius={3} />
 							</BarChart>
@@ -297,9 +304,8 @@ export function OverviewView() {
 								>
 									<PersonaAvatar
 										domiaKey={trace.sourceDomiaKey}
-										name={
-											nameByKey[trace.sourceDomiaKey] ?? trace.sourceDomiaKey
-										}
+										name={trace.sourceDomiaName ?? trace.sourceDomiaKey}
+										avatarId={trace.sourceDomiaAvatarId}
 										size="sm"
 									/>
 									<div className="min-w-0 flex-1">

@@ -18,6 +18,8 @@ CREATE TABLE `domia_registry` (
 	`grpc_port` integer,
 	`http_port` integer,
 	`config_snapshot_json` text,
+	`avatar_id` text,
+	`avatar_mime` text,
 	`last_interaction_at` text,
 	`first_seen_at` integer NOT NULL,
 	`last_seen_at` integer NOT NULL,
@@ -115,6 +117,17 @@ CREATE TABLE `memory_fact` (
 --> statement-breakpoint
 CREATE INDEX `memory_fact_source_updated_idx` ON `memory_fact` (`source_domia_key`,`updated_at`);--> statement-breakpoint
 CREATE UNIQUE INDEX `memory_fact_source_domia_key_subject_relation_unique` ON `memory_fact` (`source_domia_key`,`subject`,`relation`);--> statement-breakpoint
+CREATE TABLE `mind_template` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`description` text DEFAULT '' NOT NULL,
+	`mind` text,
+	`config` text,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `mind_template_name_idx` ON `mind_template` (`name`);--> statement-breakpoint
 CREATE TABLE `sync_cursor` (
 	`domia_key` text PRIMARY KEY NOT NULL,
 	`last_interaction_at` text,

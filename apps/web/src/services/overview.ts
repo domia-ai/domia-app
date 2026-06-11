@@ -14,6 +14,7 @@ import { avgOf, effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
 import type { MeshEdge, OverviewStats } from "@/types"
 import type {
 	DomiaTelemetry,
+	OverviewActivity,
 	OverviewData,
 	OverviewPerformance,
 	RecentInteraction,
@@ -42,7 +43,9 @@ export const buildMeshEdges = (rows: DomiaRegistryRow[]): MeshEdge[] => {
 	return edges
 }
 
-export const getOverviewStats = async (): Promise<OverviewStats> => {
+export const getOverviewStats = async (): Promise<
+	Omit<OverviewStats, "conversationsAllTime">
+> => {
 	const [fleet] = await db
 		.select({
 			discovered: count(),
@@ -136,6 +139,43 @@ const pullInteractions = async (): Promise<LeanRow[]> =>
 		.from(interactionTrace)
 		.orderBy(desc(interactionTrace.createdAt))
 
+const ACTIVITY_DENSE_DAY_LIMIT = 2
+const ACTIVITY_DAY_SLOTS = 14
+
+const buildActivity = (rows: LeanRow[]): OverviewActivity => {
+	const days = new Set(rows.map((r) => r.createdAt.slice(0, 10)))
+
+	if (days.size > 0 && days.size <= ACTIVITY_DENSE_DAY_LIMIT) {
+		const since = Date.now() - DAY_MS
+		const map = new Map<string, number>()
+		for (const r of rows) {
+			const d = fromSqliteTs(r.createdAt)
+			if (!d || d.getTime() < since) continue
+			const key = r.createdAt.slice(0, 13)
+			map.set(key, (map.get(key) ?? 0) + 1)
+		}
+		const buckets = [...map.entries()]
+			.sort((a, b) => a[0].localeCompare(b[0]))
+			.map(([bucket, count]) => ({
+				bucket,
+				label: `${bucket.slice(11, 13)}:00`,
+				count,
+			}))
+		return { granularity: "hour", label: "last 24 hours", buckets }
+	}
+
+	const map = new Map<string, number>()
+	for (const r of rows) {
+		const key = r.createdAt.slice(0, 10)
+		map.set(key, (map.get(key) ?? 0) + 1)
+	}
+	const buckets = [...map.entries()]
+		.sort((a, b) => a[0].localeCompare(b[0]))
+		.slice(-ACTIVITY_DAY_SLOTS)
+		.map(([bucket, count]) => ({ bucket, label: bucket.slice(5), count }))
+	return { granularity: "day", label: "last 14 days", buckets }
+}
+
 const buildPerformance = (rows: LeanRow[]): OverviewPerformance => {
 	const total = rows.length
 	const s2s = rows.filter(
@@ -162,6 +202,7 @@ const buildPerformance = (rows: LeanRow[]): OverviewPerformance => {
 			tts: avgOf(voice.map((r) => r.ttsMs ?? 0)),
 		},
 		trend: buildTrend(rows),
+		activity: buildActivity(rows),
 	}
 }
 
@@ -182,10 +223,15 @@ const buildTelemetryMap = (rows: LeanRow[]): Record<string, DomiaTelemetry> => {
 	return out
 }
 
-const buildRecent = (rows: LeanRow[]): RecentInteraction[] =>
+const buildRecent = (
+	rows: LeanRow[],
+	dirByKey: Map<string, { name: string; avatarId: string | null }>,
+): RecentInteraction[] =>
 	rows.slice(0, RECENT_LIMIT).map((r) => ({
 		id: r.id,
 		sourceDomiaKey: r.sourceDomiaKey,
+		sourceDomiaName: dirByKey.get(r.sourceDomiaKey)?.name ?? null,
+		sourceDomiaAvatarId: dirByKey.get(r.sourceDomiaKey)?.avatarId ?? null,
 		input: r.sttResult ?? r.inputRaw ?? "—",
 		reply: r.llmResponse,
 		flow: deriveFlow(r.inputType, r.responseType),
@@ -203,12 +249,15 @@ export const getOverviewData = async (): Promise<OverviewData> => {
 		getOverviewStats(),
 		pullInteractions(),
 	])
+	const dirByKey = new Map(
+		rows.map((r) => [r.domiaKey, { name: r.name, avatarId: r.avatarId }]),
+	)
 	return {
 		rows,
 		edges: buildMeshEdges(rows),
-		stats,
+		stats: { ...stats, conversationsAllTime: interactions.length },
 		performance: buildPerformance(interactions),
-		recent: buildRecent(interactions),
+		recent: buildRecent(interactions, dirByKey),
 		telemetry: buildTelemetryMap(interactions),
 	}
 }

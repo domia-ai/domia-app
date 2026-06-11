@@ -6,6 +6,7 @@ import {
 	Boxes,
 	Brain,
 	Ear,
+	Fingerprint,
 	Heart,
 	Mic,
 	Network,
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils"
 import type { ConfigSnapshot } from "@/types/config"
 
 const ICONS: Record<string, typeof User> = {
+	identity: Fingerprint,
 	user: User,
 	heart: Heart,
 	audio: AudioLines,

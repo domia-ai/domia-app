@@ -38,12 +38,22 @@ export type DomiaTelemetry = {
 export type RecentInteraction = {
 	id: string
 	sourceDomiaKey: string
+	sourceDomiaName: string | null
+	sourceDomiaAvatarId: string | null
 	input: string
 	reply: string | null
 	flow: FlowKey
 	ttfaMs: number | null
 	delegated: boolean
 	createdAt: string
+}
+
+export type ActivityBucket = { bucket: string; label: string; count: number }
+
+export type OverviewActivity = {
+	granularity: "hour" | "day"
+	label: string
+	buckets: ActivityBucket[]
 }
 
 export type OverviewPerformance = {
@@ -54,6 +64,7 @@ export type OverviewPerformance = {
 	volume24h: number
 	stageAvg: { stt: number; llm: number; tts: number }
 	trend: TimeBucketRow[]
+	activity: OverviewActivity
 }
 
 export type OverviewData = {

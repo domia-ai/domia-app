@@ -52,12 +52,30 @@ const EMOTION_RADAR_FIELDS: ConfigField[] = EMOTION_FIELDS.map(
 
 export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 	{
+		id: "identity",
+		label: "Identity",
+		icon: "identity",
+		group: "Personality",
+		kind: "fields",
+		source: "domia",
+		description:
+			"This Domia's name on the network — how it shows up everywhere in the console.",
+		fields: [
+			{
+				key: "name",
+				label: "Domia name",
+				kind: "text",
+				hint: "A human name for this device, e.g. Kitchen or Living Room.",
+			},
+		],
+	},
+	{
 		id: "character",
 		label: "Personality",
 		icon: "user",
 		group: "Personality",
 		kind: "fields",
-		description: "Who this Domia is — name, character and the way it talks.",
+		description: "Who this Domia is — character and the way it talks.",
 		fields: PERSONA_FIELDS,
 	},
 	{

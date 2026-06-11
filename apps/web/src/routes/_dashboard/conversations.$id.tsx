@@ -33,7 +33,8 @@ export const Route = createFileRoute("/_dashboard/conversations/$id")({
 
 function ConversationPage() {
 	const { detail, runTargets } = Route.useLoaderData()
-	const { trace, domiaName, label, inputAudio, ttsAudio } = detail
+	const { trace, domiaName, domiaAvatarId, label, inputAudio, ttsAudio } =
+		detail
 	const name = domiaName ?? trace.sourceDomiaKey
 	const userMood = trace.userEmotionSnapshot as UserMoodSnapshot | null
 	const failed =
@@ -50,7 +51,12 @@ function ConversationPage() {
 			</Link>
 
 			<div className="flex flex-wrap items-center gap-3">
-				<PersonaAvatar domiaKey={trace.sourceDomiaKey} name={name} size="lg" />
+				<PersonaAvatar
+					domiaKey={trace.sourceDomiaKey}
+					name={name}
+					avatarId={domiaAvatarId}
+					size="lg"
+				/>
 				<div>
 					<Link
 						to="/domias/$key"

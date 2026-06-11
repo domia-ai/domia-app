@@ -38,6 +38,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 					<PersonaAvatar
 						domiaKey={row.original.sourceDomiaKey}
 						name={name}
+						avatarId={row.original.domiaAvatarId}
 						size="sm"
 					/>
 					<span className="font-medium">{name}</span>

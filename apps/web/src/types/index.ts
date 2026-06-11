@@ -52,6 +52,7 @@ export type OverviewStats = {
 	online: number
 	offline: number
 	activeSessions: number
+	conversationsAllTime: number
 }
 
 export type MeshEdge = {

@@ -14,7 +14,12 @@ const FLOW_BY_KEY = Object.fromEntries(FLOWS.map((f) => [f.key, f]))
 const flowOf = (kind: string, spoken: boolean | undefined): FlowKey =>
 	kind === "voice" ? (spoken ? "s2s" : "v2t") : spoken ? "t2s" : "t2t"
 
-export function TurnBubble({ turn, domiaKey, domiaName }: TurnBubbleProps) {
+export function TurnBubble({
+	turn,
+	domiaKey,
+	domiaName,
+	domiaAvatarId,
+}: TurnBubbleProps) {
 	const isUser = turn.role === "user"
 
 	if (isUser) {
@@ -44,7 +49,12 @@ export function TurnBubble({ turn, domiaKey, domiaName }: TurnBubbleProps) {
 
 	return (
 		<div className="flex items-start gap-2.5">
-			<PersonaAvatar domiaKey={domiaKey} name={domiaName} size="sm" />
+			<PersonaAvatar
+				domiaKey={domiaKey}
+				name={domiaName}
+				avatarId={domiaAvatarId}
+				size="sm"
+			/>
 			<div className="max-w-[80%] space-y-1.5">
 				<div
 					className={cn(

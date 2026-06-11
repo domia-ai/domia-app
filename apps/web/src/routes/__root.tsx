@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router"
 import type { QueryClient } from "@tanstack/react-query"
 import { ThemeProvider } from "@/components/providers/theme"
+import { ConsolePrefsProvider } from "@/components/providers/console-prefs"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { NotFound } from "@/components/shell/not-found"
@@ -66,8 +67,10 @@ function RootDocument({ children }: { children: ReactNode }) {
 					enableSystem
 					disableTransitionOnChange
 				>
-					<TooltipProvider>{children}</TooltipProvider>
-					<Toaster />
+					<ConsolePrefsProvider>
+						<TooltipProvider>{children}</TooltipProvider>
+						<Toaster />
+					</ConsolePrefsProvider>
 				</ThemeProvider>
 				<Scripts />
 			</body>

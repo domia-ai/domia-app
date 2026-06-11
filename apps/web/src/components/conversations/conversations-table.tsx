@@ -8,33 +8,28 @@ import { useTableQuery } from "@/hooks/use-table-query"
 import { tableParamsToQuery } from "@/utils/table-params"
 import {
 	listInteractionsFn,
-	getSnapshotFacetOptionsFn,
+	getConversationFacetsFn,
 } from "@/server/conversations"
-import { listFleetFn } from "@/server/fleet"
 import {
 	CONVERSATION_FACETS,
 	CONVERSATION_FILTER_KEYS,
 	DEFAULT_VISIBLE_COLUMNS,
-	LIVE_REFRESH_MS,
 	PRESETS,
 	TOGGLEABLE_COLUMNS,
 } from "@/constants/conversations"
+import { useConsolePrefs } from "@/components/providers/console-prefs"
 import { conversationColumns } from "./columns"
 import { RowActions } from "./row-actions"
 import { BulkActions } from "./bulk-actions"
-import type {
-	ConversationRow,
-	DomiaOption,
-	SnapshotFacetOptions,
-} from "@/types/conversations"
-import type { FilterFacetOption } from "@/types/table"
+import type { ConversationRow, ConversationFacets } from "@/types/conversations"
 import type { RowSelectionState } from "@tanstack/react-table"
 
-const EMPTY_FACETS: SnapshotFacetOptions = {
+const EMPTY_FACETS: ConversationFacets = {
 	llmModel: [],
 	sttModel: [],
 	ttsEngine: [],
 	ttsVoice: [],
+	domiaOptions: [],
 }
 
 export function ConversationsTable() {
@@ -54,39 +49,22 @@ export function ConversationsTable() {
 		filters: tp.filters,
 	}
 
+	const { liveRefreshMs } = useConsolePrefs()
 	const { data, isLoading } = useTableQuery<ConversationRow>(
 		"conversations",
 		(p) => listInteractionsFn({ data: p }),
 		params,
-		tp.filters.live === "1" ? LIVE_REFRESH_MS : undefined,
+		tp.filters.live === "1" ? liveRefreshMs : undefined,
 	)
-
-	const domiaOptionsQuery = useQuery({
-		queryKey: ["domia-options"],
-		queryFn: async (): Promise<DomiaOption[]> => {
-			const page = await listFleetFn({
-				data: {
-					page: 0,
-					pageSize: 100,
-					search: "",
-					sort: null,
-					filters: {},
-				},
-			})
-			return page.rows.map((r) => ({ domiaKey: r.domiaKey, name: r.name }))
-		},
-	})
 
 	const facetsQuery = useQuery({
 		queryKey: ["conversation-facets"],
-		queryFn: () => getSnapshotFacetOptionsFn(),
+		queryFn: () => getConversationFacetsFn(),
 	})
 
 	const facets = facetsQuery.data ?? EMPTY_FACETS
-	const domiaFacetOptions: FilterFacetOption[] = (
-		domiaOptionsQuery.data ?? []
-	).map((d) => ({ label: d.name ?? d.domiaKey, value: d.domiaKey }))
-	const facetsError = domiaOptionsQuery.isError || facetsQuery.isError
+	const domiaFacetOptions = facets.domiaOptions
+	const facetsError = facetsQuery.isError
 
 	const rows = data?.rows ?? []
 	const selectedRows = rows.filter((r) => rowSelection[r.id])
