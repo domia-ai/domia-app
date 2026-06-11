@@ -74,12 +74,28 @@ const archiveAudios = async (
 	}
 }
 
+const AUDIO_RETRY_LIMIT = 10
+
+const retryMissingAudio = async (snapshot: DomiaSnapshot): Promise<void> => {
+	for (const kind of ["tts", "input"] as const) {
+		const missing = dbAdapter.listMissingAudio(
+			snapshot.domiaKey,
+			kind,
+			AUDIO_RETRY_LIMIT,
+		)
+		for (const interactionId of missing) {
+			await archiveAudioSafe(snapshot, interactionId, kind)
+		}
+	}
+}
+
 export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 	const domiaKey = snapshot.domiaKey
 	if (!domiaKey || inFlight.has(domiaKey)) return
 	inFlight.add(domiaKey)
 	try {
 		let cursor = dbAdapter.readCursor(domiaKey)
+		await retryMissingAudio(snapshot)
 		const marker = snapshot.lastInteractionAt
 		if (!marker || marker <= cursor) return
 		let total = 0
@@ -99,12 +115,23 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				total += data.interactions.length
 			}
 
+			const pageFull =
+				data.interactions.length >= SYNC_LIMIT ||
+				data.sessions.length >= SYNC_LIMIT ||
+				data.emotionEvents.length >= SYNC_LIMIT ||
+				data.facts.length >= SYNC_LIMIT
+
 			if (data.nextCursor && data.nextCursor !== cursor) {
 				cursor = data.nextCursor
 				dbAdapter.writeCursor(domiaKey, cursor)
+			} else if (pageFull) {
+				ingestionLogger.warn(
+					`sync cursor stalled for ${domiaKey} at "${cursor}" with a full page — aborting this run`,
+				)
+				break
 			}
 
-			if (data.interactions.length < SYNC_LIMIT) break
+			if (!pageFull) break
 		}
 
 		if (total) {

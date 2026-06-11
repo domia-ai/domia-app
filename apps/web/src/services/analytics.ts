@@ -274,12 +274,16 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 
 	const s2s = byFlow.find((f) => f.flow === "s2s")
 
+	const localCount = data.filter((r) => !delegated(r)).length
+
 	return {
 		total: data.length,
 		hero: {
 			total: data.length,
 			s2sTtfaP50: s2s?.ttfa.p50 ?? null,
-			onDevicePct: 100,
+			onDevicePct: data.length
+				? Math.round((localCount / data.length) * 100)
+				: null,
 			flows: byFlow.length,
 		},
 		byFlow,

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Download, Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
@@ -23,6 +23,7 @@ import {
 } from "@/server/models"
 import type { ModelCatalogEntry } from "@/types/config"
 
+const MAX_POLL_FAILURES = 5
 const POLL_MS = 1500
 
 const kindsForStage = (stage: string): Set<string> =>
@@ -53,6 +54,13 @@ export function ModelPicker({
 }) {
 	const queryClient = useQueryClient()
 	const [installing, setInstalling] = useState<string | null>(null)
+	const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+	useEffect(
+		() => () => {
+			if (pollTimer.current) clearTimeout(pollTimer.current)
+		},
+		[],
+	)
 	const [open, setOpen] = useState(false)
 
 	const query = useQuery({
@@ -86,11 +94,27 @@ export function ModelPicker({
 			: installed.map((m) => m.name)
 
 	const pollJob = (jobId: string, label: string) => {
+		let failures = 0
+		const schedule = () => {
+			pollTimer.current = setTimeout(() => void tick(), POLL_MS)
+		}
 		const tick = async () => {
 			const res = await getModelJobFn({ data: { domiaKey, jobId } })
-			if (!res.ok || !res.data) return
+			if (!res.ok || !res.data) {
+				failures++
+				if (failures <= MAX_POLL_FAILURES) {
+					schedule()
+					return
+				}
+				setInstalling(null)
+				toast.error("Install status unavailable", {
+					description: "Lost contact with the node — check it directly.",
+				})
+				return
+			}
+			failures = 0
 			if (res.data.status === "running") {
-				setTimeout(() => void tick(), POLL_MS)
+				schedule()
 				return
 			}
 			setInstalling(null)
@@ -101,7 +125,7 @@ export function ModelPicker({
 				toast.error("Install failed", { description: res.data.detail })
 			}
 		}
-		setTimeout(() => void tick(), POLL_MS)
+		schedule()
 	}
 
 	const onInstall = async (entry: ModelCatalogEntry) => {

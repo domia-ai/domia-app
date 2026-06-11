@@ -1,38 +1,53 @@
 import { desc, eq } from "drizzle-orm"
-import {
-	domiaRegistry,
-	interactionTrace,
-	type DomiaRegistryRow,
-	type InteractionTraceRow,
-} from "@domia-app/db"
+import { domiaRegistry, interactionTrace } from "@domia-app/db"
 import { db } from "@/db"
 import { avgOf, effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
+import { deriveFlow } from "@/utils/flow"
 import type { StagePerfRow, TimeBucketRow } from "@/types/analytics"
-import type { DomiaPerformance } from "@/types/fleet"
+import type {
+	DomiaPerformance,
+	DomiaRecentRow,
+	MeshDomiaRow,
+} from "@/types/fleet"
+
+import { parseConfigSnapshot } from "@/utils/config"
 
 export { parseConfigSnapshot } from "@/utils/config"
 
 export const getDomia = async (
 	domiaKey: string,
-): Promise<DomiaRegistryRow | null> => {
+): Promise<MeshDomiaRow | null> => {
 	const [row] = await db
 		.select()
 		.from(domiaRegistry)
 		.where(eq(domiaRegistry.domiaKey, domiaKey))
 		.limit(1)
-	return row ?? null
+	if (!row) return null
+	return { ...row, config: parseConfigSnapshot(row.configSnapshotJson) }
 }
 
 export const getRecentInteractions = async (
 	domiaKey: string,
 	limit = 5,
-): Promise<InteractionTraceRow[]> =>
-	db
+): Promise<DomiaRecentRow[]> => {
+	const rows = await db
 		.select()
 		.from(interactionTrace)
 		.where(eq(interactionTrace.sourceDomiaKey, domiaKey))
 		.orderBy(desc(interactionTrace.createdAt))
 		.limit(limit)
+	return rows.map((r) => {
+		const ttfa = effectiveTtfa(r)
+		return {
+			id: r.id,
+			input: r.sttResult ?? r.inputRaw ?? "—",
+			reply: r.llmResponse,
+			flow: deriveFlow(r.inputType, r.responseType),
+			ttfaMs: ttfa > 0 ? ttfa : null,
+			createdAt: r.createdAt,
+		}
+	})
+}
 
 type PerfRow = {
 	sourceDomiaKey: string

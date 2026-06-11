@@ -179,8 +179,6 @@ export function EmotionsView() {
 							</p>
 						)}
 						{activeEvents
-							.slice()
-							.reverse()
 							.slice(page * pageSize, page * pageSize + pageSize)
 							.map((e) => (
 								<div key={e.id} className="flex items-center gap-4 py-3">

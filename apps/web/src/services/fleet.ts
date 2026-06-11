@@ -235,8 +235,37 @@ export const getFleetTelemetry = async (): Promise<
 }
 
 export const getDomiaRole = async (domiaKey: string): Promise<DomiaRole> => {
-	const map = await getFleetTelemetry()
-	return map[domiaKey]?.role ?? "standalone"
+	const [reg, interactions] = await Promise.all([
+		db
+			.select({
+				domiaKey: domiaRegistry.domiaKey,
+				configSnapshotJson: domiaRegistry.configSnapshotJson,
+			})
+			.from(domiaRegistry)
+			.where(eq(domiaRegistry.domiaKey, domiaKey))
+			.limit(1),
+		db
+			.select({
+				sourceDomiaKey: interactionTrace.sourceDomiaKey,
+				inputType: interactionTrace.inputType,
+				responseType: interactionTrace.responseType,
+				sttMs: interactionTrace.sttMs,
+				llmMs: interactionTrace.llmMs,
+				ttfaMs: interactionTrace.ttfaMs,
+				sttExecutorKey: interactionTrace.sttExecutorKey,
+				llmExecutorKey: interactionTrace.llmExecutorKey,
+				ttsExecutorKey: interactionTrace.ttsExecutorKey,
+				createdAt: interactionTrace.createdAt,
+			})
+			.from(interactionTrace),
+	])
+	const row = reg[0]
+	if (!row) return "standalone"
+	const own = interactions.filter((r) => r.sourceDomiaKey === domiaKey)
+	const delegatesAway =
+		parseConfigSnapshot(row.configSnapshotJson).capabilityDelegations.length > 0
+	const delegatedCount = own.filter((r) => isDelegated(latencyFields(r))).length
+	return inferRole(domiaKey, interactions, delegatesAway, delegatedCount)
 }
 
 export const getFleetStatsFull = async (): Promise<FleetStatsFull> => {
@@ -287,6 +316,7 @@ export const listFleet = async (
 	return {
 		rows: page.rows.map((r) => ({
 			...r,
+			config: parseConfigSnapshot(r.configSnapshotJson),
 			telemetry: telemetry[r.domiaKey] ?? null,
 		})),
 		total: page.total,

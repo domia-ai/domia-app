@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq, isNotNull, notInArray } from "drizzle-orm"
 import {
 	domiaRegistry,
 	interactionTrace,
@@ -53,6 +53,36 @@ const dbAdapter = {
 			.where(eq(domiaRegistry.domiaKey, domiaKey))
 			.run()
 	},
+	listMissingAudio: (
+		domiaKey: string,
+		kind: "tts" | "input",
+		limit: number,
+	): string[] => {
+		const pathCol =
+			kind === "tts"
+				? interactionTrace.ttsAudioPath
+				: interactionTrace.inputAudioPath
+		const archived = db
+			.select({ id: audioAsset.interactionId })
+			.from(audioAsset)
+			.where(
+				and(eq(audioAsset.sourceDomiaKey, domiaKey), eq(audioAsset.kind, kind)),
+			)
+		return db
+			.select({ id: interactionTrace.id })
+			.from(interactionTrace)
+			.where(
+				and(
+					eq(interactionTrace.sourceDomiaKey, domiaKey),
+					isNotNull(pathCol),
+					notInArray(interactionTrace.id, archived),
+				),
+			)
+			.limit(limit)
+			.all()
+			.map((r) => r.id)
+	},
+
 	hasAudio: (id: string): boolean =>
 		Boolean(
 			db
@@ -121,6 +151,9 @@ const dbAdapter = {
 					llmModelUsed: r.llmModelUsed ?? null,
 					ttsVoiceUsed: r.ttsVoiceUsed ?? null,
 					wakeWordModelUsed: r.wakeWordModelUsed ?? null,
+					status: r.status ?? null,
+					errorStep: r.errorStep ?? null,
+					errorMessage: r.errorMessage ?? null,
 					domiaSnapshot: r.domiaSnapshot ?? null,
 					createdAt: r.createdAt,
 					updatedAt: r.updatedAt,
@@ -159,12 +192,10 @@ const dbAdapter = {
 				tx.insert(memoryFact)
 					.values(values)
 					.onConflictDoUpdate({
-						target: [
-							memoryFact.sourceDomiaKey,
-							memoryFact.subject,
-							memoryFact.relation,
-						],
+						target: memoryFact.id,
 						set: {
+							subject: values.subject,
+							relation: values.relation,
 							value: values.value,
 							confidence: values.confidence,
 							sourceInteractionId: values.sourceInteractionId,

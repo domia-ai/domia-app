@@ -141,10 +141,10 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 				<div className="rounded-lg border p-4">
 					<p className="text-muted-foreground text-xs">On-device</p>
 					<p className="mt-1 text-3xl font-bold tabular-nums">
-						{data.hero.onDevicePct}%
+						{data.hero.onDevicePct == null ? "—" : `${data.hero.onDevicePct}%`}
 					</p>
 					<p className="text-muted-foreground mt-0.5 text-xs">
-						zero cloud calls, $0 inference
+						run on the origin device vs delegated
 					</p>
 				</div>
 				<div className="rounded-lg border p-4">

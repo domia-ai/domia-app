@@ -1,4 +1,5 @@
 import type { DomiaRegistryRow } from "@domia-app/db"
+import type { DomiaConfig } from "@/types"
 import type { MeshEdge, OverviewStats } from "@/types"
 import type { FlowKey } from "@/types/conversations"
 import type {
@@ -19,7 +20,18 @@ export type FleetTelemetry = {
 	delegatedCount: number
 }
 
-export type FleetRow = DomiaRegistryRow & { telemetry: FleetTelemetry | null }
+export type MeshDomiaRow = DomiaRegistryRow & { config: DomiaConfig }
+
+export type FleetRow = MeshDomiaRow & { telemetry: FleetTelemetry | null }
+
+export type DomiaRecentRow = {
+	id: string
+	input: string
+	reply: string | null
+	flow: FlowKey
+	ttfaMs: number | null
+	createdAt: string
+}
 
 export type FleetStatsFull = {
 	total: number
@@ -68,7 +80,7 @@ export type OverviewPerformance = {
 }
 
 export type OverviewData = {
-	rows: DomiaRegistryRow[]
+	rows: MeshDomiaRow[]
 	edges: MeshEdge[]
 	stats: OverviewStats
 	performance: OverviewPerformance

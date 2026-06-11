@@ -1,4 +1,4 @@
-import type { DomiaRegistryRow } from "@domia-app/db"
+import type { MeshDomiaRow } from "@/types/fleet"
 import type { RunTimings } from "@/types/conversations"
 
 export type ChatTurnRole = "user" | "domia"
@@ -37,7 +37,7 @@ export type ChatExchangeResult = {
 }
 
 export type ChatConsoleProps = {
-	domias: DomiaRegistryRow[]
+	domias: MeshDomiaRow[]
 	initialKey: string
 }
 

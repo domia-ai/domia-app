@@ -32,13 +32,14 @@ export function FleetView() {
 	const [view, setView] = useViewMode("domias", "cards")
 	const { liveRefreshMs } = useConsolePrefs()
 
-	const { data, isLoading } = useTableQuery<FleetRow>(
+	const { data, isLoading, isError } = useTableQuery<FleetRow>(
 		"fleet",
 		(params) => listFleetFn({ data: params }),
 		{ page, pageSize, search, sort, filters },
 		liveRefreshMs,
 	)
 
+	const loadFailed = isError && !data
 	const rows = data?.rows ?? []
 	const total = data?.total ?? 0
 
@@ -70,7 +71,11 @@ export function FleetView() {
 					onPageSizeChange={setPageSize}
 					onSortChange={setSort}
 					isLoading={isLoading}
-					emptyLabel="No Domias discovered yet."
+					emptyLabel={
+						loadFailed
+							? "Couldn't load the fleet — check the console connection."
+							: "No Domias discovered yet."
+					}
 					onRowClick={(row) =>
 						navigate({ to: "/domias/$key", params: { key: row.domiaKey } })
 					}
@@ -91,7 +96,9 @@ export function FleetView() {
 						</div>
 					) : (
 						<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-							No Domias discovered yet.
+							{loadFailed
+								? "Couldn't load the fleet — check the console connection."
+								: "No Domias discovered yet."}
 						</div>
 					)}
 					{total > pageSize && (

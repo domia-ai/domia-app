@@ -209,7 +209,7 @@ export function SettingsView() {
 									render={<a href="/api/conversations/export" />}
 								>
 									<Download className="size-4" />
-									Export conversations (CSV)
+									Export conversations (JSONL)
 								</Button>
 								<Badge variant="secondary">
 									Domia Console v{overview.version}

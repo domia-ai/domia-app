@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react"
-import type { DomiaRegistryRow } from "@domia-app/db"
+import type { MeshDomiaRow } from "@/types/fleet"
 import { accentFor } from "@/utils/accent"
 import { initials } from "@/utils/initials"
 import { isOnline } from "@/utils/presence"
-import { parseConfigSnapshot } from "@/utils/config"
 import {
 	customAvatarSrc,
 	isCustomAvatar,
@@ -23,7 +22,7 @@ const avatarSrc = (
 			: null
 
 type MeshNode = {
-	row: DomiaRegistryRow
+	row: MeshDomiaRow
 	x: number
 	y: number
 	isHub: boolean
@@ -40,7 +39,7 @@ export function MeshMap({
 	selectedKey,
 	onSelect,
 }: {
-	rows: DomiaRegistryRow[]
+	rows: MeshDomiaRow[]
 	edges: MeshEdge[]
 	selectedKey?: string
 	onSelect?: (key: string) => void
@@ -124,7 +123,7 @@ export function MeshMap({
 
 				{nodes.map((node) => {
 					const online = isOnline(node.row.lastSeenAt)
-					const config = parseConfigSnapshot(node.row.configSnapshotJson)
+					const config = node.row.config
 					const accent = accentFor(node.row.domiaKey)
 					const selected = selectedKey === node.row.domiaKey
 					const r = node.isHub ? 34 : 26

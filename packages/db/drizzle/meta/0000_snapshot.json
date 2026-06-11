@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "0993a2b8-335f-4ef1-bd3e-9b496f4bbcd9",
+  "id": "e6e650fd-f451-4e47-af00-8dfb1a6badec",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -59,6 +59,13 @@
         }
       },
       "indexes": {
+        "audio_asset_interaction_idx": {
+          "name": "audio_asset_interaction_idx",
+          "columns": [
+            "interaction_id"
+          ],
+          "isUnique": false
+        },
         "audio_asset_source_interaction_idx": {
           "name": "audio_asset_source_interaction_idx",
           "columns": [
@@ -395,6 +402,13 @@
             "updated_at"
           ],
           "isUnique": false
+        },
+        "session_trace_last_used_idx": {
+          "name": "session_trace_last_used_idx",
+          "columns": [
+            "last_used_at"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -643,6 +657,27 @@
           "notNull": false,
           "autoincrement": false
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_step": {
+          "name": "error_step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "domia_snapshot": {
           "name": "domia_snapshot",
           "type": "text",
@@ -671,6 +706,20 @@
           "columns": [
             "source_domia_key",
             "created_at"
+          ],
+          "isUnique": false
+        },
+        "interaction_trace_created_idx": {
+          "name": "interaction_trace_created_idx",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "interaction_trace_session_trace_idx": {
+          "name": "interaction_trace_session_trace_idx",
+          "columns": [
+            "interaction_session_trace_id"
           ],
           "isUnique": false
         },
@@ -756,6 +805,15 @@
         }
       },
       "indexes": {
+        "memory_fact_source_subject_idx": {
+          "name": "memory_fact_source_subject_idx",
+          "columns": [
+            "source_domia_key",
+            "subject",
+            "relation"
+          ],
+          "isUnique": false
+        },
         "memory_fact_source_updated_idx": {
           "name": "memory_fact_source_updated_idx",
           "columns": [
@@ -764,14 +822,12 @@
           ],
           "isUnique": false
         },
-        "memory_fact_source_domia_key_subject_relation_unique": {
-          "name": "memory_fact_source_domia_key_subject_relation_unique",
+        "memory_fact_interaction_idx": {
+          "name": "memory_fact_interaction_idx",
           "columns": [
-            "source_domia_key",
-            "subject",
-            "relation"
+            "source_interaction_id"
           ],
-          "isUnique": true
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -803,13 +859,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "''"
-        },
-        "mind": {
-          "name": "mind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         },
         "config": {
           "name": "config",

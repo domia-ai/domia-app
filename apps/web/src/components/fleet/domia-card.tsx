@@ -6,7 +6,6 @@ import { StatusPill } from "@/components/domia/status"
 import { RoleBadge } from "./columns"
 import { formatMs, relativeTime } from "@/utils/format"
 import { isOnline } from "@/utils/presence"
-import { parseConfigSnapshot } from "@/utils/config"
 import type { FleetRow } from "@/types/fleet"
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -21,7 +20,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 export function DomiaCard({ row }: { row: FleetRow }) {
-	const persona = parseConfigSnapshot(row.configSnapshotJson).characterProfile
+	const persona = row.config.characterProfile
 
 	return (
 		<Link
@@ -60,7 +59,7 @@ export function DomiaCard({ row }: { row: FleetRow }) {
 							value={formatMs(row.telemetry?.ttfaP50 ?? null)}
 						/>
 						<Stat
-							label="Last seen"
+							label="Last interaction"
 							value={relativeTime(row.lastInteractionAt)}
 						/>
 					</div>

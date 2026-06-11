@@ -27,7 +27,6 @@ import { StatusPill } from "@/components/domia/status"
 import { CapabilityChips } from "@/components/domia/capability-chips"
 import { MoodRadar } from "@/components/domia/mood-radar"
 import { accentFor } from "@/utils/accent"
-import { parseConfigSnapshot } from "@/utils/config"
 import { isOnline } from "@/utils/presence"
 import { relativeTime, relativeTimeMs, formatMs } from "@/utils/format"
 import { cn } from "@/lib/utils"
@@ -53,9 +52,7 @@ export function OverviewView() {
 	const [selectedKey, setSelectedKey] = useState(rows[0]?.domiaKey ?? "")
 	const selected =
 		rows.find((r) => r.domiaKey === selectedKey) ?? rows[0] ?? null
-	const config = selected
-		? parseConfigSnapshot(selected.configSnapshotJson)
-		: null
+	const config = selected ? selected.config : null
 	const delegated = (config?.capabilityDelegations ?? []).map(
 		(d) => d.capability.toLowerCase() as CapabilityKey,
 	)

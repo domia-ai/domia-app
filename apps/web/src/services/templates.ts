@@ -122,7 +122,6 @@ export const createConfigTemplate = (
 				id,
 				name: input.name.trim(),
 				description: input.description.trim(),
-				mind: null,
 				config: sanitizeConfigBundle(input.config),
 				createdAt: now,
 				updatedAt: now,
@@ -147,7 +146,6 @@ export const updateConfigTemplate = (
 			.set({
 				name: input.name.trim(),
 				description: input.description.trim(),
-				mind: null,
 				config: sanitizeConfigBundle(input.config),
 				updatedAt: Date.now(),
 			})

@@ -4,7 +4,6 @@ import {
 	text,
 	integer,
 	real,
-	unique,
 	index,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
@@ -83,6 +82,9 @@ export const interactionTrace = sqliteTable(
 		llmModelUsed: text("llm_model_used"),
 		ttsVoiceUsed: text("tts_voice_used"),
 		wakeWordModelUsed: text("wake_word_model_used"),
+		status: text("status"),
+		errorStep: text("error_step"),
+		errorMessage: text("error_message"),
 		domiaSnapshot: text("domia_snapshot", { mode: "json" }).$type<JsonValue>(),
 		createdAt: text("created_at").notNull(),
 		updatedAt: text("updated_at").notNull(),
@@ -91,6 +93,10 @@ export const interactionTrace = sqliteTable(
 		index("interaction_trace_source_created_idx").on(
 			t.sourceDomiaKey,
 			t.createdAt,
+		),
+		index("interaction_trace_created_idx").on(t.createdAt),
+		index("interaction_trace_session_trace_idx").on(
+			t.interactionSessionTraceId,
 		),
 		index("interaction_trace_source_updated_idx").on(
 			t.sourceDomiaKey,
@@ -113,6 +119,7 @@ export const interactionSessionTrace = sqliteTable(
 	},
 	(t) => [
 		index("session_trace_source_updated_idx").on(t.sourceDomiaKey, t.updatedAt),
+		index("session_trace_last_used_idx").on(t.lastUsedAt),
 	],
 )
 
@@ -145,8 +152,13 @@ export const memoryFact = sqliteTable(
 		updatedAt: text("updated_at").notNull(),
 	},
 	(t) => [
-		unique().on(t.sourceDomiaKey, t.subject, t.relation),
+		index("memory_fact_source_subject_idx").on(
+			t.sourceDomiaKey,
+			t.subject,
+			t.relation,
+		),
 		index("memory_fact_source_updated_idx").on(t.sourceDomiaKey, t.updatedAt),
+		index("memory_fact_interaction_idx").on(t.sourceInteractionId),
 	],
 )
 
@@ -168,6 +180,7 @@ export const audioAsset = sqliteTable(
 		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
 	},
 	(t) => [
+		index("audio_asset_interaction_idx").on(t.interactionId),
 		index("audio_asset_source_interaction_idx").on(
 			t.sourceDomiaKey,
 			t.interactionId,
@@ -266,7 +279,6 @@ export const mindTemplate = sqliteTable(
 		id: text("id").primaryKey(),
 		name: text("name").notNull(),
 		description: text("description").notNull().default(""),
-		mind: text("mind", { mode: "json" }).$type<JsonValue>(),
 		config: text("config", { mode: "json" }).$type<JsonValue>(),
 		createdAt: integer("created_at").notNull(),
 		updatedAt: integer("updated_at").notNull(),
@@ -274,17 +286,12 @@ export const mindTemplate = sqliteTable(
 	(t) => [uniqueIndex("mind_template_name_idx").on(t.name)],
 )
 
-export type MindTemplateRow = typeof mindTemplate.$inferSelect
-export type MindTemplateInsert = typeof mindTemplate.$inferInsert
-
 export type DomiaRegistryRow = typeof domiaRegistry.$inferSelect
 export type DomiaRegistryInsert = typeof domiaRegistry.$inferInsert
 export type InteractionTraceRow = typeof interactionTrace.$inferSelect
 export type InteractionTraceInsert = typeof interactionTrace.$inferInsert
 export type InteractionSessionTraceRow =
 	typeof interactionSessionTrace.$inferSelect
-export type InteractionSessionTraceInsert =
-	typeof interactionSessionTrace.$inferInsert
 export type EmotionEventRow = typeof emotionEvent.$inferSelect
 export type EmotionEventInsert = typeof emotionEvent.$inferInsert
 export type MemoryFactRow = typeof memoryFact.$inferSelect

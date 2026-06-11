@@ -38,7 +38,7 @@ export function MemoriesView() {
 	} = useTableParams(FILTER_KEYS)
 	const [view, setView] = useViewMode("memories", "cards")
 
-	const { data, isLoading } = useTableQuery<MemoryFactRow>(
+	const { data, isLoading, isError } = useTableQuery<MemoryFactRow>(
 		"memories",
 		(p) => listFactsFn({ data: p }),
 		{ page, pageSize, search, sort, filters },
@@ -48,6 +48,7 @@ export function MemoriesView() {
 		queryFn: () => getFactDomiaOptionsFn(),
 	})
 
+	const loadFailed = isError && !data
 	const rows = data?.rows ?? []
 	const total = data?.total ?? 0
 	const domiaOptions = domiaQuery.data ?? []
@@ -99,7 +100,11 @@ export function MemoriesView() {
 					onPageSizeChange={setPageSize}
 					onSortChange={setSort}
 					isLoading={isLoading}
-					emptyLabel="No facts learned yet."
+					emptyLabel={
+						loadFailed
+							? "Couldn't load memories — check the console connection."
+							: "No facts learned yet."
+					}
 				/>
 			) : (
 				<div className="space-y-4">
@@ -117,8 +122,9 @@ export function MemoriesView() {
 						</div>
 					) : (
 						<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-							No facts learned yet. They appear as Domias remember things about
-							you.
+							{loadFailed
+								? "Couldn't load memories — check the console connection."
+								: "No facts learned yet. They appear as Domias remember things about you."}
 						</div>
 					)}
 					{total > pageSize && (

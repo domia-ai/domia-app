@@ -3,7 +3,6 @@ import {
 	domiaRegistry,
 	interactionSessionTrace,
 	interactionTrace,
-	type DomiaRegistryRow,
 } from "@domia-app/db"
 import { db } from "@/db"
 import { ONLINE_THRESHOLD_MS } from "@/utils/presence"
@@ -14,6 +13,7 @@ import { avgOf, effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
 import type { MeshEdge, OverviewStats } from "@/types"
 import type {
 	DomiaTelemetry,
+	MeshDomiaRow,
 	OverviewActivity,
 	OverviewData,
 	OverviewPerformance,
@@ -25,14 +25,21 @@ const ACTIVE_SESSION_WINDOW_MS = 30 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
 const RECENT_LIMIT = 6
 
-export const listMeshDomias = async (): Promise<DomiaRegistryRow[]> =>
-	db.select().from(domiaRegistry).orderBy(desc(domiaRegistry.lastSeenAt))
+export const listMeshDomias = async (): Promise<MeshDomiaRow[]> => {
+	const rows = await db
+		.select()
+		.from(domiaRegistry)
+		.orderBy(desc(domiaRegistry.lastSeenAt))
+	return rows.map((row) => ({
+		...row,
+		config: parseConfigSnapshot(row.configSnapshotJson),
+	}))
+}
 
-export const buildMeshEdges = (rows: DomiaRegistryRow[]): MeshEdge[] => {
+export const buildMeshEdges = (rows: MeshDomiaRow[]): MeshEdge[] => {
 	const edges: MeshEdge[] = []
 	for (const row of rows) {
-		const config = parseConfigSnapshot(row.configSnapshotJson)
-		for (const delegation of config.capabilityDelegations) {
+		for (const delegation of row.config.capabilityDelegations) {
 			edges.push({
 				source: row.domiaKey,
 				target: delegation.targetDomiaKey,

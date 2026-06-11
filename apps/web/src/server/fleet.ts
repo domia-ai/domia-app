@@ -2,17 +2,12 @@ import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import {
 	getDomiaRole,
-	getFleetStats,
 	getFleetStatsFull,
 	listDomiaTargets,
 	listFleet,
 	listRunTargets,
 } from "@/services/fleet"
 import { idSchema, tableParamsSchema } from "@/schemas/server"
-
-export const getFleetStatsFn = createServerFn({ method: "GET" }).handler(() =>
-	getFleetStats(),
-)
 
 export const getFleetStatsFullFn = createServerFn({ method: "GET" }).handler(
 	() => getFleetStatsFull(),

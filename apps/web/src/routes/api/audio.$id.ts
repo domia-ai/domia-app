@@ -33,8 +33,11 @@ export const Route = createFileRoute("/api/audio/$id")({
 				)
 				if (match) {
 					const start = match[1] ? parseInt(match[1], 10) : 0
-					const end = match[2] ? parseInt(match[2], 10) : total - 1
-					if (start >= total || end >= total || start > end) {
+					const end = Math.min(
+						match[2] ? parseInt(match[2], 10) : total - 1,
+						total - 1,
+					)
+					if (start >= total || start > end) {
 						return new Response("Range not satisfiable", {
 							status: 416,
 							headers: { "Content-Range": `bytes */${total}` },

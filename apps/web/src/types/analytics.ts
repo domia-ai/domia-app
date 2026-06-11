@@ -86,7 +86,7 @@ export type CorpusSummary = {
 export type HeroStats = {
 	total: number
 	s2sTtfaP50: number | null
-	onDevicePct: number
+	onDevicePct: number | null
 	flows: number
 }
 

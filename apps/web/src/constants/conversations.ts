@@ -42,7 +42,7 @@ export const PRESETS: ConversationPreset[] = [
 	{
 		key: "slowest",
 		label: "Slowest",
-		params: { sort: "totalMs", dir: "desc" },
+		params: { sort: "latency", dir: "desc" },
 	},
 	{ key: "errors", label: "Errors", params: { error: "1" } },
 	{ key: "ungraded", label: "Ungraded", params: { rating: "ungraded" } },

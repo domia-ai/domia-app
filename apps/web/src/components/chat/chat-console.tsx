@@ -18,7 +18,6 @@ import { Composer } from "./composer"
 import { TurnBubble } from "./turn-bubble"
 import { sendMessage } from "@/server/chat"
 import { accentFor } from "@/utils/accent"
-import { parseConfigSnapshot } from "@/utils/config"
 import { isOnline } from "@/utils/presence"
 import type { ChatConsoleProps, ChatTurn, SendMessageInput } from "@/types/chat"
 
@@ -29,9 +28,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null)
 
 	const selected = domias.find((d) => d.domiaKey === selectedKey) ?? domias[0]
-	const config = selected
-		? parseConfigSnapshot(selected.configSnapshotJson)
-		: null
+	const config = selected ? selected.config : null
 	const turns = useMemo(
 		() => threads[selectedKey] ?? [],
 		[threads, selectedKey],

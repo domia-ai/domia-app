@@ -21,12 +21,9 @@ import {
 	getRecentInteractionsFn,
 } from "@/server/domia"
 import { getDomiaRoleFn } from "@/server/fleet"
-import { parseConfigSnapshot } from "@/utils/config"
 import { accentFor } from "@/utils/accent"
 import { isOnline } from "@/utils/presence"
 import { relativeTime, formatMs } from "@/utils/format"
-import { deriveFlow } from "@/utils/flow"
-import { effectiveTtfa } from "@/utils/metrics"
 import { FLOWS } from "@/constants/conversations"
 import { cn } from "@/lib/utils"
 
@@ -51,7 +48,7 @@ export const Route = createFileRoute("/_dashboard/domias/$key")({
 
 function DomiaDetailPage() {
 	const { domia, recent, performance, role } = Route.useLoaderData()
-	const config = parseConfigSnapshot(domia.configSnapshotJson)
+	const config = domia.config
 	const accent = accentFor(domia.domiaKey)
 	const online = isOnline(domia.lastSeenAt)
 	const address = domia.localIp ? `${domia.localIp}:${domia.httpPort}` : "—"
@@ -167,11 +164,7 @@ function DomiaDetailPage() {
 							{recent.length ? (
 								<ul className="space-y-3">
 									{recent.map((trace) => {
-										const flow =
-											FLOW_BY_KEY[
-												deriveFlow(trace.inputType, trace.responseType)
-											]
-										const ttfa = effectiveTtfa(trace)
+										const flow = FLOW_BY_KEY[trace.flow]
 										return (
 											<li key={trace.id} className="space-y-1 text-sm">
 												<Link
@@ -179,11 +172,11 @@ function DomiaDetailPage() {
 													params={{ id: trace.id }}
 													className="hover:text-primary line-clamp-2 font-medium transition-colors"
 												>
-													{trace.sttResult ?? trace.inputRaw ?? "—"}
+													{trace.input}
 												</Link>
-												{trace.llmResponse && (
+												{trace.reply && (
 													<p className="text-muted-foreground line-clamp-2">
-														↳ {trace.llmResponse}
+														↳ {trace.reply}
 													</p>
 												)}
 												<div className="text-muted-foreground flex items-center gap-2 text-xs">
@@ -201,9 +194,9 @@ function DomiaDetailPage() {
 															{flow.key.toUpperCase()}
 														</Badge>
 													)}
-													{ttfa > 0 && (
+													{trace.ttfaMs != null && (
 														<span className="font-mono tabular-nums">
-															{formatMs(ttfa)}
+															{formatMs(trace.ttfaMs)}
 														</span>
 													)}
 													<span>·</span>

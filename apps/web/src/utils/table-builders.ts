@@ -6,13 +6,16 @@ import {
 	inArray,
 	isNotNull,
 	isNull,
-	like,
 	lte,
 	or,
+	sql,
 	type SQL,
 } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { FacetMapEntry, SortState, TableFilters } from "@/types/table"
+
+const escapeLike = (value: string): string =>
+	value.replace(/[\\%_]/g, (ch) => `\\${ch}`)
 
 export const buildSearchWhere = (
 	searchColumns: SQLiteColumn[],
@@ -20,7 +23,11 @@ export const buildSearchWhere = (
 ): SQL | undefined => {
 	const term = search.trim()
 	if (!term || searchColumns.length === 0) return undefined
-	return or(...searchColumns.map((c) => like(c, `%${term}%`)))
+	return or(
+		...searchColumns.map(
+			(c) => sql`${c} LIKE ${`%${escapeLike(term)}%`} ESCAPE '\\'`,
+		),
+	)
 }
 
 export const buildOrderBy = (
@@ -59,7 +66,9 @@ export const buildFacetFilters = (
 				out.push(inArray(entry.column, value.split(",").filter(Boolean)))
 				break
 			case "like":
-				out.push(like(entry.column, `%${value}%`))
+				out.push(
+					sql`${entry.column} LIKE ${`%${escapeLike(value)}%`} ESCAPE '\\'`,
+				)
 				break
 			case "gte":
 				out.push(gte(entry.column, v))

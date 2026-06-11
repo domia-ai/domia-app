@@ -1,4 +1,5 @@
 import { EMOTION_KEYS, type EmotionKey } from "@/constants/emotions"
+import { fromSqliteTs } from "@/utils/format"
 import type { EmotionState } from "@/types"
 import type { EmotionEventRow } from "@/types/emotions"
 
@@ -19,9 +20,9 @@ const parseDelta = (delta: unknown): Partial<Record<EmotionKey, number>> => {
 }
 
 const fmtTime = (ts: string): string => {
-	const d = new Date(ts)
-	if (Number.isNaN(d.getTime())) return ts
-	return d.toLocaleTimeString("en-US", {
+	const d = fromSqliteTs(ts)
+	if (!d) return ts
+	return d.toLocaleTimeString(undefined, {
 		hour: "2-digit",
 		minute: "2-digit",
 	})

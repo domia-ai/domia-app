@@ -50,7 +50,7 @@ export function ConversationsTable() {
 	}
 
 	const { liveRefreshMs } = useConsolePrefs()
-	const { data, isLoading } = useTableQuery<ConversationRow>(
+	const { data, isLoading, isError } = useTableQuery<ConversationRow>(
 		"conversations",
 		(p) => listInteractionsFn({ data: p }),
 		params,
@@ -66,6 +66,7 @@ export function ConversationsTable() {
 	const domiaFacetOptions = facets.domiaOptions
 	const facetsError = facetsQuery.isError
 
+	const loadFailed = isError && !data
 	const rows = data?.rows ?? []
 	const selectedRows = rows.filter((r) => rowSelection[r.id])
 	const exportHref = `/api/conversations/export?${tableParamsToQuery(params)}`
@@ -88,7 +89,11 @@ export function ConversationsTable() {
 			onPageSizeChange={tp.setPageSize}
 			onSortChange={tp.setSort}
 			isLoading={isLoading}
-			emptyLabel="No conversations recorded yet."
+			emptyLabel={
+				loadFailed
+					? "Couldn't load conversations — check the console connection."
+					: "No conversations recorded yet."
+			}
 			onRowClick={(row) =>
 				navigate({ to: "/conversations/$id", params: { id: row.id } })
 			}

@@ -8,6 +8,7 @@ CREATE TABLE `audio_asset` (
 	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 --> statement-breakpoint
+CREATE INDEX `audio_asset_interaction_idx` ON `audio_asset` (`interaction_id`);--> statement-breakpoint
 CREATE INDEX `audio_asset_source_interaction_idx` ON `audio_asset` (`source_domia_key`,`interaction_id`);--> statement-breakpoint
 CREATE TABLE `domia_registry` (
 	`domia_key` text PRIMARY KEY NOT NULL,
@@ -61,6 +62,7 @@ CREATE TABLE `interaction_session_trace` (
 );
 --> statement-breakpoint
 CREATE INDEX `session_trace_source_updated_idx` ON `interaction_session_trace` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE INDEX `session_trace_last_used_idx` ON `interaction_session_trace` (`last_used_at`);--> statement-breakpoint
 CREATE TABLE `interaction_trace` (
 	`id` text PRIMARY KEY NOT NULL,
 	`source_domia_key` text NOT NULL,
@@ -96,12 +98,17 @@ CREATE TABLE `interaction_trace` (
 	`llm_model_used` text,
 	`tts_voice_used` text,
 	`wake_word_model_used` text,
+	`status` text,
+	`error_step` text,
+	`error_message` text,
 	`domia_snapshot` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `interaction_trace_source_created_idx` ON `interaction_trace` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE INDEX `interaction_trace_created_idx` ON `interaction_trace` (`created_at`);--> statement-breakpoint
+CREATE INDEX `interaction_trace_session_trace_idx` ON `interaction_trace` (`interaction_session_trace_id`);--> statement-breakpoint
 CREATE INDEX `interaction_trace_source_updated_idx` ON `interaction_trace` (`source_domia_key`,`updated_at`);--> statement-breakpoint
 CREATE TABLE `memory_fact` (
 	`id` text PRIMARY KEY NOT NULL,
@@ -115,13 +122,13 @@ CREATE TABLE `memory_fact` (
 	`updated_at` text NOT NULL
 );
 --> statement-breakpoint
+CREATE INDEX `memory_fact_source_subject_idx` ON `memory_fact` (`source_domia_key`,`subject`,`relation`);--> statement-breakpoint
 CREATE INDEX `memory_fact_source_updated_idx` ON `memory_fact` (`source_domia_key`,`updated_at`);--> statement-breakpoint
-CREATE UNIQUE INDEX `memory_fact_source_domia_key_subject_relation_unique` ON `memory_fact` (`source_domia_key`,`subject`,`relation`);--> statement-breakpoint
+CREATE INDEX `memory_fact_interaction_idx` ON `memory_fact` (`source_interaction_id`);--> statement-breakpoint
 CREATE TABLE `mind_template` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`description` text DEFAULT '' NOT NULL,
-	`mind` text,
 	`config` text,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL
