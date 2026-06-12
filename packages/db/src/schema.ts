@@ -74,6 +74,7 @@ export const interactionTrace = sqliteTable(
 		llmMs: integer("llm_ms"),
 		ttsMs: integer("tts_ms"),
 		ttfaMs: integer("ttfa_ms"),
+		perceivedTtfaMs: integer("perceived_ttfa_ms"),
 		totalMs: integer("total_ms"),
 		sttExecutorKey: text("stt_executor_key"),
 		llmExecutorKey: text("llm_executor_key"),

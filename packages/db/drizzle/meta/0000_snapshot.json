@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3f0f3bef-6b85-489a-85cd-e0c261b93cbe",
+  "id": "fdbb8e8d-da4f-4ec2-b37e-25752dc86b80",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -596,6 +596,13 @@
         },
         "ttfa_ms": {
           "name": "ttfa_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "perceived_ttfa_ms": {
+          "name": "perceived_ttfa_ms",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,

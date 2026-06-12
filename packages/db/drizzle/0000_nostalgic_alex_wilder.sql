@@ -90,6 +90,7 @@ CREATE TABLE `interaction_trace` (
 	`llm_ms` integer,
 	`tts_ms` integer,
 	`ttfa_ms` integer,
+	`perceived_ttfa_ms` integer,
 	`total_ms` integer,
 	`stt_executor_key` text,
 	`llm_executor_key` text,
