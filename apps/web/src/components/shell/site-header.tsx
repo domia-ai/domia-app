@@ -3,15 +3,23 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import type { FleetStats } from "@/types"
 import { CommandMenu } from "./command-menu"
+import { DemoBadge } from "./demo-banner"
 import { ThemeToggle } from "./theme-toggle"
 
-export function SiteHeader({ stats }: { stats: FleetStats }) {
+export function SiteHeader({
+	stats,
+	demoMode = false,
+}: {
+	stats: FleetStats
+	demoMode?: boolean
+}) {
 	return (
 		<header className="bg-background/80 sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b px-4 backdrop-blur md:px-6">
 			<SidebarTrigger className="-ml-1" />
 			<Separator orientation="vertical" className="mr-1 hidden h-5 md:block" />
 			<CommandMenu />
 			<div className="ml-auto flex items-center gap-3">
+				{demoMode && <DemoBadge />}
 				<div className="bg-card hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium sm:flex">
 					<span
 						className={cn(

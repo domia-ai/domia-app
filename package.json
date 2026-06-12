@@ -2,7 +2,7 @@
 	"name": "domia-app",
 	"version": "0.0.1",
 	"private": true,
-	"description": "Domia App — fleet management console for a mesh of Domias",
+	"description": "Domia App fleet management console for a mesh of Domias",
 	"author": "kevin Castillo <kecoco16@gmail.com>",
 	"license": "BUSL-1.1",
 	"engines": {
@@ -34,5 +34,8 @@
 		"prettier-plugin-tailwindcss": "^0.8.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1"
+	},
+	"overrides": {
+		"rolldown": "^1.1.1"
 	}
 }

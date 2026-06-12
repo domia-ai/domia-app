@@ -56,6 +56,7 @@ export function ConfigWorkspace({
 	mode = "live",
 	onSaved,
 	editTemplate,
+	readOnly = false,
 }: {
 	domiaKey: string
 	domiaName: string
@@ -65,6 +66,7 @@ export function ConfigWorkspace({
 	mode?: "live" | "template"
 	onSaved?: () => void
 	editTemplate?: { id: string; name: string; description: string }
+	readOnly?: boolean
 }) {
 	const queryClient = useQueryClient()
 	const router = useRouter()
@@ -168,18 +170,20 @@ export function ConfigWorkspace({
 							<SaveTemplateDialog config={snapshotConfig} />
 						</div>
 					)}
-					<ConfigSection
-						domiaKey={domiaKey}
-						section={active}
-						draft={draft}
-						online={online}
-						accent={accent}
-						search={search}
-					/>
+					<fieldset disabled={readOnly} className="contents">
+						<ConfigSection
+							domiaKey={domiaKey}
+							section={active}
+							draft={draft}
+							online={online}
+							accent={accent}
+							search={search}
+						/>
+					</fieldset>
 				</div>
 			</div>
 
-			{isTemplate ? (
+			{readOnly ? null : isTemplate ? (
 				<div className="bg-background/95 fixed inset-x-0 bottom-0 z-20 border-t backdrop-blur lg:left-[var(--sidebar-width,16rem)]">
 					<div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3">
 						<span className="text-sm">

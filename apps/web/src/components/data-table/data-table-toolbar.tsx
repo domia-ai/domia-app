@@ -88,6 +88,13 @@ export function DataTableToolbar({
 					onValueChange={(v) =>
 						setFilter(facet.key, !v || v === "all" ? null : v)
 					}
+					items={[
+						{ value: "all", label: `Any ${facet.label.toLowerCase()}` },
+						...optionsFor(facet).map((o) => ({
+							value: o.value,
+							label: o.label,
+						})),
+					]}
 				>
 					<SelectTrigger className="h-8 w-[140px]">
 						<SelectValue placeholder={facet.label} />

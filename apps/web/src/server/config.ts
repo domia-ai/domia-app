@@ -7,6 +7,7 @@ import {
 	restartDomia,
 } from "@/services/config"
 import { idSchema, importConfigInputSchema } from "@/schemas/server"
+import { assertWritable } from "@/lib/demo"
 
 export const getConfigFn = createServerFn({ method: "GET" })
 	.validator(idSchema)
@@ -18,11 +19,17 @@ export const getConfigHealthFn = createServerFn({ method: "GET" })
 
 export const importConfigFn = createServerFn({ method: "POST" })
 	.validator(importConfigInputSchema)
-	.handler(({ data }) => importConfig(data))
+	.handler(({ data }) => {
+		assertWritable()
+		return importConfig(data)
+	})
 
 export const restartDomiaFn = createServerFn({ method: "POST" })
 	.validator(idSchema)
-	.handler(({ data }) => restartDomia(data))
+	.handler(({ data }) => {
+		assertWritable()
+		return restartDomia(data)
+	})
 
 export const configQueryOptions = (domiaKey: string) =>
 	queryOptions({

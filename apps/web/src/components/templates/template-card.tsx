@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { applyConfigTemplateFn, deleteTemplateFn } from "@/server/templates"
+import { isDemoMode } from "@/lib/demo"
 import { cn } from "@/lib/utils"
 import type { TemplateCardProps } from "@/types"
 
@@ -103,7 +104,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 							variant="ghost"
 							size="icon-sm"
 							aria-label="Delete"
-							disabled={deleteMutation.isPending}
+							disabled={deleteMutation.isPending || isDemoMode()}
 							onClick={onDelete}
 						>
 							<Trash2 className="size-4" />
@@ -122,7 +123,11 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 					</div>
 				)}
 				<div className="flex items-center gap-2">
-					<Select value={targetKey} onValueChange={(v) => v && setTargetKey(v)}>
+					<Select
+						value={targetKey}
+						onValueChange={(v) => v && setTargetKey(v)}
+						items={targets.map((t) => ({ value: t.domiaKey, label: t.name }))}
+					>
 						<SelectTrigger className="h-9 flex-1">
 							<SelectValue placeholder="Choose a Domia" />
 						</SelectTrigger>
@@ -144,7 +149,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 					</Select>
 					<Button
 						size="sm"
-						disabled={!targetKey || applyMutation.isPending}
+						disabled={!targetKey || applyMutation.isPending || isDemoMode()}
 						onClick={onApply}
 					>
 						<Sparkles className="size-4" />

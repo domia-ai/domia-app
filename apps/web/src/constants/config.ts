@@ -497,6 +497,12 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				label: "Reflection concurrency",
 				kind: "number",
 			},
+			{
+				key: "reflectionYieldToVoice",
+				label: "Yield to live voice",
+				kind: "boolean",
+				hint: "Abort and requeue reflection when a voice request arrives.",
+			},
 		],
 	},
 	{

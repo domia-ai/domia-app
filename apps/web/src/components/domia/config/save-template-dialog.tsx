@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { isDemoMode } from "@/lib/demo"
 import {
 	createConfigTemplateFn,
 	updateConfigTemplateFn,
@@ -88,7 +89,11 @@ export function SaveTemplateDialog({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger
 				render={
-					<Button variant={variant} size="sm" disabled={disabled}>
+					<Button
+						variant={variant}
+						size="sm"
+						disabled={disabled || isDemoMode()}
+					>
 						<BookmarkPlus className="size-4" />
 						{label}
 					</Button>

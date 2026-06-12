@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { Plus, ThumbsDown, ThumbsUp, X } from "lucide-react"
 import { toast } from "sonner"
+import { isDemoMode } from "@/lib/demo"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -192,9 +193,13 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!canSubmit || isSubmitting}
+							disabled={!canSubmit || isSubmitting || isDemoMode()}
 						>
-							{isSubmitting ? "Saving…" : "Save evaluation"}
+							{isDemoMode()
+								? "Read-only demo"
+								: isSubmitting
+									? "Saving…"
+									: "Save evaluation"}
 						</Button>
 					)}
 				</form.Subscribe>

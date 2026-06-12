@@ -31,7 +31,7 @@ function NewTemplatePage() {
 		enabled: isDomiaClone,
 	})
 
-	const online = (targetsQuery.data ?? []).filter((t) => t.online)
+	const allTargets = targetsQuery.data ?? []
 	const templates = templatesQuery.data ?? []
 	const sourceDomia = (targetsQuery.data ?? []).find(
 		(t) => t.domiaKey === domiaKey,
@@ -139,13 +139,13 @@ function NewTemplatePage() {
 						<p className="text-destructive text-sm">
 							Couldn't load Domias to clone.
 						</p>
-					) : online.length > 0 ? (
+					) : allTargets.length > 0 ? (
 						<div className="space-y-2">
 							<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-								Or clone an online Domia
+								Or clone a Domia (offline ones use their last reported config)
 							</p>
 							<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-								{online.map((t) => (
+								{allTargets.map((t) => (
 									<button
 										key={t.domiaKey}
 										type="button"
@@ -163,6 +163,7 @@ function NewTemplatePage() {
 											<p className="truncate text-sm font-medium">{t.name}</p>
 											<p className="text-muted-foreground font-mono text-xs">
 												{t.domiaKey}
+												{!t.online ? " · offline" : ""}
 											</p>
 										</div>
 									</button>

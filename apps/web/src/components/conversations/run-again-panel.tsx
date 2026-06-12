@@ -12,6 +12,7 @@ import {
 import { formatMs } from "@/utils/format"
 import { humanizeDomiaKey } from "@/utils/journey"
 import { runInteraction } from "@/server/run"
+import { isDemoMode } from "@/lib/demo"
 import type {
 	RunInteractionResult,
 	RunAgainPanelProps,
@@ -25,6 +26,7 @@ export function RunAgainPanel({
 	originalReply,
 	originalTrace,
 }: RunAgainPanelProps) {
+	const demoMode = isDemoMode()
 	const [targetKey, setTargetKey] = useState(originKey)
 	const [result, setResult] = useState<RunInteractionResult | null>(null)
 	const [pending, start] = useTransition()
@@ -61,7 +63,16 @@ export function RunAgainPanel({
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center gap-2">
-				<Select value={targetKey} onValueChange={(v) => v && setTargetKey(v)}>
+				<Select
+					value={targetKey}
+					onValueChange={(v) => v && setTargetKey(v)}
+					items={targets.map((t) => ({
+						value: t.domiaKey,
+						label: t.isOrigin
+							? `${humanizeDomiaKey(t.domiaKey)} (origin)`
+							: humanizeDomiaKey(t.domiaKey),
+					}))}
+				>
 					<SelectTrigger className="h-9 flex-1">
 						<SelectValue />
 					</SelectTrigger>
@@ -80,7 +91,7 @@ export function RunAgainPanel({
 						))}
 					</SelectContent>
 				</Select>
-				<Button onClick={run} disabled={pending} className="h-9">
+				<Button onClick={run} disabled={pending || demoMode} className="h-9">
 					{pending ? (
 						<RefreshCw className="size-4 animate-spin" />
 					) : (
@@ -89,6 +100,12 @@ export function RunAgainPanel({
 					Run
 				</Button>
 			</div>
+
+			{demoMode && (
+				<p className="text-muted-foreground text-xs">
+					Re-running needs a live mesh — disabled in this read-only demo.
+				</p>
+			)}
 
 			{mode === "transcript-as-voice" && (
 				<p className="text-muted-foreground text-xs">

@@ -1,4 +1,7 @@
 import { getNodeEndpoint } from "@/services/fleet"
+import { getDomia } from "@/services/domia"
+import { domiaConfigToSnapshot } from "@/utils/config"
+import { DEFAULT_CONFIG_SNAPSHOT } from "@/constants/config-defaults"
 import {
 	nodeGetConfig,
 	nodeImportConfig,
@@ -8,6 +11,7 @@ import {
 import type { ActionResult } from "@/types"
 import type {
 	ConfigSnapshot,
+	ConfigFetchSource,
 	ConfigImportResult,
 	ConfigHealth,
 	ImportConfigInput,
@@ -20,15 +24,36 @@ const resolveBase = async (domiaKey: string): Promise<ActionResult<string>> => {
 	return { ok: true, data: `http://${endpoint.localIp}:${endpoint.httpPort}` }
 }
 
+const snapshotFallback = async (
+	domiaKey: string,
+): Promise<
+	(ActionResult<ConfigSnapshot> & { source: ConfigFetchSource }) | null
+> => {
+	const domia = await getDomia(domiaKey)
+	if (!domia) return null
+	return {
+		ok: true,
+		data: {
+			...DEFAULT_CONFIG_SNAPSHOT,
+			...domiaConfigToSnapshot(domia.config, domia.name),
+		} as ConfigSnapshot,
+		source: "snapshot",
+	}
+}
+
 export const getConfig = async (
 	domiaKey: string,
-): Promise<ActionResult<ConfigSnapshot>> => {
+): Promise<ActionResult<ConfigSnapshot> & { source?: ConfigFetchSource }> => {
 	const base = await resolveBase(domiaKey)
-	if (!base.ok) return base
+	if (!base.ok) {
+		return (await snapshotFallback(domiaKey)) ?? base
+	}
 	try {
 		const { config } = await nodeGetConfig(base.data!)
-		return { ok: true, data: config }
+		return { ok: true, data: config, source: "live" }
 	} catch (err) {
+		const fallback = await snapshotFallback(domiaKey)
+		if (fallback) return fallback
 		return {
 			ok: false,
 			error:

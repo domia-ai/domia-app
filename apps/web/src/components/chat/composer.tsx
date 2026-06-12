@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Toggle } from "@/components/ui/toggle"
 import { cn } from "@/lib/utils"
 import { blobToWav16kBase64 } from "@/lib/wav-encode"
+import { isDemoMode } from "@/lib/demo"
 import type { ComposerProps } from "@/types/chat"
 
 const toBase64 = (file: File): Promise<string> =>
@@ -19,7 +20,13 @@ const toBase64 = (file: File): Promise<string> =>
 		reader.readAsDataURL(file)
 	})
 
-export function Composer({ disabled, onSendText, onSendVoice }: ComposerProps) {
+export function Composer({
+	disabled: disabledProp,
+	onSendText,
+	onSendVoice,
+}: ComposerProps) {
+	const demoMode = isDemoMode()
+	const disabled = disabledProp || demoMode
 	const [draft, setDraft] = useState("")
 	const [speak, setSpeak] = useState(false)
 	const [recording, setRecording] = useState(false)
@@ -90,7 +97,11 @@ export function Composer({ disabled, onSendText, onSendVoice }: ComposerProps) {
 							submit()
 						}
 					}}
-					placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+					placeholder={
+						demoMode
+							? "Chat needs a live mesh — disabled in this read-only demo"
+							: "Type a message… (Enter to send, Shift+Enter for newline)"
+					}
 					disabled={disabled}
 					className="max-h-40 min-h-[3rem] resize-none pr-12"
 				/>

@@ -70,6 +70,7 @@ export function MemoriesView() {
 						<Select
 							value={filters.domia ?? "all"}
 							onValueChange={(v) => setFilter("domia", v === "all" ? null : v)}
+							items={[{ value: "all", label: "All Domias" }, ...domiaOptions]}
 						>
 							<SelectTrigger className="h-9 w-44">
 								<SelectValue placeholder="All Domias" />

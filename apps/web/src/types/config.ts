@@ -27,6 +27,8 @@ export type ConfigSnapshot = {
 	delegations: JsonObject[]
 }
 
+export type ConfigFetchSource = "live" | "snapshot"
+
 export type ConfigImportResult = {
 	config: ConfigSnapshot
 }

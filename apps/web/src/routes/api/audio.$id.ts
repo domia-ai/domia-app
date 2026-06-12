@@ -22,8 +22,13 @@ export const Route = createFileRoute("/api/audio/$id")({
 				}
 
 				const total = data.length
+				const contentType = asset.localPath.endsWith(".m4a")
+					? "audio/mp4"
+					: asset.localPath.endsWith(".mp3")
+						? "audio/mpeg"
+						: "audio/wav"
 				const baseHeaders = {
-					"Content-Type": "audio/wav",
+					"Content-Type": contentType,
 					"Accept-Ranges": "bytes",
 					"Cache-Control": "public, max-age=3600",
 				}

@@ -31,10 +31,7 @@ function ConfigPage() {
 	const online = isOnline(domia.lastSeenAt)
 	const accent = accentFor(domia.domiaKey)
 
-	const query = useQuery({
-		...configQueryOptions(domia.domiaKey),
-		enabled: online,
-	})
+	const query = useQuery(configQueryOptions(domia.domiaKey))
 
 	const result = query.data
 	const failed = query.isError
@@ -82,11 +79,7 @@ function ConfigPage() {
 				</div>
 			</div>
 
-			{!online ? (
-				<p className="text-muted-foreground py-16 text-center text-sm">
-					This Domia is offline. Bring it online to edit its configuration.
-				</p>
-			) : query.isLoading ? (
+			{query.isLoading ? (
 				<div className="text-muted-foreground flex items-center justify-center gap-2 py-16 text-sm">
 					<Loader2 className="size-4 animate-spin" />
 					Loading live configuration…
@@ -96,13 +89,22 @@ function ConfigPage() {
 					Could not load configuration: {failed}
 				</p>
 			) : result?.ok && result.data ? (
-				<ConfigWorkspace
-					domiaKey={domia.domiaKey}
-					domiaName={domia.name}
-					config={result.data}
-					online={online}
-					accent={accent}
-				/>
+				<>
+					{result.source === "snapshot" && (
+						<p className="text-muted-foreground rounded-lg border border-dashed px-4 py-2.5 text-sm">
+							Showing the last configuration this Domia reported. It is offline,
+							so editing is disabled until it comes back.
+						</p>
+					)}
+					<ConfigWorkspace
+						domiaKey={domia.domiaKey}
+						domiaName={domia.name}
+						config={result.data}
+						online={online}
+						accent={accent}
+						readOnly={result.source === "snapshot"}
+					/>
+				</>
 			) : null}
 		</div>
 	)

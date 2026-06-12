@@ -6,6 +6,7 @@ import {
 	installModelInputSchema,
 	modelJobInputSchema,
 } from "@/schemas/server"
+import { assertWritable } from "@/lib/demo"
 
 export const getModelsFn = createServerFn({ method: "GET" })
 	.validator(idSchema)
@@ -13,7 +14,10 @@ export const getModelsFn = createServerFn({ method: "GET" })
 
 export const installModelFn = createServerFn({ method: "POST" })
 	.validator(installModelInputSchema)
-	.handler(({ data }) => installModel(data))
+	.handler(({ data }) => {
+		assertWritable()
+		return installModel(data)
+	})
 
 export const getModelJobFn = createServerFn({ method: "GET" })
 	.validator(modelJobInputSchema)

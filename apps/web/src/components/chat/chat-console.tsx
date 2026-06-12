@@ -143,6 +143,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 					<Select
 						value={selectedKey}
 						onValueChange={(v) => v && setSelectedKey(v)}
+						items={domias.map((d) => ({ value: d.domiaKey, label: d.name }))}
 					>
 						<SelectTrigger className="h-9 w-56">
 							<SelectValue />
