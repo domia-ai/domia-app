@@ -80,6 +80,7 @@ CREATE TABLE `interaction_trace` (
 	`mcp_response` text,
 	`llm_prompt` text,
 	`llm_response` text,
+	`heard_reply` text,
 	`tts_engine_used` text,
 	`tts_audio_path` text,
 	`final_output` text,

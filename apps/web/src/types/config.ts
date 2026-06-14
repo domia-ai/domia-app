@@ -22,7 +22,6 @@ export type ConfigSnapshot = {
 	wakeWord: ConfigSection
 	playback: ConfigSection
 	mqttLocal: ConfigSection
-	mqttRemote: ConfigSection
 	mcpServers: JsonObject[]
 	delegations: JsonObject[]
 }

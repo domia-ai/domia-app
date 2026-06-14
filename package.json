@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "Domia App fleet management console for a mesh of Domias",
 	"author": "kevin Castillo <kecoco16@gmail.com>",
-	"license": "BUSL-1.1",
+	"license": "Apache-2.0",
 	"engines": {
 		"node": ">=24"
 	},

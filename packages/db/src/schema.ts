@@ -58,6 +58,7 @@ export const interactionTrace = sqliteTable(
 		mcpResponse: text("mcp_response", { mode: "json" }).$type<JsonValue>(),
 		llmPrompt: text("llm_prompt"),
 		llmResponse: text("llm_response"),
+		heardReply: text("heard_reply"),
 		ttsEngineUsed: text("tts_engine_used"),
 		ttsAudioPath: text("tts_audio_path"),
 		finalOutput: text("final_output"),

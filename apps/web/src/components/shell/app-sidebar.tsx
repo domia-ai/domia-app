@@ -3,6 +3,8 @@ import {
 	BarChart3,
 	Boxes,
 	BrainCircuit,
+	Code2,
+	Globe,
 	HeartPulse,
 	LayoutDashboard,
 	LayoutTemplate,
@@ -34,6 +36,11 @@ const NAV: NavItem[] = [
 	{ href: "/skills", label: "Skills", icon: Boxes },
 	{ href: "/analytics", label: "Analytics", icon: BarChart3 },
 	{ href: "/settings", label: "Settings", icon: Settings },
+]
+
+const EXTERNAL_LINKS = [
+	{ href: "https://domia.ai", label: "Website", icon: Globe },
+	{ href: "https://github.com/domia-ai", label: "GitHub", icon: Code2 },
 ]
 
 const isActive = (pathname: string, href: string | undefined) =>
@@ -85,6 +92,28 @@ export function AppSidebar({ propertyName }: { propertyName: string }) {
 				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter>
+				<SidebarMenu>
+					{EXTERNAL_LINKS.map((item) => {
+						const Icon = item.icon
+						return (
+							<SidebarMenuItem key={item.href}>
+								<SidebarMenuButton
+									render={
+										<a
+											href={item.href}
+											target="_blank"
+											rel="noreferrer noopener"
+										/>
+									}
+									tooltip={item.label}
+								>
+									<Icon />
+									<span>{item.label}</span>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						)
+					})}
+				</SidebarMenu>
 				<p className="text-muted-foreground px-2 py-1 text-xs">
 					Mesh Console v1.0
 				</p>

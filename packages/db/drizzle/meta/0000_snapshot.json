@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fdbb8e8d-da4f-4ec2-b37e-25752dc86b80",
+  "id": "87934feb-44dd-4c57-9b25-5ecf019eea03",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -526,6 +526,13 @@
         },
         "llm_response": {
           "name": "llm_response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "heard_reply": {
+          "name": "heard_reply",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -6,7 +6,8 @@
 		"maxConcurrentVoiceReplies": 3,
 		"maxQueuedVoiceReplies": 4,
 		"voiceQueueTimeoutMs": 15000,
-		"ownConfigTtlMs": 30000
+		"ownConfigTtlMs": 30000,
+		"warmupOnBoot": true
 	},
 	"character": {
 		"name": "Default",
@@ -139,7 +140,6 @@
 		"outputDevice": null
 	},
 	"mqttLocal": null,
-	"mqttRemote": null,
 	"mcpServers": [],
 	"delegations": []
 }

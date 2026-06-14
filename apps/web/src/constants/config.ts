@@ -444,6 +444,20 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 			},
 			{ key: "streamingEnabled", label: "Stream audio", kind: "boolean" },
 			{ key: "outputDevice", label: "Output device", kind: "text" },
+			{
+				key: "feedbackSoundsEnabled",
+				label: "Feedback sounds",
+				kind: "boolean",
+				hint: "Master switch for non-verbal cues (only on live mic turns).",
+			},
+			{ key: "ackSoundEnabled", label: "Ack sound", kind: "boolean" },
+			{ key: "ackSoundPath", label: "Ack sound path", kind: "text" },
+			{ key: "errorSoundEnabled", label: "Error sound", kind: "boolean" },
+			{ key: "errorSoundPath", label: "Error sound path", kind: "text" },
+			{ key: "doneSoundEnabled", label: "Done sound", kind: "boolean" },
+			{ key: "doneSoundPath", label: "Done sound path", kind: "text" },
+			{ key: "thinkingSoundEnabled", label: "Thinking sound", kind: "boolean" },
+			{ key: "thinkingSoundPath", label: "Thinking sound path", kind: "text" },
 		],
 	},
 	{
@@ -610,6 +624,12 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				label: "Config cache TTL",
 				kind: "number",
 				unit: "ms",
+			},
+			{
+				key: "warmupOnBoot",
+				label: "Warm models on boot",
+				kind: "boolean",
+				hint: "Preload STT/LLM/TTS after startup so the first turn is hot.",
 			},
 			{
 				key: "grpcUnaryDeadlineMs",
