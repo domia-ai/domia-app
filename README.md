@@ -7,6 +7,22 @@ without ever sending your data to the cloud.
 One Console runs per property. It is a separate repo from `domia-core` (the devices) on
 purpose: the Console observes and manages the fleet, the devices stay clean.
 
+**Try it:** [console.domia.ai](https://console.domia.ai) — a live, read-only Console with real captured data.
+
+**Ecosystem:** [domia.ai](https://domia.ai) (site) · [domia-core](https://github.com/domia-ai/domia-core) (the voice AI) · this repo `domia-app` (the Console) · [@domia_ai](https://x.com/domia_ai) · [Discord](https://discord.gg/Sx4ACEMSyv)
+
+---
+
+## What you can do
+
+- **Replay any conversation — with audio.** Scrub the waveform of both what the Domia heard and what it spoke back, the transcript alongside.
+- **Tune with real numbers.** Time-to-first-audio and per-stage latency (STT / LLM / TTS) per interaction, rolled up per device.
+- **Grade & export.** Mark interactions good / needs-work, write corrections, tag them, and export NDJSON for fine-tuning your local model.
+- **Run again.** Re-fire a past interaction against a different Domia in the mesh to compare.
+- **Shape minds from afar.** A live config workspace per device — persona, mood (emotion radar), engines and models (install with a tap), thread counts, voice — and portable templates you can capture from one Domia and apply to any other.
+- **Chat tester.** Send text or a voice note to any Domia and hear the reply; every exchange becomes a real, archived interaction.
+- **Demo mode.** `VITE_DOMIA_APP_DEMO_MODE=true` serves the whole Console read-only over real captured data — what powers [console.domia.ai](https://console.domia.ai).
+
 ---
 
 ## Two planes
@@ -50,3 +66,7 @@ zod-validated env · dotenvx.
 
 - [GETTING_STARTED.md](./GETTING_STARTED.md) — run the Console locally.
 - [COMMITS.md](./COMMITS.md) — commit style.
+
+## License
+
+Open source under the [Apache License 2.0](./LICENSE). Built in public.

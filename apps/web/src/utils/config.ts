@@ -11,7 +11,7 @@ const EMPTY_CONFIG: DomiaConfig = {
 	sttConfig: null,
 	wakeWordConfig: null,
 	capabilityDelegations: [],
-	mcpServerConfigs: [],
+	skillProviders: [],
 }
 
 export const parseConfigSnapshot = (json: string | null): DomiaConfig => {
@@ -34,8 +34,7 @@ export const parseConfigSnapshot = (json: string | null): DomiaConfig => {
 				(d.wakeWordConfig as DomiaConfig["wakeWordConfig"]) ?? null,
 			capabilityDelegations:
 				(d.capabilityDelegations as DomiaConfig["capabilityDelegations"]) ?? [],
-			mcpServerConfigs:
-				(d.mcpServerConfigs as DomiaConfig["mcpServerConfigs"]) ?? [],
+			skillProviders: (d.skillProviders as DomiaConfig["skillProviders"]) ?? [],
 		}
 	} catch {
 		return EMPTY_CONFIG
@@ -59,6 +58,12 @@ const stripMeta = <T>(row: T | null): ConfigSnapshot["character"] | null => {
 	) as ConfigSnapshot["character"]
 }
 
+const stripProviderSecret = (s: unknown): Record<string, unknown> => {
+	const base = (stripMeta(s as null) ?? {}) as Record<string, unknown>
+	const auth = (s as { auth?: { kind?: string } | null })?.auth
+	return { ...base, auth: auth?.kind ? { kind: auth.kind } : null }
+}
+
 export const domiaConfigToSnapshot = (
 	config: DomiaConfig,
 	name: string,
@@ -72,8 +77,8 @@ export const domiaConfigToSnapshot = (
 	tts: stripMeta(config.ttsConfig),
 	llm: stripMeta(config.llmModelConfig),
 	wakeWord: stripMeta(config.wakeWordConfig),
-	mcpServers: config.mcpServerConfigs.map(
-		(s) => stripMeta(s) as ConfigSnapshot["mcpServers"][number],
+	skillProviders: config.skillProviders.map(
+		(s) => stripProviderSecret(s) as ConfigSnapshot["skillProviders"][number],
 	),
 	delegations: config.capabilityDelegations.map(
 		(d) => stripMeta(d) as ConfigSnapshot["delegations"][number],

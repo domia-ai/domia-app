@@ -89,7 +89,7 @@ export function ConfigWorkspace({
 	)
 
 	const importMutation = useMutation({
-		mutationFn: (bundle: Record<string, Record<string, unknown>>) =>
+		mutationFn: (bundle: Record<string, unknown>) =>
 			importConfigFn({ data: { domiaKey, bundle } }),
 	})
 
@@ -115,9 +115,9 @@ export function ConfigWorkspace({
 
 	return (
 		<div className="flex min-h-0 flex-col">
-			<div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-				<nav className="space-y-4">
-					<div className="relative">
+			<div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
+				<nav className="space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:pr-1">
+					<div className="bg-background sticky top-0 z-10 pb-1">
 						<Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
 						<Input
 							value={search}

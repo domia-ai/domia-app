@@ -1,6 +1,7 @@
 import {
 	AudioLines,
 	Brain,
+	Compass,
 	Ear,
 	MessageSquare,
 	Mic,
@@ -24,7 +25,13 @@ import type {
 export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 	const { trace, inputAudio, ttsAudio } = detail
 	const isVoice = trace.inputType === "VOICE"
-	const mcpResponse = formatMaybeJson(trace.mcpResponse)
+	const skillResponse = formatMaybeJson(trace.skillResponse)
+	const skillTotalMs = Array.isArray(trace.skillResponse)
+		? (trace.skillResponse as { ms?: number }[]).reduce(
+				(sum, t) => sum + (typeof t?.ms === "number" ? t.ms : 0),
+				0,
+			) || undefined
+		: undefined
 	const lat = buildLatency(trace)
 	const originKey = trace.sourceDomiaKey
 	const snapshot = trace.domiaSnapshot as DomiaSnapshot | null
@@ -107,24 +114,39 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 		})
 	}
 
-	if (trace.mcpServerUsed) {
+	if (trace.intentDecision) {
 		steps.push({
-			key: "mcp",
+			key: "intent",
+			icon: <Compass className="size-3.5" />,
+			title: "Intent gate",
+			durationMs: trace.intentMs ?? undefined,
+			body: (
+				<p className="bg-muted/30 rounded-lg border px-4 py-3 text-sm">
+					Routed to <span className="font-medium">{trace.intentDecision}</span>
+				</p>
+			),
+		})
+	}
+
+	if (trace.skillProviderUsed) {
+		steps.push({
+			key: "skill",
 			icon: <Wrench className="size-3.5" />,
-			title: "Tool call (MCP)",
+			title: "Tool call",
+			durationMs: skillTotalMs,
 			body: (
 				<div className="bg-muted/30 space-y-2 rounded-lg border px-4 py-3 text-sm">
 					<Badge variant="secondary" className="font-mono text-[11px]">
-						{trace.mcpServerUsed}
+						{trace.skillProviderUsed}
 					</Badge>
-					{trace.mcpPrompt && (
+					{trace.skillPrompt && (
 						<pre className="bg-background/60 text-muted-foreground overflow-x-auto rounded-md px-3 py-2 font-mono text-xs">
-							{trace.mcpPrompt}
+							{trace.skillPrompt}
 						</pre>
 					)}
-					{mcpResponse && (
+					{skillResponse && (
 						<pre className="bg-background/60 overflow-x-auto rounded-md px-3 py-2 font-mono text-xs">
-							{mcpResponse}
+							{skillResponse}
 						</pre>
 					)}
 				</div>

@@ -22,7 +22,7 @@ export type ConfigSnapshot = {
 	wakeWord: ConfigSection
 	playback: ConfigSection
 	mqttLocal: ConfigSection
-	mcpServers: JsonObject[]
+	skillProviders: JsonObject[]
 	delegations: JsonObject[]
 }
 
@@ -68,7 +68,25 @@ export type ConfigField = {
 	hint?: string
 }
 
-export type ConfigSectionKind = "fields" | "radar" | "diagnostics" | "models"
+export type ConfigSectionKind =
+	| "fields"
+	| "radar"
+	| "diagnostics"
+	| "models"
+	| "skill"
+
+export type SkillProviderDraft = {
+	id: string
+	name: string
+	protocol: "mcp" | "http" | "mqtt"
+	type: "http" | "sse"
+	url: string
+	authKind: "none" | "bearer" | "headers"
+	token: string
+	headers: string
+	whitelist: string[]
+	config: string
+}
 
 export type ConfigSectionDef = {
 	id: string

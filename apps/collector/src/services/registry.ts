@@ -10,9 +10,14 @@ const RUNTIME_FIELDS: ReadonlySet<string> = new Set([
 ])
 
 const normalizeConfig = (snapshot: DomiaSnapshot): string => {
-	const config = Object.fromEntries(
+	const config: Record<string, unknown> = Object.fromEntries(
 		Object.entries(snapshot).filter(([key]) => !RUNTIME_FIELDS.has(key)),
 	)
+	if (Array.isArray(config.skillProviders))
+		config.skillProviders = config.skillProviders.map((p) => {
+			const sp = (p ?? {}) as { auth?: { kind?: string } | null }
+			return { ...sp, auth: sp.auth?.kind ? { kind: sp.auth.kind } : null }
+		})
 	return JSON.stringify(config)
 }
 

@@ -4,13 +4,13 @@ import { HealthPanel } from "../health-panel"
 import { ModelsManager } from "../models-manager"
 import { ConfigFieldRow } from "./config-field"
 import { MoodRadarEditor } from "./mood-radar-editor"
+import { ConfigSkillProviders } from "./config-skill-providers"
 import { ARCHETYPE_PRESETS } from "@/constants/config"
 import { cn } from "@/lib/utils"
 import type { ConfigDraftApi } from "@/hooks/use-config-draft"
 import type { ConfigSectionDef, FieldValue } from "@/types/config"
 
-const fullWidth = (kind: string): boolean =>
-	kind === "boolean" || kind === "tags" || kind === "model"
+const fullWidth = (kind: string): boolean => kind === "tags"
 
 export function ConfigSection({
 	domiaKey,
@@ -49,6 +49,14 @@ export function ConfigSection({
 			<div className="space-y-4">
 				{header}
 				<ModelsManager domiaKey={domiaKey} online={online} enabled />
+			</div>
+		)
+
+	if (section.kind === "skill")
+		return (
+			<div className="space-y-4">
+				{header}
+				<ConfigSkillProviders draft={draft} />
 			</div>
 		)
 
@@ -100,7 +108,7 @@ export function ConfigSection({
 				</div>
 			)}
 
-			<div className="grid gap-4 sm:grid-cols-2">
+			<div className="grid items-start gap-x-4 gap-y-3 sm:grid-cols-2">
 				{fields.map((field) => (
 					<div
 						key={field.key}

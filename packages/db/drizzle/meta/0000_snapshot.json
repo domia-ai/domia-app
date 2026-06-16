@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "87934feb-44dd-4c57-9b25-5ecf019eea03",
+  "id": "79dee237-58a9-4822-9ce7-903490d93cc1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -496,22 +496,36 @@
           "notNull": false,
           "autoincrement": false
         },
-        "mcp_server_used": {
-          "name": "mcp_server_used",
+        "intent_decision": {
+          "name": "intent_decision",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "mcp_prompt": {
-          "name": "mcp_prompt",
+        "intent_ms": {
+          "name": "intent_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "skill_provider_used": {
+          "name": "skill_provider_used",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "mcp_response": {
-          "name": "mcp_response",
+        "skill_prompt": {
+          "name": "skill_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "skill_response": {
+          "name": "skill_response",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

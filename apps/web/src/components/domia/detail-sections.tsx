@@ -8,7 +8,7 @@ import type {
 	CharacterProfile,
 	EmotionState,
 	LlmModelConfig,
-	McpServerConfig,
+	SkillProviderConfig,
 	ModuleSettings,
 	RuntimeCapabilities,
 	SttConfig,
@@ -297,7 +297,7 @@ export function ModulesCard({ modules }: { modules: ModuleSettings }) {
 	)
 }
 
-export function SkillsCard({ servers }: { servers: McpServerConfig[] }) {
+export function SkillsCard({ servers }: { servers: SkillProviderConfig[] }) {
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
@@ -318,7 +318,7 @@ export function SkillsCard({ servers }: { servers: McpServerConfig[] }) {
 					</div>
 				) : (
 					<p className="text-muted-foreground text-sm">
-						No MCP servers configured.
+						No skill providers configured.
 					</p>
 				)}
 			</CardContent>

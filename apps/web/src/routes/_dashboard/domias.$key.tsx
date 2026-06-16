@@ -154,7 +154,7 @@ function DomiaDetailPage() {
 							delegations={config.capabilityDelegations}
 						/>
 					)}
-					<SkillsCard servers={config.mcpServerConfigs} />
+					<SkillsCard servers={config.skillProviders} />
 
 					<Card>
 						<CardHeader>

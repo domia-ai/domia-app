@@ -32,7 +32,7 @@ const CONVERSATION_FACET_MAP: Record<string, FacetMapEntry> = {
 	},
 	tool: {
 		build: (v) =>
-			v === "1" ? isNotNull(interactionTrace.mcpServerUsed) : undefined,
+			v === "1" ? isNotNull(interactionTrace.skillProviderUsed) : undefined,
 	},
 	error: {
 		build: (v) =>

@@ -196,7 +196,7 @@ export type CapabilityDelegation = {
 	targetDomiaKey: string
 }
 
-export type McpServerConfig = {
+export type SkillProviderConfig = {
 	name: string
 	enabled?: boolean
 }
@@ -211,5 +211,5 @@ export type DomiaConfig = {
 	sttConfig: SttConfig | null
 	wakeWordConfig: WakeWordConfig | null
 	capabilityDelegations: CapabilityDelegation[]
-	mcpServerConfigs: McpServerConfig[]
+	skillProviders: SkillProviderConfig[]
 }

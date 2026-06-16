@@ -1,7 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router"
 import {
 	BarChart3,
-	Boxes,
 	BrainCircuit,
 	Code2,
 	Globe,
@@ -33,7 +32,6 @@ const NAV: NavItem[] = [
 	{ href: "/chat", label: "Chat", icon: MessageSquareText },
 	{ href: "/emotions", label: "Emotions", icon: HeartPulse },
 	{ href: "/memories", label: "Memories", icon: BrainCircuit },
-	{ href: "/skills", label: "Skills", icon: Boxes },
 	{ href: "/analytics", label: "Analytics", icon: BarChart3 },
 	{ href: "/settings", label: "Settings", icon: Settings },
 ]

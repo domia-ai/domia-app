@@ -260,6 +260,32 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				kind: "boolean",
 				hint: "Smaller prompt, faster, less nuance.",
 			},
+			{
+				key: "agentPromptMode",
+				label: "Skills prompt mode",
+				kind: "select",
+				options: ["lean", "compact", "full"],
+				hint: "When skills are on: lean = most reliable tool-calling, full = richest persona (needs a stronger model), compact = balanced.",
+			},
+			{
+				key: "skillsRouting",
+				label: "Skills routing",
+				kind: "select",
+				options: ["intent-gate", "always-agent"],
+				hint: "intent-gate runs a tiny model first so chit-chat keeps full persona and only real commands hit the tools; always-agent sends every turn through the tool path.",
+			},
+			{
+				key: "intentModelName",
+				label: "Intent model",
+				kind: "model",
+				hint: "Small model for the intent gate (default llama3.2:3b). Only used when routing is intent-gate.",
+			},
+			{
+				key: "agentMaxSteps",
+				label: "Agent max steps",
+				kind: "number",
+				hint: "Max tool-call iterations per turn before the agent gives up.",
+			},
 		],
 	},
 	{
@@ -537,6 +563,12 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				hint: "Delegate work to peers.",
 			},
 			{
+				key: "skillsEngine",
+				label: "Skills (tools)",
+				kind: "boolean",
+				hint: "Let this Domia call tools from connected skill providers (see the Skills section).",
+			},
+			{
 				key: "reflectionOnlyWhenIdle",
 				label: "Reflect only when idle",
 				kind: "boolean",
@@ -553,6 +585,16 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				hint: "Abort and requeue reflection when a voice request arrives.",
 			},
 		],
+	},
+	{
+		id: "skills",
+		label: "Skills",
+		icon: "package",
+		group: "Behavior",
+		kind: "skill",
+		description:
+			"Connect skill providers so this Domia can take real actions and fetch information. The first protocol is MCP (Model Context Protocol) — Home Assistant, a calendar, a filesystem, your own. Enable the Skills toggle in Behavior for the tools to be used.",
+		fields: [],
 	},
 	{
 		id: "mqttLocal",

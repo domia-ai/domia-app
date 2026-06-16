@@ -53,7 +53,13 @@ const sanitizeConfigBundle = (c: ConfigSnapshot): JsonObject => {
 	if (c.llm) b.llm = stripMeta(c.llm)
 	if (c.wakeWord) b.wakeWord = stripMeta(c.wakeWord)
 	if (c.playback) b.playback = stripMeta(c.playback)
-	if (c.mcpServers?.length) b.mcpServers = c.mcpServers.map((s) => stripMeta(s))
+	if (c.skillProviders?.length)
+		b.skillProviders = c.skillProviders.map((s) => {
+			const base = stripMeta(s as Record<string, unknown>, ["auth"])
+			const auth = (s as { auth?: { kind?: string } | null }).auth
+			if (auth?.kind) base.auth = { kind: auth.kind } as JsonValue
+			return base
+		})
 	return b
 }
 

@@ -196,10 +196,10 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 		header: "Tool",
 		enableSorting: false,
 		cell: ({ row }) =>
-			row.original.mcpServerUsed ? (
+			row.original.skillProviderUsed ? (
 				<Badge variant="secondary" className="gap-1 text-[10px]">
 					<Wrench className="size-3" />
-					{row.original.mcpServerUsed}
+					{row.original.skillProviderUsed}
 				</Badge>
 			) : (
 				<span className="text-muted-foreground">—</span>

@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import {
 	BarChart3,
-	Boxes,
 	BrainCircuit,
 	HeartPulse,
 	LayoutDashboard,
@@ -35,7 +34,6 @@ const PAGES: NavItem[] = [
 	{ href: "/chat", label: "Chat", icon: MessageSquareText },
 	{ href: "/emotions", label: "Emotions", icon: HeartPulse },
 	{ href: "/memories", label: "Memories", icon: BrainCircuit },
-	{ href: "/skills", label: "Skills", icon: Boxes },
 	{ href: "/analytics", label: "Analytics", icon: BarChart3 },
 	{ href: "/settings", label: "Settings", icon: Settings },
 ]

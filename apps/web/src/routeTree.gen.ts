@@ -13,7 +13,6 @@ import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiNodeAudioRouteImport } from './routes/api/node-audio'
 import { Route as DashboardTemplatesRouteImport } from './routes/_dashboard/templates'
-import { Route as DashboardSkillsRouteImport } from './routes/_dashboard/skills'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
 import { Route as DashboardMemoriesRouteImport } from './routes/_dashboard/memories'
 import { Route as DashboardEmotionsRouteImport } from './routes/_dashboard/emotions'
@@ -48,11 +47,6 @@ const ApiNodeAudioRoute = ApiNodeAudioRouteImport.update({
 const DashboardTemplatesRoute = DashboardTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardSkillsRoute = DashboardSkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
@@ -148,7 +142,6 @@ export interface FileRoutesByFullPath {
   '/emotions': typeof DashboardEmotionsRoute
   '/memories': typeof DashboardMemoriesRoute
   '/settings': typeof DashboardSettingsRoute
-  '/skills': typeof DashboardSkillsRoute
   '/templates': typeof DashboardTemplatesRoute
   '/api/node-audio': typeof ApiNodeAudioRoute
   '/conversations/$id': typeof DashboardConversationsIdRoute
@@ -169,7 +162,6 @@ export interface FileRoutesByTo {
   '/emotions': typeof DashboardEmotionsRoute
   '/memories': typeof DashboardMemoriesRoute
   '/settings': typeof DashboardSettingsRoute
-  '/skills': typeof DashboardSkillsRoute
   '/templates': typeof DashboardTemplatesRoute
   '/api/node-audio': typeof ApiNodeAudioRoute
   '/': typeof DashboardIndexRoute
@@ -193,7 +185,6 @@ export interface FileRoutesById {
   '/_dashboard/emotions': typeof DashboardEmotionsRoute
   '/_dashboard/memories': typeof DashboardMemoriesRoute
   '/_dashboard/settings': typeof DashboardSettingsRoute
-  '/_dashboard/skills': typeof DashboardSkillsRoute
   '/_dashboard/templates': typeof DashboardTemplatesRoute
   '/api/node-audio': typeof ApiNodeAudioRoute
   '/_dashboard/': typeof DashboardIndexRoute
@@ -218,7 +209,6 @@ export interface FileRouteTypes {
     | '/emotions'
     | '/memories'
     | '/settings'
-    | '/skills'
     | '/templates'
     | '/api/node-audio'
     | '/conversations/$id'
@@ -239,7 +229,6 @@ export interface FileRouteTypes {
     | '/emotions'
     | '/memories'
     | '/settings'
-    | '/skills'
     | '/templates'
     | '/api/node-audio'
     | '/'
@@ -262,7 +251,6 @@ export interface FileRouteTypes {
     | '/_dashboard/emotions'
     | '/_dashboard/memories'
     | '/_dashboard/settings'
-    | '/_dashboard/skills'
     | '/_dashboard/templates'
     | '/api/node-audio'
     | '/_dashboard/'
@@ -315,13 +303,6 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof DashboardTemplatesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/skills': {
-      id: '/_dashboard/skills'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof DashboardSkillsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/settings': {
@@ -445,7 +426,6 @@ interface DashboardRouteChildren {
   DashboardEmotionsRoute: typeof DashboardEmotionsRoute
   DashboardMemoriesRoute: typeof DashboardMemoriesRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardSkillsRoute: typeof DashboardSkillsRoute
   DashboardTemplatesRoute: typeof DashboardTemplatesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardConversationsIdRoute: typeof DashboardConversationsIdRoute
@@ -464,7 +444,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardEmotionsRoute: DashboardEmotionsRoute,
   DashboardMemoriesRoute: DashboardMemoriesRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
-  DashboardSkillsRoute: DashboardSkillsRoute,
   DashboardTemplatesRoute: DashboardTemplatesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardConversationsIdRoute: DashboardConversationsIdRoute,
