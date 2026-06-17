@@ -10,7 +10,7 @@ import type {
 } from "@/types/config"
 
 const STT_ENGINES = ["WHISPER", "MOONSHINE", "ZIPFORMER"] as const
-const LLM_ENGINES = ["OLLAMA", "LLAMA_CPP"] as const
+const LLM_ENGINES = ["OLLAMA", "OPENAI_COMPATIBLE"] as const
 const TTS_ENGINES = ["KOKORO"] as const
 const WAKE_WORD_ENGINES = ["KWS"] as const
 const PLAYBACK_ENGINES = ["SOX", "PLAY-SOUND"] as const
@@ -218,6 +218,18 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 		description: "The language model that thinks and replies.",
 		fields: [
 			{ key: "engine", label: "Engine", kind: "select", options: LLM_ENGINES },
+			{
+				key: "baseUrl",
+				label: "Server URL",
+				kind: "text",
+				hint: "Where the model server runs. Ollama host (http://localhost:11434) or an OpenAI-compatible endpoint (http://localhost:8080/v1 for llama.cpp / LM Studio / vLLM, or a cloud URL).",
+			},
+			{
+				key: "apiKey",
+				label: "API key",
+				kind: "text",
+				hint: "Only for hosted/cloud OpenAI-compatible endpoints. Leave empty for local servers.",
+			},
 			{
 				key: "modelName",
 				label: "Model",

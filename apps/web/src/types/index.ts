@@ -166,6 +166,8 @@ export type ModuleSettings = {
 export type LlmModelConfig = {
 	engine: string
 	modelName: string
+	baseUrl: string
+	apiKey: string | null
 	temperature: number
 	contextWindow: number
 	numPredict: number
