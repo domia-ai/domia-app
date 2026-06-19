@@ -107,9 +107,16 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 			model: sttModel,
 			...execInfo(trace.sttExecutorKey),
 			body: (
-				<p className="bg-muted/30 rounded-lg border px-4 py-3 text-sm">
-					{trace.sttResult ?? "—"}
-				</p>
+				<div className="space-y-1">
+					<p className="bg-muted/30 rounded-lg border px-4 py-3 text-sm">
+						{trace.sttResult ?? "—"}
+					</p>
+					{trace.sttQueueMs != null && trace.sttQueueMs > 0 && (
+						<p className="text-muted-foreground font-mono text-[11px]">
+							+{formatMs(trace.sttQueueMs)} queued (pool wait)
+						</p>
+					)}
+				</div>
 			),
 		})
 	}
@@ -148,6 +155,21 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 						<pre className="bg-background/60 overflow-x-auto rounded-md px-3 py-2 font-mono text-xs">
 							{skillResponse}
 						</pre>
+					)}
+					{(trace.agentDecisionMs != null ||
+						trace.agentToolMs != null ||
+						trace.agentFinalizeMs != null) && (
+						<div className="text-muted-foreground flex flex-wrap gap-x-3 font-mono text-[11px]">
+							{trace.agentDecisionMs != null && (
+								<span>decision {formatMs(trace.agentDecisionMs)}</span>
+							)}
+							{trace.agentToolMs != null && (
+								<span>tools {formatMs(trace.agentToolMs)}</span>
+							)}
+							{trace.agentFinalizeMs != null && (
+								<span>finalize {formatMs(trace.agentFinalizeMs)}</span>
+							)}
+						</div>
 					)}
 				</div>
 			),

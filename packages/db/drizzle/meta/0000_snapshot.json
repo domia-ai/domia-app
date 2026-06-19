@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ddb7cab7-527f-4695-8295-a90d7c32475e",
+  "id": "7654006f-f355-4b18-bd2a-9f871e18c73f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -510,6 +510,27 @@
           "notNull": false,
           "autoincrement": false
         },
+        "agent_decision_ms": {
+          "name": "agent_decision_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "agent_tool_ms": {
+          "name": "agent_tool_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "agent_finalize_ms": {
+          "name": "agent_finalize_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "skill_provider_used": {
           "name": "skill_provider_used",
           "type": "text",
@@ -601,6 +622,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "stt_queue_ms": {
+          "name": "stt_queue_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "llm_ms": {
           "name": "llm_ms",
           "type": "integer",
@@ -610,6 +638,13 @@
         },
         "tts_ms": {
           "name": "tts_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tts_queue_ms": {
+          "name": "tts_queue_ms",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
