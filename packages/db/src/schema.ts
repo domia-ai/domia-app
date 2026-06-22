@@ -24,10 +24,15 @@ export const domiaRegistry = sqliteTable(
 		domiaKey: text("domia_key").primaryKey(),
 		id: text("id"),
 		name: text("name").notNull(),
+		nodeId: text("node_id"),
 		isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
 		localIp: text("local_ip"),
 		grpcPort: integer("grpc_port"),
 		httpPort: integer("http_port"),
+		isHosted: integer("is_hosted", { mode: "boolean" }).notNull().default(true),
+		isPrincipal: integer("is_principal", { mode: "boolean" })
+			.notNull()
+			.default(false),
 		configSnapshotJson: text("config_snapshot_json"),
 		avatarId: text("avatar_id"),
 		avatarMime: text("avatar_mime"),

@@ -14,6 +14,13 @@
 	],
 	"scripts": {
 		"build": "npm run build --workspaces --if-present",
+		"db:build": "npm run build -w @domia-app/db",
+		"db:reset": "npm run db:reset -w @domia-app/db",
+		"db:studio": "npm run db:studio -w @domia-app/db",
+		"dev:collector": "npm run dev -w @domia-app/collector",
+		"dev:web": "npm run dev -w @domia-app/web",
+		"dev": "concurrently -k -n collector,web -c blue,green \"npm:dev:collector\" \"npm:dev:web\"",
+		"dev:fresh": "npm run db:build && npm run db:reset && npm run dev",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"lint:web": "npm run lint --workspace apps/web --if-present",
@@ -24,6 +31,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"concurrently": "^10.0.3",
 		"eslint": "^10.4.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.6",

@@ -1,7 +1,14 @@
+import { desc, eq } from "drizzle-orm"
+import { interactionTrace } from "@domia-app/db"
+import { db } from "@/db"
 import { getNodeEndpoint } from "@/services/fleet"
 import { nodeChat, nodeVoice, parseInteractionId } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
-import type { ChatExchangeResult, SendMessageInput } from "@/types/chat"
+import type {
+	ChatExchangeResult,
+	ChatTurn,
+	SendMessageInput,
+} from "@/types/chat"
 
 export const sendMessage = async (
 	input: SendMessageInput,
@@ -17,6 +24,7 @@ export const sendMessage = async (
 			const r = await nodeVoice(base, {
 				audioBase64: input.audioBase64,
 				speak: input.speak,
+				domiaKey: input.targetDomiaKey,
 			})
 			return {
 				ok: true,
@@ -31,7 +39,11 @@ export const sendMessage = async (
 		}
 
 		if (!input.text?.trim()) return { ok: false, error: "Message is empty" }
-		const r = await nodeChat(base, { text: input.text, speak: input.speak })
+		const r = await nodeChat(base, {
+			text: input.text,
+			speak: input.speak,
+			domiaKey: input.targetDomiaKey,
+		})
 		return {
 			ok: true,
 			data: {
@@ -46,6 +58,59 @@ export const sendMessage = async (
 		return {
 			ok: false,
 			error: err instanceof Error ? err.message : "Send failed",
+		}
+	}
+}
+
+const HISTORY_LIMIT = 12
+
+export const recentChatTurns = async (
+	domiaKey: string,
+): Promise<ActionResult<ChatTurn[]>> => {
+	try {
+		const rows = await db
+			.select({
+				id: interactionTrace.id,
+				inputType: interactionTrace.inputType,
+				responseType: interactionTrace.responseType,
+				inputRaw: interactionTrace.inputRaw,
+				sttResult: interactionTrace.sttResult,
+				llmResponse: interactionTrace.llmResponse,
+				createdAt: interactionTrace.createdAt,
+			})
+			.from(interactionTrace)
+			.where(eq(interactionTrace.sourceDomiaKey, domiaKey))
+			.orderBy(desc(interactionTrace.createdAt))
+			.limit(HISTORY_LIMIT)
+
+		const turns: ChatTurn[] = []
+		for (const r of [...rows].reverse()) {
+			const isVoice = r.inputType === "voice"
+			const at = r.createdAt ?? new Date().toISOString()
+			turns.push({
+				id: `${r.id}-u`,
+				role: "user",
+				kind: isVoice ? "voice" : "text",
+				text: (isVoice ? r.sttResult : r.inputRaw) ?? "",
+				transcript: isVoice ? r.sttResult : null,
+				at,
+			})
+			turns.push({
+				id: `${r.id}-d`,
+				role: "domia",
+				kind: isVoice ? "voice" : "text",
+				text: r.llmResponse ?? "",
+				interactionId: r.id,
+				audioUrl: r.responseType === "voice" ? "tts" : null,
+				spoken: r.responseType === "voice",
+				at,
+			})
+		}
+		return { ok: true, data: turns }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not load history",
 		}
 	}
 }

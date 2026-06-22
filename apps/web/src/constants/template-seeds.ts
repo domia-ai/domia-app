@@ -1,3 +1,4 @@
+import standalone from "./system-templates/standalone.json"
 import fullHub from "./system-templates/full-hub.json"
 import thinClient from "./system-templates/thin-client.json"
 import homeAssistant from "./system-templates/home-assistant.json"
@@ -10,24 +11,31 @@ export const SYSTEM_TEMPLATES: {
 	config: ConfigSnapshot
 }[] = [
 	{
-		id: "system:full-hub",
-		name: "Full hub",
+		id: "system:standalone",
+		name: "Standalone",
 		description:
-			"Runs the whole pipeline locally — STT, LLM, TTS and intents — and serves other Domias over the mesh. Mic, wake-word and playback stay off until the device needs them.",
+			"Everything on one machine — wake word, mic, STT, LLM, TTS and playback all run locally. Say the wake word and it listens and replies, fully offline. The right choice for a single smart speaker.",
+		config: standalone as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:full-hub",
+		name: "Inference hub",
+		description:
+			"A headless brain — runs STT, LLM, TTS and intents for the mesh, with no mic and no wake word: it does not listen on its own. Other Domias (a thin client, or a thin identity on the same machine) delegate their inference to it automatically. For a machine that powers a home, not a standalone speaker.",
 		config: fullHub as unknown as ConfigSnapshot,
 	},
 	{
 		id: "system:thin-client",
 		name: "Thin client",
 		description:
-			"Wake word, microphone and playback. Delegates STT, LLM and TTS to a hub over the mesh.",
+			"Ears and voice only — wake word, mic and playback. It captures speech, then delegates STT, LLM and TTS to whatever capable Domia is nearest on the mesh (an Inference hub, or a full Domia on the same machine) — no delegation setup needed. For low-power edge devices.",
 		config: thinClient as unknown as ConfigSnapshot,
 	},
 	{
 		id: "system:home-assistant",
 		name: "Home Assistant room device",
 		description:
-			"A thin room device (wake word, mic, playback) that controls Home Assistant over MCP — tools run locally on the device while STT, LLM and TTS delegate to a hub over the mesh. After applying, set the provider URL and paste a long-lived token in the Skills section, and point STT/LLM/TTS delegations at your hub.",
+			"A thin room device (wake word, mic, playback) that controls Home Assistant over MCP — tools run locally while STT, LLM and TTS auto-delegate to a capable Domia on the mesh. After applying, set the provider URL and paste a long-lived token in the Skills section.",
 		config: homeAssistant as unknown as ConfigSnapshot,
 	},
 ]

@@ -10,7 +10,10 @@ import {
 	MessageSquareText,
 	MessagesSquare,
 	Network,
+	Radio,
+	Server,
 	Settings,
+	Workflow,
 } from "lucide-react"
 import {
 	Sidebar,
@@ -26,6 +29,9 @@ import type { NavItem } from "@/types"
 
 const NAV: NavItem[] = [
 	{ href: "/", label: "Overview", icon: LayoutDashboard },
+	{ href: "/live", label: "Live", icon: Radio },
+	{ href: "/nodes", label: "Nodes", icon: Server },
+	{ href: "/mesh", label: "Mesh", icon: Workflow },
 	{ href: "/domias", label: "Domias", icon: Network },
 	{ href: "/templates", label: "Templates", icon: LayoutTemplate },
 	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },

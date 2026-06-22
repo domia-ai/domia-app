@@ -11,6 +11,36 @@ const MAX_AUDIO_BASE64 = 20_000_000
 
 export const idSchema = z.string().min(1).max(200)
 
+export const nodeIdSchema = z.string().min(1).max(200)
+
+export const createIdentityInputSchema = z.object({
+	anchorDomiaKey: z.string().min(1).max(200),
+	name: z.string().min(1).max(80),
+})
+
+export const removeIdentityInputSchema = z.object({
+	anchorDomiaKey: z.string().min(1).max(200),
+	domiaKey: z.string().min(1).max(200),
+})
+
+export const discoverSatellitesInputSchema = z.string().min(1).max(200)
+
+export const listSatellitesInputSchema = z.string().min(1).max(200)
+
+export const bindSatelliteInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+	name: z.string().min(1).max(120).optional(),
+	host: z.string().min(1).max(200),
+	port: z.number().int().positive().max(65535).optional(),
+	encryptionKey: z.string().min(1).max(200).optional(),
+})
+
+export const unbindSatelliteInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+})
+
 export const tableParamsSchema = z.object({
 	page: z.number().int().min(0),
 	pageSize: z.number().int().min(1).max(200),

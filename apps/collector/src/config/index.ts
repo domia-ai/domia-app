@@ -14,6 +14,11 @@ const envSchema = z.object({
 	MQTT_USERNAME: z.string().default("domia"),
 	MQTT_PASSWORD: z.string().default("domia"),
 	MQTT_TOPIC_ROOT: z.string().default("domia"),
+	DOMIA_APP_RECONCILE_INTERVAL_MS: z.coerce
+		.number()
+		.int()
+		.positive()
+		.default(60_000),
 })
 
 export const env = envSchema.parse(process.env)

@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { ArrowRight, MessagesSquare } from "lucide-react"
+import { ArrowRight, MessagesSquare, Square } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { cancelTurn } from "@/server/rooms"
+import { chatHistoryQueryOptions } from "@/server/chat"
 import {
 	Select,
 	SelectContent,
@@ -16,23 +20,44 @@ import { CapabilityChips } from "@/components/domia/capability-chips"
 import { MoodRadar } from "@/components/domia/mood-radar"
 import { Composer } from "./composer"
 import { TurnBubble } from "./turn-bubble"
+import { LiveVoice } from "./live-voice"
 import { sendMessage } from "@/server/chat"
 import { accentFor } from "@/utils/accent"
 import { isOnline } from "@/utils/presence"
 import type { ChatConsoleProps, ChatTurn, SendMessageInput } from "@/types/chat"
 
 export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
-	const [selectedKey, setSelectedKey] = useState(initialKey)
+	const navigate = useNavigate()
+	const selectedKey = initialKey
 	const [threads, setThreads] = useState<Record<string, ChatTurn[]>>({})
 	const [pending, setPending] = useState(false)
 	const scrollRef = useRef<HTMLDivElement | null>(null)
+	const activeRef = useRef<{ key: string; id: string } | null>(null)
+	const cancelledRef = useRef<Set<string>>(new Set())
 
 	const selected = domias.find((d) => d.domiaKey === selectedKey) ?? domias[0]
 	const config = selected ? selected.config : null
+	const seeded = threads[selectedKey] !== undefined
+	const history = useQuery({
+		...chatHistoryQueryOptions(selectedKey),
+		enabled: !!selectedKey && !seeded,
+	})
 	const turns = useMemo(
 		() => threads[selectedKey] ?? [],
 		[threads, selectedKey],
 	)
+
+	useEffect(() => {
+		if (seeded) return
+		const res = history.data
+		if (res?.ok) {
+			setThreads((prev) =>
+				prev[selectedKey] !== undefined
+					? prev
+					: { ...prev, [selectedKey]: res.data ?? [] },
+			)
+		}
+	}, [history.data, selectedKey, seeded])
 
 	useEffect(() => {
 		scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
@@ -56,8 +81,14 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 		input: SendMessageInput,
 	) => {
 		setPending(true)
+		activeRef.current = { key, id: domiaTurnId }
 		const res = await sendMessage({ data: input })
+		if (cancelledRef.current.has(domiaTurnId)) {
+			cancelledRef.current.delete(domiaTurnId)
+			return
+		}
 		setPending(false)
+		activeRef.current = null
 		if (res.ok && res.data) {
 			if (input.kind === "voice" && res.data.transcript) {
 				patch(key, userTurn.id, { transcript: res.data.transcript })
@@ -68,11 +99,24 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 				interactionId: res.data.interactionId,
 				audioUrl: res.data.audioUrl,
 				timings: res.data.timings,
+				autoplay: input.speak && !!res.data.audioUrl,
 			})
 		} else if (!res.ok) {
 			patch(key, domiaTurnId, { pending: false, error: true, text: res.error })
 			toast.error(res.error)
 		}
+	}
+
+	const onCancel = () => {
+		const active = activeRef.current
+		if (!active) return
+		cancelledRef.current.add(active.id)
+		patch(active.key, active.id, { pending: false, cancelled: true })
+		setPending(false)
+		activeRef.current = null
+		cancelTurn({
+			data: { hostDomiaKey: selectedKey, domiaKey: selectedKey },
+		}).catch(() => undefined)
 	}
 
 	const onSendText = (text: string, speak: boolean) => {
@@ -142,7 +186,9 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 				<CardHeader className="flex-row items-center justify-between gap-2 space-y-0 border-b">
 					<Select
 						value={selectedKey}
-						onValueChange={(v) => v && setSelectedKey(v)}
+						onValueChange={(v) =>
+							v && navigate({ to: "/chat", search: { domia: v } })
+						}
 						items={domias.map((d) => ({ value: d.domiaKey, label: d.name }))}
 					>
 						<SelectTrigger className="h-9 w-56">
@@ -181,11 +227,31 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 					)}
 				</div>
 
-				<div className="border-t p-3">
+				<div className="space-y-3 border-t p-3">
+					{pending && (
+						<Button
+							variant="outline"
+							size="sm"
+							className="w-full"
+							onClick={onCancel}
+						>
+							<Square className="size-3.5" />
+							Stop
+						</Button>
+					)}
 					<Composer
 						disabled={pending}
 						onSendText={onSendText}
 						onSendVoice={onSendVoice}
+					/>
+					<LiveVoice
+						target={{
+							domiaKey: selected.domiaKey,
+							localIp: selected.localIp,
+							httpPort: selected.httpPort,
+						}}
+						domiaName={selected.name}
+						disabled={!online}
 					/>
 				</div>
 			</Card>

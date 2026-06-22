@@ -67,13 +67,24 @@ export function TurnBubble({
 							<Loader2 className="size-3.5 animate-spin" />
 							thinking…
 						</span>
-					) : (
+					) : turn.cancelled ? (
+						<p className="text-muted-foreground text-sm italic">cancelled</p>
+					) : turn.text ? (
 						<p className="text-sm whitespace-pre-wrap">{turn.text}</p>
+					) : audioSrc ? (
+						<p className="text-muted-foreground text-sm italic">spoken reply</p>
+					) : (
+						<p className="text-muted-foreground text-sm italic">no response</p>
 					)}
 				</div>
 
 				{audioSrc && (
-					<Waveform src={audioSrc} height={28} className="w-72 max-w-full" />
+					<Waveform
+						src={audioSrc}
+						height={28}
+						autoPlay={turn.autoplay}
+						className="w-72 max-w-full"
+					/>
 				)}
 
 				{!turn.pending && !turn.error && (

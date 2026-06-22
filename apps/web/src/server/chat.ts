@@ -1,6 +1,10 @@
+import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
-import { sendMessage as sendMessageService } from "@/services/chat"
-import { sendMessageInputSchema } from "@/schemas/server"
+import {
+	sendMessage as sendMessageService,
+	recentChatTurns,
+} from "@/services/chat"
+import { sendMessageInputSchema, idSchema } from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
 
 export const sendMessage = createServerFn({ method: "POST" })
@@ -8,4 +12,15 @@ export const sendMessage = createServerFn({ method: "POST" })
 	.handler(({ data }) => {
 		assertWritable()
 		return sendMessageService(data)
+	})
+
+export const recentChatTurnsFn = createServerFn({ method: "GET" })
+	.validator(idSchema)
+	.handler(({ data }) => recentChatTurns(data))
+
+export const chatHistoryQueryOptions = (domiaKey: string) =>
+	queryOptions({
+		queryKey: ["chat-history", domiaKey],
+		queryFn: () => recentChatTurnsFn({ data: domiaKey }),
+		staleTime: 60_000,
 	})

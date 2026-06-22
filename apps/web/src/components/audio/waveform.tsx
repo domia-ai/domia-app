@@ -25,6 +25,7 @@ export const Waveform = forwardRef<WaveformHandle, WaveformProps>(
 			accent = "primary",
 			height = 40,
 			showSpeed = false,
+			autoPlay = false,
 			className,
 			onReady,
 			onFinish,
@@ -75,6 +76,7 @@ export const Waveform = forwardRef<WaveformHandle, WaveformProps>(
 				setReady(true)
 				setDuration(ws.getDuration())
 				cbs.current.onReady?.(ws.getDuration())
+				if (autoPlay) void ws.play()
 			})
 			ws.on("play", () => setPlaying(true))
 			ws.on("pause", () => setPlaying(false))
@@ -93,7 +95,7 @@ export const Waveform = forwardRef<WaveformHandle, WaveformProps>(
 				setPlaying(false)
 				setCurrent(0)
 			}
-		}, [src, accent, height])
+		}, [src, accent, height, autoPlay])
 
 		const cycleSpeed = () => {
 			const next = (speedIndex + 1) % PLAYBACK_SPEEDS.length

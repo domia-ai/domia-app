@@ -49,7 +49,7 @@ export const getConfig = async (
 		return (await snapshotFallback(domiaKey)) ?? base
 	}
 	try {
-		const { config } = await nodeGetConfig(base.data!)
+		const { config } = await nodeGetConfig(base.data!, domiaKey)
 		return { ok: true, data: config, source: "live" }
 	} catch (err) {
 		const fallback = await snapshotFallback(domiaKey)
@@ -68,7 +68,11 @@ export const importConfig = async (
 	const base = await resolveBase(input.domiaKey)
 	if (!base.ok) return base
 	try {
-		const result = await nodeImportConfig(base.data!, input.bundle)
+		const result = await nodeImportConfig(
+			base.data!,
+			input.bundle,
+			input.domiaKey,
+		)
 		return { ok: true, data: result }
 	} catch (err) {
 		return {
@@ -84,7 +88,7 @@ export const getConfigHealth = async (
 	const base = await resolveBase(domiaKey)
 	if (!base.ok) return base
 	try {
-		const { health } = await nodeGetConfigHealth(base.data!)
+		const { health } = await nodeGetConfigHealth(base.data!, domiaKey)
 		return { ok: true, data: health }
 	} catch (err) {
 		return {

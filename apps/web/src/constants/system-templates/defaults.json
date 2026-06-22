@@ -6,8 +6,7 @@
 		"maxConcurrentVoiceReplies": 3,
 		"maxQueuedVoiceReplies": 4,
 		"voiceQueueTimeoutMs": 15000,
-		"ownConfigTtlMs": 30000,
-		"warmupOnBoot": true
+		"ownConfigTtlMs": 30000
 	},
 	"character": {
 		"name": "Default",
@@ -48,7 +47,8 @@
 		"collectiveMind": true,
 		"remoteAccessEngine": true,
 		"narrativeEngine": true,
-		"identityEngine": true
+		"identityEngine": true,
+		"skillsEngine": false
 	},
 	"capabilities": {
 		"wakeword": false,

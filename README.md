@@ -55,6 +55,16 @@ data/audio       archived voices           (<domiaKey>/<input|tts>/<id>.wav)
 
 The DB package is a pure library (`createDb(path)`); each app injects its own path from env.
 
+## Run
+
+```bash
+npm install
+npm run dev:fresh   # build db + reset archive + collector + web (Ctrl-C stops both)
+```
+
+Day to day, once the archive exists: `npm run dev`. The fleet (`domia-core`) runs
+separately. Full setup and the per-process breakdown: [GETTING_STARTED.md](./GETTING_STARTED.md).
+
 ## Stack
 
 Node 24 · TypeScript · Drizzle ORM + better-sqlite3 (WAL) · MQTT · TanStack Start ·

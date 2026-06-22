@@ -23,6 +23,43 @@ const dbAdapter = {
 			.onConflictDoUpdate({ target: domiaRegistry.domiaKey, set: updateSet })
 			.run()
 	},
+	markNodeOffline: (nodeId: string, staleAt: number) => {
+		db.update(domiaRegistry)
+			.set({ lastSeenAt: staleAt })
+			.where(eq(domiaRegistry.nodeId, nodeId))
+			.run()
+	},
+	getActiveMirrorIdentities: () =>
+		db
+			.select({
+				domiaKey: domiaRegistry.domiaKey,
+				nodeId: domiaRegistry.nodeId,
+				localIp: domiaRegistry.localIp,
+				httpPort: domiaRegistry.httpPort,
+			})
+			.from(domiaRegistry)
+			.where(
+				and(
+					eq(domiaRegistry.isActive, true),
+					isNotNull(domiaRegistry.nodeId),
+					isNotNull(domiaRegistry.localIp),
+					isNotNull(domiaRegistry.httpPort),
+				),
+			)
+			.all(),
+	retireMirrorIdentitiesByNode: (nodeId: string, keepKeys: string[]) => {
+		if (keepKeys.length === 0) return
+		db.update(domiaRegistry)
+			.set({ isActive: false, updatedAt: Date.now() })
+			.where(
+				and(
+					eq(domiaRegistry.nodeId, nodeId),
+					eq(domiaRegistry.isActive, true),
+					notInArray(domiaRegistry.domiaKey, keepKeys),
+				),
+			)
+			.run()
+	},
 	readRegistryConfig: (domiaKey: string): string | null => {
 		const row = db
 			.select({ json: domiaRegistry.configSnapshotJson })

@@ -12,6 +12,35 @@ How to run the Console locally against a Domia fleet.
   `DOMIA_ENV=.env.edge npm run dev` (edge), or the `npm run dev:hub` / `dev:edge`
   wrappers. Each Domia boots neutral and gets its role from a config template.
 
+## Quick start (one command)
+
+From the repo root, after `npm install` and configuring the collector `.env` (steps 1–2
+below):
+
+```bash
+npm run dev:fresh
+```
+
+This builds `packages/db`, recreates the archive from zero, then runs the collector and
+the web Console together (labelled `collector` / `web`; `Ctrl-C` stops both). Day to day,
+once the archive exists, just `npm run dev`.
+
+The fleet itself (`domia-core` instances) is launched separately — see Prerequisites.
+
+### Root scripts
+
+| Script                              | What it does                                                   |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `npm run dev`                       | collector + web together (`concurrently`, `Ctrl-C` kills both) |
+| `npm run dev:fresh`                 | `db:build` → `db:reset` → `dev` — the full from-zero bring-up  |
+| `npm run db:build`                  | compile `packages/db` (run after changing the schema/exports)  |
+| `npm run db:reset`                  | recreate the archive DB from the current schema                |
+| `npm run db:studio`                 | open Drizzle Studio against the archive                        |
+| `npm run dev:collector` / `dev:web` | run a single plane on its own                                  |
+
+The manual breakdown below is equivalent — useful when you want each process in its own
+terminal (separate logs, restart one without the other).
+
 ## 1. Install
 
 ```bash

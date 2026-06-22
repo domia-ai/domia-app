@@ -30,7 +30,10 @@ export const runInteraction = async (
 			const audioBase64 = (await readFile(inputAudio.localPath)).toString(
 				"base64",
 			)
-			const r = await nodeVoice(base, { audioBase64 })
+			const r = await nodeVoice(base, {
+				audioBase64,
+				domiaKey: input.targetDomiaKey,
+			})
 			return {
 				ok: true,
 				data: {
@@ -51,7 +54,11 @@ export const runInteraction = async (
 		if (!text) return { ok: false, error: "No input text to re-run" }
 		const speak =
 			input.mode === "transcript-as-voice" || trace.responseType === "voice"
-		const r = await nodeChat(base, { text, speak })
+		const r = await nodeChat(base, {
+			text,
+			speak,
+			domiaKey: input.targetDomiaKey,
+		})
 		return {
 			ok: true,
 			data: {

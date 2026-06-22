@@ -742,9 +742,10 @@ export const SECTION_GROUPS = [
 
 export const ARCHETYPE_PRESETS: ArchetypePreset[] = [
 	{
-		id: "full-hub",
-		label: "Full hub",
-		description: "Runs the whole pipeline locally and can serve peers.",
+		id: "standalone",
+		label: "Standalone",
+		description:
+			"Everything local — wake word, mic, STT, LLM, TTS and playback.",
 		capabilities: {
 			wakeword: true,
 			record: true,
@@ -774,9 +775,9 @@ export const ARCHETYPE_PRESETS: ArchetypePreset[] = [
 		},
 	},
 	{
-		id: "headless-brain",
-		label: "Headless brain",
-		description: "Processing node — STT/LLM/TTS, no mic or speaker.",
+		id: "inference-hub",
+		label: "Inference hub",
+		description: "Brain only — STT, LLM, TTS and intents, no mic or speaker.",
 		capabilities: {
 			wakeword: false,
 			record: false,

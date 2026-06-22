@@ -67,6 +67,16 @@ export const getNodeEndpoint = async (
 	return { localIp: row.localIp, httpPort: row.httpPort }
 }
 
+export const resolveNodeBase = async (
+	domiaKey: string,
+): Promise<{ ok: true; data: string } | { ok: false; error: string }> => {
+	const endpoint = await getNodeEndpoint(domiaKey)
+	if (!endpoint) {
+		return { ok: false, error: "This node has no reachable address" }
+	}
+	return { ok: true, data: `http://${endpoint.localIp}:${endpoint.httpPort}` }
+}
+
 const SEARCH_COLUMNS = [domiaRegistry.name, domiaRegistry.domiaKey]
 
 const SORTABLE = {

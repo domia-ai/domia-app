@@ -14,7 +14,7 @@ export const fetchSync = async (
 ): Promise<SyncResponse | null> => {
 	const base = baseUrl(snapshot)
 	if (!base) return null
-	const url = `${base}/sync?since=${encodeURIComponent(since)}&limit=${limit}`
+	const url = `${base}/sync?since=${encodeURIComponent(since)}&limit=${limit}&domiaKey=${encodeURIComponent(snapshot.domiaKey)}`
 	const res = await fetch(url, { signal: AbortSignal.timeout(10_000) })
 	if (!res.ok) throw new Error(`sync ${res.status} for ${snapshot.domiaKey}`)
 	return syncResponseSchema.parse(await res.json()) as SyncResponse

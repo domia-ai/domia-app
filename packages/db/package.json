@@ -4,6 +4,16 @@
 	"private": true,
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client.d.ts",
+			"default": "./dist/client.js"
+		}
+	},
 	"scripts": {
 		"build": "rm -rf dist && tsc",
 		"dev": "tsc --watch",

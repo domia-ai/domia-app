@@ -20,7 +20,7 @@ export const getModels = async (
 	const base = await resolveBase(domiaKey)
 	if (!base.ok) return base
 	try {
-		const { models } = await nodeGetModels(base.data!)
+		const { models } = await nodeGetModels(base.data!, domiaKey)
 		return { ok: true, data: models }
 	} catch (err) {
 		return {
@@ -36,7 +36,11 @@ export const installModel = async (
 	const base = await resolveBase(input.domiaKey)
 	if (!base.ok) return base
 	try {
-		const { job } = await nodeInstallModel(base.data!, input.spec)
+		const { job } = await nodeInstallModel(
+			base.data!,
+			input.spec,
+			input.domiaKey,
+		)
 		return { ok: true, data: job }
 	} catch (err) {
 		return {
@@ -53,7 +57,7 @@ export const getModelJob = async (
 	const base = await resolveBase(domiaKey)
 	if (!base.ok) return base
 	try {
-		const { job } = await nodeGetModelJob(base.data!, jobId)
+		const { job } = await nodeGetModelJob(base.data!, jobId, domiaKey)
 		return { ok: true, data: job }
 	} catch (err) {
 		return {

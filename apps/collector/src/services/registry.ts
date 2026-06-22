@@ -3,9 +3,12 @@ import { registryLogger } from "@/utils"
 import type { DomiaSnapshot } from "@/types"
 
 const RUNTIME_FIELDS: ReadonlySet<string> = new Set([
+	"nodeId",
 	"localIp",
 	"grpcPort",
 	"httpPort",
+	"isHosted",
+	"isPrincipal",
 	"lastInteractionAt",
 ])
 
@@ -30,10 +33,13 @@ export const upsertHeartbeat = (snapshot: DomiaSnapshot) => {
 	const liveness = {
 		id: snapshot.id ?? null,
 		name: snapshot.name,
+		nodeId: snapshot.nodeId ?? null,
 		isActive: snapshot.isActive ?? true,
 		localIp: snapshot.localIp ?? null,
 		grpcPort: snapshot.grpcPort ?? null,
 		httpPort: snapshot.httpPort ?? null,
+		isHosted: snapshot.isHosted ?? true,
+		isPrincipal: snapshot.isPrincipal ?? false,
 		lastSeenAt: now,
 	}
 

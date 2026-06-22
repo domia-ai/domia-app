@@ -18,6 +18,8 @@ export type ChatTurn = {
 	audioUrl?: string | null
 	timings?: RunTimings | null
 	spoken?: boolean
+	autoplay?: boolean
+	cancelled?: boolean
 }
 
 export type SendMessageInput = {
@@ -39,6 +41,28 @@ export type ChatExchangeResult = {
 export type ChatConsoleProps = {
 	domias: MeshDomiaRow[]
 	initialKey: string
+}
+
+export type LiveVoiceStatus =
+	| "idle"
+	| "connecting"
+	| "ready"
+	| "listening"
+	| "thinking"
+	| "speaking"
+	| "error"
+
+export type LiveVoiceState = {
+	status: LiveVoiceStatus
+	transcript: string
+	reply: string
+	error: string | null
+}
+
+export type LiveVoiceTarget = {
+	domiaKey: string
+	localIp: string | null
+	httpPort: number | null
 }
 
 export type ComposerProps = {

@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url"
 const here = dirname(fileURLToPath(import.meta.url))
 const coreDir = resolve(here, "../../../../domia-core/templates")
 const webDir = resolve(here, "../src/constants/system-templates")
-const files = ["full-hub.json", "thin-client.json", "defaults.json"]
+const files = [
+	"standalone.json",
+	"full-hub.json",
+	"thin-client.json",
+	"defaults.json",
+]
 const check = process.argv.includes("--check")
 
 let drift = false

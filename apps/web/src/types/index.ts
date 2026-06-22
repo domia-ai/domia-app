@@ -103,6 +103,7 @@ export type WaveformProps = {
 	accent?: "primary" | "input"
 	height?: number
 	showSpeed?: boolean
+	autoPlay?: boolean
 	className?: string
 	onReady?: (duration: number) => void
 	onFinish?: () => void

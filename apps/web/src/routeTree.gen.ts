@@ -8,474 +8,558 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as DashboardRouteImport } from "./routes/_dashboard"
-import { Route as DashboardIndexRouteImport } from "./routes/_dashboard/index"
-import { Route as ApiNodeAudioRouteImport } from "./routes/api/node-audio"
-import { Route as DashboardTemplatesRouteImport } from "./routes/_dashboard/templates"
-import { Route as DashboardSettingsRouteImport } from "./routes/_dashboard/settings"
-import { Route as DashboardMemoriesRouteImport } from "./routes/_dashboard/memories"
-import { Route as DashboardEmotionsRouteImport } from "./routes/_dashboard/emotions"
-import { Route as DashboardChatRouteImport } from "./routes/_dashboard/chat"
-import { Route as DashboardAnalyticsRouteImport } from "./routes/_dashboard/analytics"
-import { Route as DashboardDomiasIndexRouteImport } from "./routes/_dashboard/domias.index"
-import { Route as DashboardConversationsIndexRouteImport } from "./routes/_dashboard/conversations.index"
-import { Route as ApiConversationsExportRouteImport } from "./routes/api/conversations.export"
-import { Route as ApiAudioIdRouteImport } from "./routes/api/audio.$id"
-import { Route as DashboardTemplatesNewRouteImport } from "./routes/_dashboard/templates_.new"
-import { Route as DashboardDomiasKeyRouteImport } from "./routes/_dashboard/domias.$key"
-import { Route as DashboardConversationsIdRouteImport } from "./routes/_dashboard/conversations.$id"
-import { Route as ApiDomiasKeyAvatarRouteImport } from "./routes/api/domias.$key.avatar"
-import { Route as DashboardTemplatesIdEditRouteImport } from "./routes/_dashboard/templates_.$id.edit"
-import { Route as DashboardDomiasKeyConfigRouteImport } from "./routes/_dashboard/domias.$key_.config"
-import { Route as DashboardConversationsSessionIdRouteImport } from "./routes/_dashboard/conversations.session.$id"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/_dashboard'
+import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
+import { Route as ApiNodeAudioRouteImport } from './routes/api/node-audio'
+import { Route as DashboardTemplatesRouteImport } from './routes/_dashboard/templates'
+import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
+import { Route as DashboardMemoriesRouteImport } from './routes/_dashboard/memories'
+import { Route as DashboardEmotionsRouteImport } from './routes/_dashboard/emotions'
+import { Route as DashboardChatRouteImport } from './routes/_dashboard/chat'
+import { Route as DashboardAnalyticsRouteImport } from './routes/_dashboard/analytics'
+import { Route as DashboardNodesIndexRouteImport } from './routes/_dashboard/nodes.index'
+import { Route as DashboardMeshIndexRouteImport } from './routes/_dashboard/mesh.index'
+import { Route as DashboardLiveIndexRouteImport } from './routes/_dashboard/live.index'
+import { Route as DashboardDomiasIndexRouteImport } from './routes/_dashboard/domias.index'
+import { Route as DashboardConversationsIndexRouteImport } from './routes/_dashboard/conversations.index'
+import { Route as ApiConversationsExportRouteImport } from './routes/api/conversations.export'
+import { Route as ApiAudioIdRouteImport } from './routes/api/audio.$id'
+import { Route as DashboardTemplatesNewRouteImport } from './routes/_dashboard/templates_.new'
+import { Route as DashboardNodesNodeIdRouteImport } from './routes/_dashboard/nodes.$nodeId'
+import { Route as DashboardDomiasKeyRouteImport } from './routes/_dashboard/domias.$key'
+import { Route as DashboardConversationsIdRouteImport } from './routes/_dashboard/conversations.$id'
+import { Route as ApiDomiasKeyAvatarRouteImport } from './routes/api/domias.$key.avatar'
+import { Route as DashboardTemplatesIdEditRouteImport } from './routes/_dashboard/templates_.$id.edit'
+import { Route as DashboardDomiasKeyConfigRouteImport } from './routes/_dashboard/domias.$key_.config'
+import { Route as DashboardConversationsSessionIdRouteImport } from './routes/_dashboard/conversations.session.$id'
 
 const DashboardRoute = DashboardRouteImport.update({
-	id: "/_dashboard",
-	getParentRoute: () => rootRouteImport,
+  id: '/_dashboard',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => DashboardRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const ApiNodeAudioRoute = ApiNodeAudioRouteImport.update({
-	id: "/api/node-audio",
-	path: "/api/node-audio",
-	getParentRoute: () => rootRouteImport,
+  id: '/api/node-audio',
+  path: '/api/node-audio',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardTemplatesRoute = DashboardTemplatesRouteImport.update({
-	id: "/templates",
-	path: "/templates",
-	getParentRoute: () => DashboardRoute,
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-	id: "/settings",
-	path: "/settings",
-	getParentRoute: () => DashboardRoute,
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardMemoriesRoute = DashboardMemoriesRouteImport.update({
-	id: "/memories",
-	path: "/memories",
-	getParentRoute: () => DashboardRoute,
+  id: '/memories',
+  path: '/memories',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardEmotionsRoute = DashboardEmotionsRouteImport.update({
-	id: "/emotions",
-	path: "/emotions",
-	getParentRoute: () => DashboardRoute,
+  id: '/emotions',
+  path: '/emotions',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardChatRoute = DashboardChatRouteImport.update({
-	id: "/chat",
-	path: "/chat",
-	getParentRoute: () => DashboardRoute,
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
-	id: "/analytics",
-	path: "/analytics",
-	getParentRoute: () => DashboardRoute,
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNodesIndexRoute = DashboardNodesIndexRouteImport.update({
+  id: '/nodes/',
+  path: '/nodes/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMeshIndexRoute = DashboardMeshIndexRouteImport.update({
+  id: '/mesh/',
+  path: '/mesh/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardLiveIndexRoute = DashboardLiveIndexRouteImport.update({
+  id: '/live/',
+  path: '/live/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDomiasIndexRoute = DashboardDomiasIndexRouteImport.update({
-	id: "/domias/",
-	path: "/domias/",
-	getParentRoute: () => DashboardRoute,
+  id: '/domias/',
+  path: '/domias/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardConversationsIndexRoute =
-	DashboardConversationsIndexRouteImport.update({
-		id: "/conversations/",
-		path: "/conversations/",
-		getParentRoute: () => DashboardRoute,
-	} as any)
+  DashboardConversationsIndexRouteImport.update({
+    id: '/conversations/',
+    path: '/conversations/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const ApiConversationsExportRoute = ApiConversationsExportRouteImport.update({
-	id: "/api/conversations/export",
-	path: "/api/conversations/export",
-	getParentRoute: () => rootRouteImport,
+  id: '/api/conversations/export',
+  path: '/api/conversations/export',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAudioIdRoute = ApiAudioIdRouteImport.update({
-	id: "/api/audio/$id",
-	path: "/api/audio/$id",
-	getParentRoute: () => rootRouteImport,
+  id: '/api/audio/$id',
+  path: '/api/audio/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardTemplatesNewRoute = DashboardTemplatesNewRouteImport.update({
-	id: "/templates_/new",
-	path: "/templates/new",
-	getParentRoute: () => DashboardRoute,
+  id: '/templates_/new',
+  path: '/templates/new',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNodesNodeIdRoute = DashboardNodesNodeIdRouteImport.update({
+  id: '/nodes/$nodeId',
+  path: '/nodes/$nodeId',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDomiasKeyRoute = DashboardDomiasKeyRouteImport.update({
-	id: "/domias/$key",
-	path: "/domias/$key",
-	getParentRoute: () => DashboardRoute,
+  id: '/domias/$key',
+  path: '/domias/$key',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardConversationsIdRoute =
-	DashboardConversationsIdRouteImport.update({
-		id: "/conversations/$id",
-		path: "/conversations/$id",
-		getParentRoute: () => DashboardRoute,
-	} as any)
+  DashboardConversationsIdRouteImport.update({
+    id: '/conversations/$id',
+    path: '/conversations/$id',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const ApiDomiasKeyAvatarRoute = ApiDomiasKeyAvatarRouteImport.update({
-	id: "/api/domias/$key/avatar",
-	path: "/api/domias/$key/avatar",
-	getParentRoute: () => rootRouteImport,
+  id: '/api/domias/$key/avatar',
+  path: '/api/domias/$key/avatar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardTemplatesIdEditRoute =
-	DashboardTemplatesIdEditRouteImport.update({
-		id: "/templates_/$id/edit",
-		path: "/templates/$id/edit",
-		getParentRoute: () => DashboardRoute,
-	} as any)
+  DashboardTemplatesIdEditRouteImport.update({
+    id: '/templates_/$id/edit',
+    path: '/templates/$id/edit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardDomiasKeyConfigRoute =
-	DashboardDomiasKeyConfigRouteImport.update({
-		id: "/domias/$key_/config",
-		path: "/domias/$key/config",
-		getParentRoute: () => DashboardRoute,
-	} as any)
+  DashboardDomiasKeyConfigRouteImport.update({
+    id: '/domias/$key_/config',
+    path: '/domias/$key/config',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardConversationsSessionIdRoute =
-	DashboardConversationsSessionIdRouteImport.update({
-		id: "/conversations/session/$id",
-		path: "/conversations/session/$id",
-		getParentRoute: () => DashboardRoute,
-	} as any)
+  DashboardConversationsSessionIdRouteImport.update({
+    id: '/conversations/session/$id',
+    path: '/conversations/session/$id',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-	"/": typeof DashboardIndexRoute
-	"/analytics": typeof DashboardAnalyticsRoute
-	"/chat": typeof DashboardChatRoute
-	"/emotions": typeof DashboardEmotionsRoute
-	"/memories": typeof DashboardMemoriesRoute
-	"/settings": typeof DashboardSettingsRoute
-	"/templates": typeof DashboardTemplatesRoute
-	"/api/node-audio": typeof ApiNodeAudioRoute
-	"/conversations/$id": typeof DashboardConversationsIdRoute
-	"/domias/$key": typeof DashboardDomiasKeyRoute
-	"/templates/new": typeof DashboardTemplatesNewRoute
-	"/api/audio/$id": typeof ApiAudioIdRoute
-	"/api/conversations/export": typeof ApiConversationsExportRoute
-	"/conversations/": typeof DashboardConversationsIndexRoute
-	"/domias/": typeof DashboardDomiasIndexRoute
-	"/conversations/session/$id": typeof DashboardConversationsSessionIdRoute
-	"/domias/$key/config": typeof DashboardDomiasKeyConfigRoute
-	"/templates/$id/edit": typeof DashboardTemplatesIdEditRoute
-	"/api/domias/$key/avatar": typeof ApiDomiasKeyAvatarRoute
+  '/': typeof DashboardIndexRoute
+  '/analytics': typeof DashboardAnalyticsRoute
+  '/chat': typeof DashboardChatRoute
+  '/emotions': typeof DashboardEmotionsRoute
+  '/memories': typeof DashboardMemoriesRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/templates': typeof DashboardTemplatesRoute
+  '/api/node-audio': typeof ApiNodeAudioRoute
+  '/conversations/$id': typeof DashboardConversationsIdRoute
+  '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
+  '/templates/new': typeof DashboardTemplatesNewRoute
+  '/api/audio/$id': typeof ApiAudioIdRoute
+  '/api/conversations/export': typeof ApiConversationsExportRoute
+  '/conversations/': typeof DashboardConversationsIndexRoute
+  '/domias/': typeof DashboardDomiasIndexRoute
+  '/live/': typeof DashboardLiveIndexRoute
+  '/mesh/': typeof DashboardMeshIndexRoute
+  '/nodes/': typeof DashboardNodesIndexRoute
+  '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
+  '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRoutesByTo {
-	"/analytics": typeof DashboardAnalyticsRoute
-	"/chat": typeof DashboardChatRoute
-	"/emotions": typeof DashboardEmotionsRoute
-	"/memories": typeof DashboardMemoriesRoute
-	"/settings": typeof DashboardSettingsRoute
-	"/templates": typeof DashboardTemplatesRoute
-	"/api/node-audio": typeof ApiNodeAudioRoute
-	"/": typeof DashboardIndexRoute
-	"/conversations/$id": typeof DashboardConversationsIdRoute
-	"/domias/$key": typeof DashboardDomiasKeyRoute
-	"/templates/new": typeof DashboardTemplatesNewRoute
-	"/api/audio/$id": typeof ApiAudioIdRoute
-	"/api/conversations/export": typeof ApiConversationsExportRoute
-	"/conversations": typeof DashboardConversationsIndexRoute
-	"/domias": typeof DashboardDomiasIndexRoute
-	"/conversations/session/$id": typeof DashboardConversationsSessionIdRoute
-	"/domias/$key/config": typeof DashboardDomiasKeyConfigRoute
-	"/templates/$id/edit": typeof DashboardTemplatesIdEditRoute
-	"/api/domias/$key/avatar": typeof ApiDomiasKeyAvatarRoute
+  '/analytics': typeof DashboardAnalyticsRoute
+  '/chat': typeof DashboardChatRoute
+  '/emotions': typeof DashboardEmotionsRoute
+  '/memories': typeof DashboardMemoriesRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/templates': typeof DashboardTemplatesRoute
+  '/api/node-audio': typeof ApiNodeAudioRoute
+  '/': typeof DashboardIndexRoute
+  '/conversations/$id': typeof DashboardConversationsIdRoute
+  '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
+  '/templates/new': typeof DashboardTemplatesNewRoute
+  '/api/audio/$id': typeof ApiAudioIdRoute
+  '/api/conversations/export': typeof ApiConversationsExportRoute
+  '/conversations': typeof DashboardConversationsIndexRoute
+  '/domias': typeof DashboardDomiasIndexRoute
+  '/live': typeof DashboardLiveIndexRoute
+  '/mesh': typeof DashboardMeshIndexRoute
+  '/nodes': typeof DashboardNodesIndexRoute
+  '/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/domias/$key/config': typeof DashboardDomiasKeyConfigRoute
+  '/templates/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRoutesById {
-	__root__: typeof rootRouteImport
-	"/_dashboard": typeof DashboardRouteWithChildren
-	"/_dashboard/analytics": typeof DashboardAnalyticsRoute
-	"/_dashboard/chat": typeof DashboardChatRoute
-	"/_dashboard/emotions": typeof DashboardEmotionsRoute
-	"/_dashboard/memories": typeof DashboardMemoriesRoute
-	"/_dashboard/settings": typeof DashboardSettingsRoute
-	"/_dashboard/templates": typeof DashboardTemplatesRoute
-	"/api/node-audio": typeof ApiNodeAudioRoute
-	"/_dashboard/": typeof DashboardIndexRoute
-	"/_dashboard/conversations/$id": typeof DashboardConversationsIdRoute
-	"/_dashboard/domias/$key": typeof DashboardDomiasKeyRoute
-	"/_dashboard/templates_/new": typeof DashboardTemplatesNewRoute
-	"/api/audio/$id": typeof ApiAudioIdRoute
-	"/api/conversations/export": typeof ApiConversationsExportRoute
-	"/_dashboard/conversations/": typeof DashboardConversationsIndexRoute
-	"/_dashboard/domias/": typeof DashboardDomiasIndexRoute
-	"/_dashboard/conversations/session/$id": typeof DashboardConversationsSessionIdRoute
-	"/_dashboard/domias/$key_/config": typeof DashboardDomiasKeyConfigRoute
-	"/_dashboard/templates_/$id/edit": typeof DashboardTemplatesIdEditRoute
-	"/api/domias/$key/avatar": typeof ApiDomiasKeyAvatarRoute
+  __root__: typeof rootRouteImport
+  '/_dashboard': typeof DashboardRouteWithChildren
+  '/_dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/_dashboard/chat': typeof DashboardChatRoute
+  '/_dashboard/emotions': typeof DashboardEmotionsRoute
+  '/_dashboard/memories': typeof DashboardMemoriesRoute
+  '/_dashboard/settings': typeof DashboardSettingsRoute
+  '/_dashboard/templates': typeof DashboardTemplatesRoute
+  '/api/node-audio': typeof ApiNodeAudioRoute
+  '/_dashboard/': typeof DashboardIndexRoute
+  '/_dashboard/conversations/$id': typeof DashboardConversationsIdRoute
+  '/_dashboard/domias/$key': typeof DashboardDomiasKeyRoute
+  '/_dashboard/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
+  '/_dashboard/templates_/new': typeof DashboardTemplatesNewRoute
+  '/api/audio/$id': typeof ApiAudioIdRoute
+  '/api/conversations/export': typeof ApiConversationsExportRoute
+  '/_dashboard/conversations/': typeof DashboardConversationsIndexRoute
+  '/_dashboard/domias/': typeof DashboardDomiasIndexRoute
+  '/_dashboard/live/': typeof DashboardLiveIndexRoute
+  '/_dashboard/mesh/': typeof DashboardMeshIndexRoute
+  '/_dashboard/nodes/': typeof DashboardNodesIndexRoute
+  '/_dashboard/conversations/session/$id': typeof DashboardConversationsSessionIdRoute
+  '/_dashboard/domias/$key_/config': typeof DashboardDomiasKeyConfigRoute
+  '/_dashboard/templates_/$id/edit': typeof DashboardTemplatesIdEditRoute
+  '/api/domias/$key/avatar': typeof ApiDomiasKeyAvatarRoute
 }
 export interface FileRouteTypes {
-	fileRoutesByFullPath: FileRoutesByFullPath
-	fullPaths:
-		| "/"
-		| "/analytics"
-		| "/chat"
-		| "/emotions"
-		| "/memories"
-		| "/settings"
-		| "/templates"
-		| "/api/node-audio"
-		| "/conversations/$id"
-		| "/domias/$key"
-		| "/templates/new"
-		| "/api/audio/$id"
-		| "/api/conversations/export"
-		| "/conversations/"
-		| "/domias/"
-		| "/conversations/session/$id"
-		| "/domias/$key/config"
-		| "/templates/$id/edit"
-		| "/api/domias/$key/avatar"
-	fileRoutesByTo: FileRoutesByTo
-	to:
-		| "/analytics"
-		| "/chat"
-		| "/emotions"
-		| "/memories"
-		| "/settings"
-		| "/templates"
-		| "/api/node-audio"
-		| "/"
-		| "/conversations/$id"
-		| "/domias/$key"
-		| "/templates/new"
-		| "/api/audio/$id"
-		| "/api/conversations/export"
-		| "/conversations"
-		| "/domias"
-		| "/conversations/session/$id"
-		| "/domias/$key/config"
-		| "/templates/$id/edit"
-		| "/api/domias/$key/avatar"
-	id:
-		| "__root__"
-		| "/_dashboard"
-		| "/_dashboard/analytics"
-		| "/_dashboard/chat"
-		| "/_dashboard/emotions"
-		| "/_dashboard/memories"
-		| "/_dashboard/settings"
-		| "/_dashboard/templates"
-		| "/api/node-audio"
-		| "/_dashboard/"
-		| "/_dashboard/conversations/$id"
-		| "/_dashboard/domias/$key"
-		| "/_dashboard/templates_/new"
-		| "/api/audio/$id"
-		| "/api/conversations/export"
-		| "/_dashboard/conversations/"
-		| "/_dashboard/domias/"
-		| "/_dashboard/conversations/session/$id"
-		| "/_dashboard/domias/$key_/config"
-		| "/_dashboard/templates_/$id/edit"
-		| "/api/domias/$key/avatar"
-	fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/chat'
+    | '/emotions'
+    | '/memories'
+    | '/settings'
+    | '/templates'
+    | '/api/node-audio'
+    | '/conversations/$id'
+    | '/domias/$key'
+    | '/nodes/$nodeId'
+    | '/templates/new'
+    | '/api/audio/$id'
+    | '/api/conversations/export'
+    | '/conversations/'
+    | '/domias/'
+    | '/live/'
+    | '/mesh/'
+    | '/nodes/'
+    | '/conversations/session/$id'
+    | '/domias/$key/config'
+    | '/templates/$id/edit'
+    | '/api/domias/$key/avatar'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/analytics'
+    | '/chat'
+    | '/emotions'
+    | '/memories'
+    | '/settings'
+    | '/templates'
+    | '/api/node-audio'
+    | '/'
+    | '/conversations/$id'
+    | '/domias/$key'
+    | '/nodes/$nodeId'
+    | '/templates/new'
+    | '/api/audio/$id'
+    | '/api/conversations/export'
+    | '/conversations'
+    | '/domias'
+    | '/live'
+    | '/mesh'
+    | '/nodes'
+    | '/conversations/session/$id'
+    | '/domias/$key/config'
+    | '/templates/$id/edit'
+    | '/api/domias/$key/avatar'
+  id:
+    | '__root__'
+    | '/_dashboard'
+    | '/_dashboard/analytics'
+    | '/_dashboard/chat'
+    | '/_dashboard/emotions'
+    | '/_dashboard/memories'
+    | '/_dashboard/settings'
+    | '/_dashboard/templates'
+    | '/api/node-audio'
+    | '/_dashboard/'
+    | '/_dashboard/conversations/$id'
+    | '/_dashboard/domias/$key'
+    | '/_dashboard/nodes/$nodeId'
+    | '/_dashboard/templates_/new'
+    | '/api/audio/$id'
+    | '/api/conversations/export'
+    | '/_dashboard/conversations/'
+    | '/_dashboard/domias/'
+    | '/_dashboard/live/'
+    | '/_dashboard/mesh/'
+    | '/_dashboard/nodes/'
+    | '/_dashboard/conversations/session/$id'
+    | '/_dashboard/domias/$key_/config'
+    | '/_dashboard/templates_/$id/edit'
+    | '/api/domias/$key/avatar'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-	DashboardRoute: typeof DashboardRouteWithChildren
-	ApiNodeAudioRoute: typeof ApiNodeAudioRoute
-	ApiAudioIdRoute: typeof ApiAudioIdRoute
-	ApiConversationsExportRoute: typeof ApiConversationsExportRoute
-	ApiDomiasKeyAvatarRoute: typeof ApiDomiasKeyAvatarRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  ApiNodeAudioRoute: typeof ApiNodeAudioRoute
+  ApiAudioIdRoute: typeof ApiAudioIdRoute
+  ApiConversationsExportRoute: typeof ApiConversationsExportRoute
+  ApiDomiasKeyAvatarRoute: typeof ApiDomiasKeyAvatarRoute
 }
 
-declare module "@tanstack/react-router" {
-	interface FileRoutesByPath {
-		"/_dashboard": {
-			id: "/_dashboard"
-			path: ""
-			fullPath: "/"
-			preLoaderRoute: typeof DashboardRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		"/_dashboard/": {
-			id: "/_dashboard/"
-			path: "/"
-			fullPath: "/"
-			preLoaderRoute: typeof DashboardIndexRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/api/node-audio": {
-			id: "/api/node-audio"
-			path: "/api/node-audio"
-			fullPath: "/api/node-audio"
-			preLoaderRoute: typeof ApiNodeAudioRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		"/_dashboard/templates": {
-			id: "/_dashboard/templates"
-			path: "/templates"
-			fullPath: "/templates"
-			preLoaderRoute: typeof DashboardTemplatesRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/settings": {
-			id: "/_dashboard/settings"
-			path: "/settings"
-			fullPath: "/settings"
-			preLoaderRoute: typeof DashboardSettingsRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/memories": {
-			id: "/_dashboard/memories"
-			path: "/memories"
-			fullPath: "/memories"
-			preLoaderRoute: typeof DashboardMemoriesRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/emotions": {
-			id: "/_dashboard/emotions"
-			path: "/emotions"
-			fullPath: "/emotions"
-			preLoaderRoute: typeof DashboardEmotionsRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/chat": {
-			id: "/_dashboard/chat"
-			path: "/chat"
-			fullPath: "/chat"
-			preLoaderRoute: typeof DashboardChatRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/analytics": {
-			id: "/_dashboard/analytics"
-			path: "/analytics"
-			fullPath: "/analytics"
-			preLoaderRoute: typeof DashboardAnalyticsRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/domias/": {
-			id: "/_dashboard/domias/"
-			path: "/domias"
-			fullPath: "/domias/"
-			preLoaderRoute: typeof DashboardDomiasIndexRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/conversations/": {
-			id: "/_dashboard/conversations/"
-			path: "/conversations"
-			fullPath: "/conversations/"
-			preLoaderRoute: typeof DashboardConversationsIndexRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/api/conversations/export": {
-			id: "/api/conversations/export"
-			path: "/api/conversations/export"
-			fullPath: "/api/conversations/export"
-			preLoaderRoute: typeof ApiConversationsExportRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		"/api/audio/$id": {
-			id: "/api/audio/$id"
-			path: "/api/audio/$id"
-			fullPath: "/api/audio/$id"
-			preLoaderRoute: typeof ApiAudioIdRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		"/_dashboard/templates_/new": {
-			id: "/_dashboard/templates_/new"
-			path: "/templates/new"
-			fullPath: "/templates/new"
-			preLoaderRoute: typeof DashboardTemplatesNewRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/domias/$key": {
-			id: "/_dashboard/domias/$key"
-			path: "/domias/$key"
-			fullPath: "/domias/$key"
-			preLoaderRoute: typeof DashboardDomiasKeyRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/conversations/$id": {
-			id: "/_dashboard/conversations/$id"
-			path: "/conversations/$id"
-			fullPath: "/conversations/$id"
-			preLoaderRoute: typeof DashboardConversationsIdRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/api/domias/$key/avatar": {
-			id: "/api/domias/$key/avatar"
-			path: "/api/domias/$key/avatar"
-			fullPath: "/api/domias/$key/avatar"
-			preLoaderRoute: typeof ApiDomiasKeyAvatarRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		"/_dashboard/templates_/$id/edit": {
-			id: "/_dashboard/templates_/$id/edit"
-			path: "/templates/$id/edit"
-			fullPath: "/templates/$id/edit"
-			preLoaderRoute: typeof DashboardTemplatesIdEditRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/domias/$key_/config": {
-			id: "/_dashboard/domias/$key_/config"
-			path: "/domias/$key/config"
-			fullPath: "/domias/$key/config"
-			preLoaderRoute: typeof DashboardDomiasKeyConfigRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-		"/_dashboard/conversations/session/$id": {
-			id: "/_dashboard/conversations/session/$id"
-			path: "/conversations/session/$id"
-			fullPath: "/conversations/session/$id"
-			preLoaderRoute: typeof DashboardConversationsSessionIdRouteImport
-			parentRoute: typeof DashboardRoute
-		}
-	}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_dashboard': {
+      id: '/_dashboard'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/': {
+      id: '/_dashboard/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/node-audio': {
+      id: '/api/node-audio'
+      path: '/api/node-audio'
+      fullPath: '/api/node-audio'
+      preLoaderRoute: typeof ApiNodeAudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/templates': {
+      id: '/_dashboard/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof DashboardTemplatesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/settings': {
+      id: '/_dashboard/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/memories': {
+      id: '/_dashboard/memories'
+      path: '/memories'
+      fullPath: '/memories'
+      preLoaderRoute: typeof DashboardMemoriesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/emotions': {
+      id: '/_dashboard/emotions'
+      path: '/emotions'
+      fullPath: '/emotions'
+      preLoaderRoute: typeof DashboardEmotionsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/chat': {
+      id: '/_dashboard/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof DashboardChatRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/analytics': {
+      id: '/_dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/nodes/': {
+      id: '/_dashboard/nodes/'
+      path: '/nodes'
+      fullPath: '/nodes/'
+      preLoaderRoute: typeof DashboardNodesIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/mesh/': {
+      id: '/_dashboard/mesh/'
+      path: '/mesh'
+      fullPath: '/mesh/'
+      preLoaderRoute: typeof DashboardMeshIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/live/': {
+      id: '/_dashboard/live/'
+      path: '/live'
+      fullPath: '/live/'
+      preLoaderRoute: typeof DashboardLiveIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/domias/': {
+      id: '/_dashboard/domias/'
+      path: '/domias'
+      fullPath: '/domias/'
+      preLoaderRoute: typeof DashboardDomiasIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/conversations/': {
+      id: '/_dashboard/conversations/'
+      path: '/conversations'
+      fullPath: '/conversations/'
+      preLoaderRoute: typeof DashboardConversationsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/conversations/export': {
+      id: '/api/conversations/export'
+      path: '/api/conversations/export'
+      fullPath: '/api/conversations/export'
+      preLoaderRoute: typeof ApiConversationsExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/audio/$id': {
+      id: '/api/audio/$id'
+      path: '/api/audio/$id'
+      fullPath: '/api/audio/$id'
+      preLoaderRoute: typeof ApiAudioIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/templates_/new': {
+      id: '/_dashboard/templates_/new'
+      path: '/templates/new'
+      fullPath: '/templates/new'
+      preLoaderRoute: typeof DashboardTemplatesNewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/nodes/$nodeId': {
+      id: '/_dashboard/nodes/$nodeId'
+      path: '/nodes/$nodeId'
+      fullPath: '/nodes/$nodeId'
+      preLoaderRoute: typeof DashboardNodesNodeIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/domias/$key': {
+      id: '/_dashboard/domias/$key'
+      path: '/domias/$key'
+      fullPath: '/domias/$key'
+      preLoaderRoute: typeof DashboardDomiasKeyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/conversations/$id': {
+      id: '/_dashboard/conversations/$id'
+      path: '/conversations/$id'
+      fullPath: '/conversations/$id'
+      preLoaderRoute: typeof DashboardConversationsIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/api/domias/$key/avatar': {
+      id: '/api/domias/$key/avatar'
+      path: '/api/domias/$key/avatar'
+      fullPath: '/api/domias/$key/avatar'
+      preLoaderRoute: typeof ApiDomiasKeyAvatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/templates_/$id/edit': {
+      id: '/_dashboard/templates_/$id/edit'
+      path: '/templates/$id/edit'
+      fullPath: '/templates/$id/edit'
+      preLoaderRoute: typeof DashboardTemplatesIdEditRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/domias/$key_/config': {
+      id: '/_dashboard/domias/$key_/config'
+      path: '/domias/$key/config'
+      fullPath: '/domias/$key/config'
+      preLoaderRoute: typeof DashboardDomiasKeyConfigRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/conversations/session/$id': {
+      id: '/_dashboard/conversations/session/$id'
+      path: '/conversations/session/$id'
+      fullPath: '/conversations/session/$id'
+      preLoaderRoute: typeof DashboardConversationsSessionIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+  }
 }
 
 interface DashboardRouteChildren {
-	DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
-	DashboardChatRoute: typeof DashboardChatRoute
-	DashboardEmotionsRoute: typeof DashboardEmotionsRoute
-	DashboardMemoriesRoute: typeof DashboardMemoriesRoute
-	DashboardSettingsRoute: typeof DashboardSettingsRoute
-	DashboardTemplatesRoute: typeof DashboardTemplatesRoute
-	DashboardIndexRoute: typeof DashboardIndexRoute
-	DashboardConversationsIdRoute: typeof DashboardConversationsIdRoute
-	DashboardDomiasKeyRoute: typeof DashboardDomiasKeyRoute
-	DashboardTemplatesNewRoute: typeof DashboardTemplatesNewRoute
-	DashboardConversationsIndexRoute: typeof DashboardConversationsIndexRoute
-	DashboardDomiasIndexRoute: typeof DashboardDomiasIndexRoute
-	DashboardConversationsSessionIdRoute: typeof DashboardConversationsSessionIdRoute
-	DashboardDomiasKeyConfigRoute: typeof DashboardDomiasKeyConfigRoute
-	DashboardTemplatesIdEditRoute: typeof DashboardTemplatesIdEditRoute
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
+  DashboardChatRoute: typeof DashboardChatRoute
+  DashboardEmotionsRoute: typeof DashboardEmotionsRoute
+  DashboardMemoriesRoute: typeof DashboardMemoriesRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardTemplatesRoute: typeof DashboardTemplatesRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardConversationsIdRoute: typeof DashboardConversationsIdRoute
+  DashboardDomiasKeyRoute: typeof DashboardDomiasKeyRoute
+  DashboardNodesNodeIdRoute: typeof DashboardNodesNodeIdRoute
+  DashboardTemplatesNewRoute: typeof DashboardTemplatesNewRoute
+  DashboardConversationsIndexRoute: typeof DashboardConversationsIndexRoute
+  DashboardDomiasIndexRoute: typeof DashboardDomiasIndexRoute
+  DashboardLiveIndexRoute: typeof DashboardLiveIndexRoute
+  DashboardMeshIndexRoute: typeof DashboardMeshIndexRoute
+  DashboardNodesIndexRoute: typeof DashboardNodesIndexRoute
+  DashboardConversationsSessionIdRoute: typeof DashboardConversationsSessionIdRoute
+  DashboardDomiasKeyConfigRoute: typeof DashboardDomiasKeyConfigRoute
+  DashboardTemplatesIdEditRoute: typeof DashboardTemplatesIdEditRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-	DashboardAnalyticsRoute: DashboardAnalyticsRoute,
-	DashboardChatRoute: DashboardChatRoute,
-	DashboardEmotionsRoute: DashboardEmotionsRoute,
-	DashboardMemoriesRoute: DashboardMemoriesRoute,
-	DashboardSettingsRoute: DashboardSettingsRoute,
-	DashboardTemplatesRoute: DashboardTemplatesRoute,
-	DashboardIndexRoute: DashboardIndexRoute,
-	DashboardConversationsIdRoute: DashboardConversationsIdRoute,
-	DashboardDomiasKeyRoute: DashboardDomiasKeyRoute,
-	DashboardTemplatesNewRoute: DashboardTemplatesNewRoute,
-	DashboardConversationsIndexRoute: DashboardConversationsIndexRoute,
-	DashboardDomiasIndexRoute: DashboardDomiasIndexRoute,
-	DashboardConversationsSessionIdRoute: DashboardConversationsSessionIdRoute,
-	DashboardDomiasKeyConfigRoute: DashboardDomiasKeyConfigRoute,
-	DashboardTemplatesIdEditRoute: DashboardTemplatesIdEditRoute,
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
+  DashboardChatRoute: DashboardChatRoute,
+  DashboardEmotionsRoute: DashboardEmotionsRoute,
+  DashboardMemoriesRoute: DashboardMemoriesRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardTemplatesRoute: DashboardTemplatesRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardConversationsIdRoute: DashboardConversationsIdRoute,
+  DashboardDomiasKeyRoute: DashboardDomiasKeyRoute,
+  DashboardNodesNodeIdRoute: DashboardNodesNodeIdRoute,
+  DashboardTemplatesNewRoute: DashboardTemplatesNewRoute,
+  DashboardConversationsIndexRoute: DashboardConversationsIndexRoute,
+  DashboardDomiasIndexRoute: DashboardDomiasIndexRoute,
+  DashboardLiveIndexRoute: DashboardLiveIndexRoute,
+  DashboardMeshIndexRoute: DashboardMeshIndexRoute,
+  DashboardNodesIndexRoute: DashboardNodesIndexRoute,
+  DashboardConversationsSessionIdRoute: DashboardConversationsSessionIdRoute,
+  DashboardDomiasKeyConfigRoute: DashboardDomiasKeyConfigRoute,
+  DashboardTemplatesIdEditRoute: DashboardTemplatesIdEditRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-	DashboardRouteChildren,
+  DashboardRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-	DashboardRoute: DashboardRouteWithChildren,
-	ApiNodeAudioRoute: ApiNodeAudioRoute,
-	ApiAudioIdRoute: ApiAudioIdRoute,
-	ApiConversationsExportRoute: ApiConversationsExportRoute,
-	ApiDomiasKeyAvatarRoute: ApiDomiasKeyAvatarRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  ApiNodeAudioRoute: ApiNodeAudioRoute,
+  ApiAudioIdRoute: ApiAudioIdRoute,
+  ApiConversationsExportRoute: ApiConversationsExportRoute,
+  ApiDomiasKeyAvatarRoute: ApiDomiasKeyAvatarRoute,
 }
 export const routeTree = rootRouteImport
-	._addFileChildren(rootRouteChildren)
-	._addFileTypes<FileRouteTypes>()
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx"
-import type { createStart } from "@tanstack/react-start"
-declare module "@tanstack/react-start" {
-	interface Register {
-		ssr: true
-		router: Awaited<ReturnType<typeof getRouter>>
-	}
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
 }

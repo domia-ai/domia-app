@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "7654006f-f355-4b18-bd2a-9f871e18c73f",
+  "id": "51d06b3c-0165-4600-a834-a23095bfbf1b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audio_asset": {
@@ -104,6 +104,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "node_id": {
+          "name": "node_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "is_active": {
           "name": "is_active",
           "type": "integer",
@@ -132,6 +139,22 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "is_hosted": {
+          "name": "is_hosted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "is_principal": {
+          "name": "is_principal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "config_snapshot_json": {
           "name": "config_snapshot_json",

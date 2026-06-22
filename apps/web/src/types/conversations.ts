@@ -263,14 +263,22 @@ export type RunInteractionResult = {
 	audioBase: string
 }
 
-export type NodeChatBody = { text: string; speak?: boolean }
+export type NodeChatBody = {
+	text: string
+	speak?: boolean
+	domiaKey?: string
+}
 export type NodeChatResponse = {
 	interactionId: string
 	reply: string
 	audioUrl?: string | null
 	timings?: RunTimings
 }
-export type NodeVoiceBody = { audioBase64: string; speak?: boolean }
+export type NodeVoiceBody = {
+	audioBase64: string
+	speak?: boolean
+	domiaKey?: string
+}
 export type NodeVoiceResponse = {
 	interactionId: string
 	transcript: string
