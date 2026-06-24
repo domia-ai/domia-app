@@ -6,16 +6,15 @@ import {
 	BrainCircuit,
 	HeartPulse,
 	LayoutDashboard,
+	Megaphone,
 	MessageSquareText,
 	MessagesSquare,
 	Network,
 	Pencil,
-	Radio,
 	Search,
 	Server,
 	Settings,
 	Sparkles,
-	Workflow,
 	Zap,
 } from "lucide-react"
 import {
@@ -32,10 +31,9 @@ import type { NavItem } from "@/types"
 
 const PAGES: NavItem[] = [
 	{ href: "/", label: "Overview", icon: LayoutDashboard },
-	{ href: "/live", label: "Live", icon: Radio },
+	{ href: "/domias", label: "Fleet", icon: Network },
 	{ href: "/nodes", label: "Nodes", icon: Server },
-	{ href: "/mesh", label: "Mesh", icon: Workflow },
-	{ href: "/domias", label: "Domias", icon: Network },
+	{ href: "/broadcast", label: "Broadcast", icon: Megaphone },
 	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },
 	{ href: "/chat", label: "Chat", icon: MessageSquareText },
 	{ href: "/emotions", label: "Emotions", icon: HeartPulse },

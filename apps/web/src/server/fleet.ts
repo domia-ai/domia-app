@@ -7,6 +7,7 @@ import {
 	listFleet,
 	listRunTargets,
 } from "@/services/fleet"
+import { getFleetGraph } from "@/services/fleet-graph"
 import { idSchema, tableParamsSchema } from "@/schemas/server"
 
 export const getFleetStatsFullFn = createServerFn({ method: "GET" }).handler(
@@ -39,4 +40,15 @@ export const domiaTargetsQueryOptions = () =>
 	queryOptions({
 		queryKey: ["domia-targets"],
 		queryFn: () => listDomiaTargetsFn(),
+	})
+
+export const getFleetGraphFn = createServerFn({ method: "GET" }).handler(() =>
+	getFleetGraph(),
+)
+
+export const fleetGraphQueryOptions = () =>
+	queryOptions({
+		queryKey: ["fleet-graph"],
+		queryFn: () => getFleetGraphFn(),
+		refetchInterval: 5000,
 	})

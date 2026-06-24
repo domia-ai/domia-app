@@ -17,7 +17,16 @@ import type {
 	StagePerfRow,
 	TimeBucketRow,
 	WaterfallData,
+	TokenStats,
+	ToolStats,
+	SourceRow,
 } from "@/types/analytics"
+
+const avgDec = (values: number[]): number | null => {
+	const f = values.filter((v) => Number.isFinite(v) && v > 0)
+	if (!f.length) return null
+	return Math.round((f.reduce((a, b) => a + b, 0) / f.length) * 10) / 10
+}
 
 type Row = {
 	id: string
@@ -36,6 +45,15 @@ type Row = {
 	createdAt: string
 	error: boolean
 	input: string
+	promptTokens: number | null
+	completionTokens: number | null
+	tokensPerSec: number | null
+	ttftMs: number | null
+	contextWindow: number | null
+	toolCalls: number | null
+	toolErrors: number | null
+	inputAudioMs: number | null
+	satelliteProtocol: string | null
 }
 
 const num = (v: number | null | undefined): number | null =>
@@ -87,6 +105,15 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 				llmResponse: interactionTrace.llmResponse,
 				sttResult: interactionTrace.sttResult,
 				inputRaw: interactionTrace.inputRaw,
+				promptTokens: interactionTrace.llmPromptTokens,
+				completionTokens: interactionTrace.llmCompletionTokens,
+				tokensPerSec: interactionTrace.llmTokensPerSec,
+				ttftMs: interactionTrace.llmTtftMs,
+				contextWindow: interactionTrace.llmContextWindow,
+				toolCalls: interactionTrace.toolCallCount,
+				toolErrors: interactionTrace.toolErrorCount,
+				inputAudioMs: interactionTrace.inputAudioMs,
+				satelliteProtocol: interactionTrace.satelliteProtocol,
 			})
 			.from(interactionTrace)
 			.orderBy(desc(interactionTrace.createdAt)),
@@ -121,6 +148,15 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		createdAt: r.createdAt,
 		error: r.llmResponse == null || r.llmResponse === "",
 		input: r.sttResult ?? r.inputRaw ?? "—",
+		promptTokens: r.promptTokens,
+		completionTokens: r.completionTokens,
+		tokensPerSec: r.tokensPerSec,
+		ttftMs: r.ttftMs,
+		contextWindow: r.contextWindow,
+		toolCalls: r.toolCalls,
+		toolErrors: r.toolErrors,
+		inputAudioMs: r.inputAudioMs,
+		satelliteProtocol: r.satelliteProtocol,
 	}))
 
 	const flowOf = (r: Row) => deriveFlow(r.inputType, r.responseType)
@@ -237,6 +273,7 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 	const latency: LatencyDistRow[] = [
 		["stt", "Speech-to-text", data.map((r) => r.sttMs ?? 0)],
 		["llm", "LLM", data.map((r) => r.llmMs ?? 0)],
+		["ttft", "Time to first token", data.map((r) => r.ttftMs ?? 0)],
 		["tts", "Text-to-speech", data.map((r) => r.ttsMs ?? 0)],
 		["ttfa", "Time to first audio", data.map(eff)],
 		["total", "Total", data.map((r) => r.totalMs ?? 0)],
@@ -271,6 +308,80 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 			errors: b.errors,
 			avgMs: b.ms.length ? avgOf(b.ms) : null,
 		}))
+
+	const tokenRows = data.filter((r) => r.completionTokens != null)
+	const tokenModels = new Map<string, Row[]>()
+	for (const r of tokenRows) {
+		if (!r.llmModel) continue
+		const arr = tokenModels.get(r.llmModel) ?? []
+		arr.push(r)
+		tokenModels.set(r.llmModel, arr)
+	}
+	const ctxPcts = tokenRows
+		.filter((r) => r.contextWindow && r.promptTokens != null)
+		.map(
+			(r) => ((r.promptTokens as number) / (r.contextWindow as number)) * 100,
+		)
+	const tokens: TokenStats = {
+		turns: tokenRows.length,
+		avgTokensPerSec: avgDec(tokenRows.map((r) => r.tokensPerSec ?? 0)),
+		avgPromptTokens: avgOf(tokenRows.map((r) => r.promptTokens ?? 0)) || null,
+		avgCompletionTokens:
+			avgOf(tokenRows.map((r) => r.completionTokens ?? 0)) || null,
+		avgContextPct: ctxPcts.length ? Math.round(avgOf(ctxPcts)) : null,
+		byModel: [...tokenModels.entries()]
+			.map(([model, rs]) => ({
+				model,
+				count: rs.length,
+				tokensPerSec: avgDec(rs.map((r) => r.tokensPerSec ?? 0)),
+				promptTokens: avgOf(rs.map((r) => r.promptTokens ?? 0)) || null,
+				completionTokens: avgOf(rs.map((r) => r.completionTokens ?? 0)) || null,
+			}))
+			.sort((a, b) => b.count - a.count),
+	}
+
+	const TTFT_BINS: { max: number; label: string }[] = [
+		{ max: 250, label: "< 250ms" },
+		{ max: 500, label: "250–500" },
+		{ max: 750, label: "500–750" },
+		{ max: 1000, label: "750ms–1s" },
+		{ max: 1500, label: "1–1.5s" },
+		{ max: Infinity, label: "1.5s+" },
+	]
+	const ttftHistogram: HistogramBin[] = TTFT_BINS.map((bin, i) => {
+		const lo = i === 0 ? 0 : TTFT_BINS[i - 1].max
+		return {
+			label: bin.label,
+			count: data.filter((r) => {
+				const t = r.ttftMs ?? 0
+				return t > lo && t <= bin.max
+			}).length,
+		}
+	})
+
+	const toolTurns = data.filter((r) => (r.toolCalls ?? 0) > 0)
+	const totalCalls = data.reduce((s, r) => s + (r.toolCalls ?? 0), 0)
+	const totalToolErrors = data.reduce((s, r) => s + (r.toolErrors ?? 0), 0)
+	const tools: ToolStats = {
+		turnsWithTools: toolTurns.length,
+		withToolsPct: data.length
+			? Math.round((toolTurns.length / data.length) * 100)
+			: null,
+		totalCalls,
+		errorRate: totalCalls
+			? Math.round((totalToolErrors / totalCalls) * 100)
+			: null,
+	}
+
+	const srcMap = new Map<string, number>()
+	for (const r of data) {
+		const src = r.satelliteProtocol ?? "local mic"
+		srcMap.set(src, (srcMap.get(src) ?? 0) + 1)
+	}
+	const sources: SourceRow[] = [...srcMap.entries()]
+		.map(([source, count]) => ({ source, count }))
+		.sort((a, b) => b.count - a.count)
+	const avgInputAudioMs = avgOf(data.map((r) => r.inputAudioMs ?? 0)) || null
 
 	const s2s = byFlow.find((f) => f.flow === "s2s")
 
@@ -320,5 +431,10 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 			down: Number(corpus[0]?.down ?? 0),
 			tagged: Number(corpus[0]?.tagged ?? 0),
 		},
+		tokens,
+		ttftHistogram,
+		tools,
+		sources,
+		avgInputAudioMs,
 	}
 }

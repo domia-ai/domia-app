@@ -4,6 +4,10 @@ import {
 	nodeListSatellites,
 	nodeBindSatellite,
 	nodeUnbindSatellite,
+	nodeSetSatelliteWakeWords,
+	nodeSetSatelliteNumber,
+	nodeSetSatelliteFollowUp,
+	nodeTestSatelliteSpeaker,
 	nodePresence,
 } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
@@ -11,6 +15,10 @@ import type {
 	DiscoveredSatellite,
 	BoundSatellite,
 	BindSatelliteBody,
+	SetWakeWordsResult,
+	SetNumberResult,
+	SetFollowUpResult,
+	TestSpeakerResult,
 } from "@/types/satellites"
 import type { PresenceEntry } from "@/types/rooms"
 
@@ -54,6 +62,14 @@ export const listSatellites = async (
 				connectedAt: live?.connectedAt ?? null,
 				lastActiveAt: room?.lastActiveAt ?? null,
 				lastError: live?.connected ? null : (live?.lastError ?? null),
+				micActive: !!live?.micActive,
+				reconnectCount: live?.reconnectCount ?? 0,
+				sampleRate: live?.sampleRate ?? null,
+				lastTurnAt: live?.lastTurnAt ?? null,
+				lastPlaybackAt: live?.lastPlaybackAt ?? null,
+				availableWakeWords: live?.availableWakeWords ?? [],
+				activeWakeWords: live?.activeWakeWords ?? [],
+				numberEntities: live?.numberEntities ?? [],
 			}
 		})
 		return { ok: true, data: merged }
@@ -103,6 +119,98 @@ export const unbindSatellite = async (input: {
 		return {
 			ok: false,
 			error: err instanceof Error ? err.message : "Could not unbind satellite",
+		}
+	}
+}
+
+export const setSatelliteWakeWords = async (input: {
+	domiaKey: string
+	satelliteId: string
+	wakeWords: string[]
+}): Promise<ActionResult<SetWakeWordsResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const result = await nodeSetSatelliteWakeWords(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+			input.wakeWords,
+		)
+		return { ok: true, data: result }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not set wake words",
+		}
+	}
+}
+
+export const setSatelliteNumber = async (input: {
+	domiaKey: string
+	satelliteId: string
+	entityId: string
+	value: number
+}): Promise<ActionResult<SetNumberResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const result = await nodeSetSatelliteNumber(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+			input.entityId,
+			input.value,
+		)
+		return { ok: true, data: result }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not set value",
+		}
+	}
+}
+
+export const setSatelliteFollowUp = async (input: {
+	domiaKey: string
+	satelliteId: string
+	enabled: boolean
+}): Promise<ActionResult<SetFollowUpResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const result = await nodeSetSatelliteFollowUp(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+			input.enabled,
+		)
+		return { ok: true, data: result }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not set follow-up",
+		}
+	}
+}
+
+export const testSatelliteSpeaker = async (input: {
+	domiaKey: string
+	satelliteId: string
+}): Promise<ActionResult<TestSpeakerResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const result = await nodeTestSatelliteSpeaker(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+		)
+		return { ok: true, data: result }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not test speaker",
 		}
 	}
 }

@@ -1,3 +1,4 @@
+/* global AudioWorkletProcessor, registerProcessor */
 class PcmCaptureProcessor extends AudioWorkletProcessor {
 	constructor() {
 		super()

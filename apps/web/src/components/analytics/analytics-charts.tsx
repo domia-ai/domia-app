@@ -12,6 +12,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
+	ChartLegend,
+	ChartLegendContent,
 	type ChartConfig,
 } from "@/components/ui/chart"
 import type { AnalyticsChartsProps } from "@/types/analytics"
@@ -86,6 +88,7 @@ export function AnalyticsCharts({
 								allowDecimals={false}
 							/>
 							<ChartTooltip content={<ChartTooltipContent />} />
+							<ChartLegend content={<ChartLegendContent />} />
 							<Bar dataKey="count" fill="var(--color-count)" radius={4} />
 							<Bar dataKey="errors" fill="var(--color-errors)" radius={4} />
 						</BarChart>

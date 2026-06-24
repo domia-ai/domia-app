@@ -5,12 +5,20 @@ import {
 	listSatellites,
 	bindSatellite,
 	unbindSatellite,
+	setSatelliteWakeWords,
+	setSatelliteNumber,
+	setSatelliteFollowUp,
+	testSatelliteSpeaker,
 } from "@/services/satellites"
 import {
 	discoverSatellitesInputSchema,
 	listSatellitesInputSchema,
 	bindSatelliteInputSchema,
 	unbindSatelliteInputSchema,
+	setSatelliteWakeWordsInputSchema,
+	setSatelliteNumberInputSchema,
+	setSatelliteFollowUpInputSchema,
+	testSatelliteSpeakerInputSchema,
 } from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
 
@@ -35,6 +43,34 @@ export const unbindSatelliteFn = createServerFn({ method: "POST" })
 	.handler(({ data }) => {
 		assertWritable()
 		return unbindSatellite(data)
+	})
+
+export const setSatelliteWakeWordsFn = createServerFn({ method: "POST" })
+	.validator(setSatelliteWakeWordsInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return setSatelliteWakeWords(data)
+	})
+
+export const setSatelliteNumberFn = createServerFn({ method: "POST" })
+	.validator(setSatelliteNumberInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return setSatelliteNumber(data)
+	})
+
+export const setSatelliteFollowUpFn = createServerFn({ method: "POST" })
+	.validator(setSatelliteFollowUpInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return setSatelliteFollowUp(data)
+	})
+
+export const testSatelliteSpeakerFn = createServerFn({ method: "POST" })
+	.validator(testSatelliteSpeakerInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return testSatelliteSpeaker(data)
 	})
 
 export const satellitesQueryOptions = (domiaKey: string) =>

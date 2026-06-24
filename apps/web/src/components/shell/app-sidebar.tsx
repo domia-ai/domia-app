@@ -7,13 +7,11 @@ import {
 	HeartPulse,
 	LayoutDashboard,
 	LayoutTemplate,
+	Megaphone,
 	MessageSquareText,
 	MessagesSquare,
 	Network,
-	Radio,
-	Server,
 	Settings,
-	Workflow,
 } from "lucide-react"
 import {
 	Sidebar,
@@ -29,10 +27,13 @@ import type { NavItem } from "@/types"
 
 const NAV: NavItem[] = [
 	{ href: "/", label: "Overview", icon: LayoutDashboard },
-	{ href: "/live", label: "Live", icon: Radio },
-	{ href: "/nodes", label: "Nodes", icon: Server },
-	{ href: "/mesh", label: "Mesh", icon: Workflow },
-	{ href: "/domias", label: "Domias", icon: Network },
+	{
+		href: "/domias",
+		label: "Fleet",
+		icon: Network,
+		activeFor: ["/domias", "/nodes"],
+	},
+	{ href: "/broadcast", label: "Broadcast", icon: Megaphone },
 	{ href: "/templates", label: "Templates", icon: LayoutTemplate },
 	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },
 	{ href: "/chat", label: "Chat", icon: MessageSquareText },
@@ -47,10 +48,15 @@ const EXTERNAL_LINKS = [
 	{ href: "https://github.com/domia-ai", label: "GitHub", icon: Code2 },
 ]
 
-const isActive = (pathname: string, href: string | undefined) =>
+const matchesHref = (pathname: string, href: string) =>
 	href === "/"
 		? pathname === "/"
-		: !!href && (pathname === href || pathname.startsWith(href + "/"))
+		: pathname === href || pathname.startsWith(href + "/")
+
+const isActive = (pathname: string, item: NavItem) =>
+	item.activeFor
+		? item.activeFor.some((h) => matchesHref(pathname, h))
+		: !!item.href && matchesHref(pathname, item.href)
 
 export function AppSidebar({ propertyName }: { propertyName: string }) {
 	const pathname = useLocation({ select: (l) => l.pathname })
@@ -83,7 +89,7 @@ export function AppSidebar({ propertyName }: { propertyName: string }) {
 								<SidebarMenuItem key={item.href}>
 									<SidebarMenuButton
 										render={<Link to={item.href} />}
-										isActive={isActive(pathname, item.href)}
+										isActive={isActive(pathname, item)}
 										tooltip={item.label}
 									>
 										<Icon />

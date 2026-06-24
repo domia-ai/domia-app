@@ -2,6 +2,7 @@ import type { DomiaRegistryRow } from "@domia-app/db"
 import type { DomiaConfig } from "@/types"
 import type { MeshEdge, OverviewStats } from "@/types"
 import type { FlowKey } from "@/types/conversations"
+import type { MeshEdge as MeshTopologyEdge } from "@/types/mesh"
 import type {
 	LatencySummary,
 	StagePerfRow,
@@ -23,6 +24,32 @@ export type FleetTelemetry = {
 export type MeshDomiaRow = DomiaRegistryRow & { config: DomiaConfig }
 
 export type FleetRow = MeshDomiaRow & { telemetry: FleetTelemetry | null }
+
+export type FleetGraphIdentity = {
+	domiaKey: string
+	name: string
+	avatarId: string | null
+	isPrincipal: boolean
+	role: DomiaRole
+	caps: { stt: boolean; llm: boolean; tts: boolean }
+	online: boolean
+	count: number
+	ttfaP50: number | null
+}
+
+export type FleetGraphNode = {
+	nodeId: string
+	name: string
+	localIp: string
+	httpPort: number
+	online: boolean
+	identities: FleetGraphIdentity[]
+}
+
+export type FleetGraph = {
+	nodes: FleetGraphNode[]
+	edges: MeshTopologyEdge[]
+}
 
 export type DomiaRecentRow = {
 	id: string

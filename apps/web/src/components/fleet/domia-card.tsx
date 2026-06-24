@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
@@ -21,6 +21,16 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 export function DomiaCard({ row }: { row: FleetRow }) {
 	const persona = row.config.characterProfile
+	const navigate = useNavigate()
+	const nodeId = row.nodeId
+	const goToNode = (e: {
+		preventDefault: () => void
+		stopPropagation: () => void
+	}) => {
+		e.preventDefault()
+		e.stopPropagation()
+		if (nodeId) void navigate({ to: "/nodes/$nodeId", params: { nodeId } })
+	}
 
 	return (
 		<Link
@@ -67,9 +77,21 @@ export function DomiaCard({ row }: { row: FleetRow }) {
 						<Badge variant="secondary" className="font-mono text-xs">
 							{row.domiaKey}
 						</Badge>
-						<span className="font-mono">
-							{row.localIp ? `${row.localIp}:${row.httpPort}` : "—"}
-						</span>
+						{row.localIp && nodeId ? (
+							<span
+								role="link"
+								tabIndex={0}
+								onClick={goToNode}
+								onKeyDown={(e) => e.key === "Enter" && goToNode(e)}
+								className="hover:text-foreground cursor-pointer font-mono underline-offset-2 hover:underline"
+							>
+								{row.localIp}:{row.httpPort} ↗
+							</span>
+						) : (
+							<span className="font-mono">
+								{row.localIp ? `${row.localIp}:${row.httpPort}` : "—"}
+							</span>
+						)}
 					</div>
 				</CardContent>
 			</Card>

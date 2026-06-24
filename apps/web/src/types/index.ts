@@ -66,6 +66,7 @@ export type NavItem = {
 	label: string
 	icon: LucideIcon
 	soon?: boolean
+	activeFor?: string[]
 }
 
 export type RuntimeCapabilities = {

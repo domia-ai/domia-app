@@ -29,6 +29,10 @@ import type {
 	BindSatelliteBody,
 	BindSatelliteResult,
 	UnbindSatelliteResult,
+	SetWakeWordsResult,
+	SetNumberResult,
+	SetFollowUpResult,
+	TestSpeakerResult,
 } from "@/types/satellites"
 
 const withKey = (path: string, domiaKey?: string): string =>
@@ -66,6 +70,23 @@ const post = async <T>(
 const del = async <T>(base: string, path: string): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
 		method: "DELETE",
+		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
+	})
+	if (!res.ok) {
+		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
+	}
+	return res.json() as Promise<T>
+}
+
+const patch = async <T>(
+	base: string,
+	path: string,
+	body: unknown,
+): Promise<T> => {
+	const res = await fetch(`${base}${path}`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
 	if (!res.ok) {
@@ -160,6 +181,63 @@ export const nodeUnbindSatellite = (
 	del<UnbindSatelliteResult>(
 		base,
 		withKey(`/satellites/${encodeURIComponent(satelliteId)}`, domiaKey),
+	)
+
+export const nodeSetSatelliteWakeWords = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	wakeWords: string[],
+) =>
+	patch<SetWakeWordsResult>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/wake-words`,
+			domiaKey,
+		),
+		{ wakeWords },
+	)
+
+export const nodeSetSatelliteNumber = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	entityId: string,
+	value: number,
+) =>
+	patch<SetNumberResult>(
+		base,
+		withKey(`/satellites/${encodeURIComponent(satelliteId)}/numbers`, domiaKey),
+		{ entityId, value },
+	)
+
+export const nodeSetSatelliteFollowUp = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	enabled: boolean,
+) =>
+	patch<SetFollowUpResult>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/follow-up`,
+			domiaKey,
+		),
+		{ enabled },
+	)
+
+export const nodeTestSatelliteSpeaker = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+) =>
+	post<TestSpeakerResult>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/test-speaker`,
+			domiaKey,
+		),
+		{},
 	)
 
 export const parseInteractionId = (

@@ -48,6 +48,27 @@ export const broadcastToRooms = async (
 	}
 }
 
+export const announceToDomia = async (
+	domiaKey: string,
+	text: string,
+): Promise<ActionResult<{ delivered: boolean; target?: string }>> => {
+	try {
+		const base = await baseFor(domiaKey)
+		if (!base)
+			return { ok: false, error: "This Domia has no reachable address" }
+		const res = await nodeSpeak(base, { domiaKey, text })
+		const delivered = Array.isArray(res.delivered)
+			? res.delivered.length > 0
+			: !!res.delivered
+		return { ok: true, data: { delivered, target: res.target } }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Announce failed",
+		}
+	}
+}
+
 export const cancelRoomTurn = async (
 	hostDomiaKey: string,
 	domiaKey: string,

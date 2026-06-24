@@ -62,11 +62,40 @@ export type StagePerfRow = {
 }
 
 export type LatencyDistRow = {
-	key: "stt" | "llm" | "tts" | "ttfa" | "total"
+	key: "stt" | "llm" | "ttft" | "tts" | "ttfa" | "total"
 	label: string
 	p50: number | null
 	p95: number | null
 	avg: number | null
+}
+
+export type TokenModelRow = {
+	model: string
+	count: number
+	tokensPerSec: number | null
+	promptTokens: number | null
+	completionTokens: number | null
+}
+
+export type TokenStats = {
+	turns: number
+	avgTokensPerSec: number | null
+	avgPromptTokens: number | null
+	avgCompletionTokens: number | null
+	avgContextPct: number | null
+	byModel: TokenModelRow[]
+}
+
+export type ToolStats = {
+	turnsWithTools: number
+	withToolsPct: number | null
+	totalCalls: number
+	errorRate: number | null
+}
+
+export type SourceRow = {
+	source: string
+	count: number
 }
 
 export type TimeBucketRow = {
@@ -103,6 +132,11 @@ export type AnalyticsData = {
 	latency: LatencyDistRow[]
 	timeSeries: TimeBucketRow[]
 	corpus: CorpusSummary
+	tokens: TokenStats
+	ttftHistogram: HistogramBin[]
+	tools: ToolStats
+	sources: SourceRow[]
+	avgInputAudioMs: number | null
 }
 
 export type AnalyticsChartsProps = {

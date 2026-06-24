@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "@tanstack/react-form"
-import { RadarIcon, Trash2 } from "lucide-react"
+import {
+	RadarIcon,
+	Trash2,
+	Volume2,
+	SlidersHorizontal,
+	ChevronDown,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,17 +33,343 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import {
+	Collapsible,
+	CollapsibleTrigger,
+	CollapsibleContent,
+} from "@/components/ui/collapsible"
 import {
 	discoverSatellitesQueryOptions,
 	satellitesQueryOptions,
 	bindSatelliteFn,
 	unbindSatelliteFn,
+	setSatelliteWakeWordsFn,
+	setSatelliteNumberFn,
+	setSatelliteFollowUpFn,
+	testSatelliteSpeakerFn,
 } from "@/server/satellites"
 import { isDemoMode } from "@/lib/demo"
-import type { DiscoveredSatellite } from "@/types/satellites"
+import { groupSatelliteNumbers } from "@/utils/satellites"
+import type {
+	DiscoveredSatellite,
+	BoundSatellite,
+	SatelliteNumberEntity,
+} from "@/types/satellites"
 import type { NodeIdentitySummary } from "@/types/nodes"
 
 const BIND_CONFIRM_MS = 25000
+
+function NumberSlider({
+	entity,
+	domiaKey,
+	satelliteId,
+	disabled,
+}: {
+	entity: SatelliteNumberEntity
+	domiaKey: string
+	satelliteId: string
+	disabled: boolean
+}) {
+	const queryClient = useQueryClient()
+	const min = entity.min ?? 0
+	const max = entity.max ?? 1
+	const step = entity.step ?? 0.01
+	const [draft, setDraft] = useState<number>(entity.value ?? min)
+
+	useEffect(() => {
+		setDraft(entity.value ?? min)
+	}, [entity.value, min])
+
+	const mutation = useMutation({
+		mutationFn: (value: number) =>
+			setSatelliteNumberFn({
+				data: { domiaKey, satelliteId, entityId: entity.id, value },
+			}),
+	})
+
+	const onCommit = async (value: number) => {
+		const result = await mutation.mutateAsync(value)
+		if (result.ok) {
+			toast.success(
+				result.data?.live
+					? `${entity.name} applied`
+					: `${entity.name} saved — applies on reconnect`,
+			)
+			await queryClient.invalidateQueries({
+				queryKey: ["satellites", domiaKey],
+			})
+		} else {
+			toast.error(`Could not set ${entity.name}`, {
+				description: result.error,
+			})
+		}
+	}
+
+	return (
+		<div className="space-y-1">
+			<div className="flex items-center justify-between gap-2">
+				<span className="text-muted-foreground truncate text-xs">
+					{entity.name}
+				</span>
+				<span className="text-muted-foreground font-mono text-[10px]">
+					{entity.value != null
+						? `${draft}${entity.unit ? ` ${entity.unit}` : ""}`
+						: "—"}
+				</span>
+			</div>
+			<Slider
+				value={draft}
+				min={min}
+				max={max}
+				step={step}
+				disabled={disabled || mutation.isPending}
+				onValueChange={(v) => setDraft(Array.isArray(v) ? (v[0] ?? min) : v)}
+				onValueCommitted={(v) =>
+					void onCommit(Array.isArray(v) ? (v[0] ?? min) : v)
+				}
+			/>
+		</div>
+	)
+}
+
+function FollowUpToggle({
+	enabled,
+	domiaKey,
+	satelliteId,
+	disabled,
+}: {
+	enabled: boolean
+	domiaKey: string
+	satelliteId: string
+	disabled: boolean
+}) {
+	const queryClient = useQueryClient()
+	const mutation = useMutation({
+		mutationFn: (next: boolean) =>
+			setSatelliteFollowUpFn({
+				data: { domiaKey, satelliteId, enabled: next },
+			}),
+	})
+
+	const onToggle = async (next: boolean) => {
+		const result = await mutation.mutateAsync(next)
+		if (result.ok) {
+			toast.success(next ? "Hands-free follow-up on" : "Follow-up off")
+			await queryClient.invalidateQueries({
+				queryKey: ["satellites", domiaKey],
+			})
+		} else {
+			toast.error("Could not change follow-up", { description: result.error })
+		}
+	}
+
+	return (
+		<div className="flex items-center justify-between gap-2 pt-1">
+			<span className="text-muted-foreground text-xs">
+				Hands-free follow-up
+			</span>
+			<Switch
+				checked={enabled}
+				disabled={disabled || mutation.isPending}
+				onCheckedChange={(v) => void onToggle(v)}
+			/>
+		</div>
+	)
+}
+
+function SatelliteRow({
+	sat,
+	domiaKey,
+	demo,
+	onUnbind,
+	unbindPending,
+}: {
+	sat: BoundSatellite
+	domiaKey: string
+	demo: boolean
+	onUnbind: (satelliteId: string) => void
+	unbindPending: boolean
+}) {
+	const queryClient = useQueryClient()
+
+	const testMutation = useMutation({
+		mutationFn: () =>
+			testSatelliteSpeakerFn({
+				data: { domiaKey, satelliteId: sat.satelliteId },
+			}),
+	})
+
+	const wakeMutation = useMutation({
+		mutationFn: (wakeWords: string[]) =>
+			setSatelliteWakeWordsFn({
+				data: { domiaKey, satelliteId: sat.satelliteId, wakeWords },
+			}),
+	})
+
+	const onTest = async () => {
+		const result = await testMutation.mutateAsync()
+		if (result.ok && result.data?.delivered) {
+			toast.success("Playing test on device")
+		} else {
+			toast.error("Could not play test", {
+				description: result.ok
+					? `Nothing played (target: ${result.data?.target ?? "none"})`
+					: result.error,
+			})
+		}
+	}
+
+	const onWake = async (wakeWordId: string | null) => {
+		if (!wakeWordId) return
+		const result = await wakeMutation.mutateAsync([wakeWordId])
+		if (result.ok) {
+			toast.success(
+				result.data?.live
+					? "Wake word applied"
+					: "Wake word saved — applies on reconnect",
+			)
+			await queryClient.invalidateQueries({
+				queryKey: ["satellites", domiaKey],
+			})
+		} else {
+			toast.error("Could not set wake word", { description: result.error })
+		}
+	}
+
+	const numberGroups = groupSatelliteNumbers(sat.numberEntities)
+	const [tuneOpen, setTuneOpen] = useState(false)
+
+	const diagnostics = [
+		sat.sampleRate ? `${Math.round(sat.sampleRate / 1000)}kHz` : null,
+		sat.reconnectCount > 0 ? `${sat.reconnectCount} reconnects` : null,
+		sat.lastTurnAt ? `turn ${relativeTimeMs(sat.lastTurnAt)}` : null,
+		sat.lastPlaybackAt ? `play ${relativeTimeMs(sat.lastPlaybackAt)}` : null,
+	].filter(Boolean)
+
+	return (
+		<div className="space-y-1 rounded-md border p-2">
+			<div className="flex items-center gap-2">
+				<StatusDot online={sat.online} />
+				{sat.online && sat.micActive ? (
+					<span className="relative flex size-2" title="hearing audio">
+						<span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+						<span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+					</span>
+				) : null}
+				<div className="min-w-0 flex-1">
+					<div className="flex items-center gap-2">
+						<span className="truncate text-sm font-medium">
+							{sat.name ?? sat.satelliteId}
+						</span>
+						<span className="text-muted-foreground font-mono text-xs">
+							{sat.host}:{sat.port}
+						</span>
+					</div>
+					{sat.online ? (
+						<span className="text-muted-foreground text-xs">
+							{`${sat.status ?? "idle"}${sat.connectedAt ? ` · up ${relativeTimeMs(sat.connectedAt)}` : ""}`}
+						</span>
+					) : sat.connecting ? (
+						<span className="text-muted-foreground text-xs">connecting…</span>
+					) : sat.lastError ? (
+						<span className="text-destructive text-xs">
+							offline · {sat.lastError}
+						</span>
+					) : (
+						<span className="text-muted-foreground text-xs">offline</span>
+					)}
+				</div>
+				<Badge variant="outline">{sat.protocol}</Badge>
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Test speaker"
+					disabled={demo || !sat.online || testMutation.isPending}
+					onClick={onTest}
+				>
+					<Volume2 className="size-4" />
+				</Button>
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Unbind"
+					disabled={demo || unbindPending}
+					onClick={() => onUnbind(sat.satelliteId)}
+				>
+					<Trash2 className="size-4" />
+				</Button>
+			</div>
+
+			{sat.online ? (
+				<Collapsible open={tuneOpen} onOpenChange={setTuneOpen}>
+					<CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs">
+						<SlidersHorizontal className="size-3.5" />
+						Tune
+						<ChevronDown
+							className={`size-3 transition-transform ${tuneOpen ? "rotate-180" : ""}`}
+						/>
+					</CollapsibleTrigger>
+					<CollapsibleContent className="space-y-3 pt-2">
+						{sat.availableWakeWords.length > 0 ? (
+							<Select
+								value={sat.activeWakeWords[0] ?? ""}
+								onValueChange={onWake}
+								disabled={demo || wakeMutation.isPending}
+							>
+								<SelectTrigger size="sm" className="h-7 text-xs">
+									<SelectValue placeholder="Wake word" />
+								</SelectTrigger>
+								<SelectContent>
+									{sat.availableWakeWords.map((w) => (
+										<SelectItem key={w.id} value={w.id}>
+											{w.wakeWord}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						) : null}
+
+						{numberGroups.map((group) => (
+							<div key={group.label} className="space-y-1.5">
+								<span className="text-muted-foreground text-[10px] font-medium uppercase">
+									{group.label}
+								</span>
+								<div className="grid grid-cols-2 gap-x-4 gap-y-2">
+									{group.entities.map((entity) => (
+										<NumberSlider
+											key={entity.id}
+											entity={entity}
+											domiaKey={domiaKey}
+											satelliteId={sat.satelliteId}
+											disabled={demo || !sat.online}
+										/>
+									))}
+								</div>
+							</div>
+						))}
+
+						{sat.protocol === "esphome" ? (
+							<FollowUpToggle
+								enabled={sat.followUpEnabled}
+								domiaKey={domiaKey}
+								satelliteId={sat.satelliteId}
+								disabled={demo}
+							/>
+						) : null}
+
+						{diagnostics.length > 0 ? (
+							<span className="text-muted-foreground block font-mono text-[10px]">
+								{diagnostics.join(" · ")}
+							</span>
+						) : null}
+					</CollapsibleContent>
+				</Collapsible>
+			) : null}
+		</div>
+	)
+}
 
 function BoundSatellites({
 	domiaKey,
@@ -121,44 +453,14 @@ function BoundSatellites({
 	return (
 		<div className="space-y-2">
 			{sats.map((sat) => (
-				<div
+				<SatelliteRow
 					key={sat.id}
-					className="flex items-center gap-2 rounded-md border p-2"
-				>
-					<StatusDot online={sat.online} />
-					<div className="min-w-0 flex-1">
-						<div className="flex items-center gap-2">
-							<span className="truncate text-sm font-medium">
-								{sat.name ?? sat.satelliteId}
-							</span>
-							<span className="text-muted-foreground font-mono text-xs">
-								{sat.host}:{sat.port}
-							</span>
-						</div>
-						{sat.online ? (
-							<span className="text-muted-foreground text-xs">
-								{`${sat.status ?? "idle"}${sat.connectedAt ? ` · up ${relativeTimeMs(sat.connectedAt)}` : ""}`}
-							</span>
-						) : sat.connecting ? (
-							<span className="text-muted-foreground text-xs">connecting…</span>
-						) : sat.lastError ? (
-							<span className="text-destructive text-xs">
-								offline · {sat.lastError}
-							</span>
-						) : (
-							<span className="text-muted-foreground text-xs">offline</span>
-						)}
-					</div>
-					<Badge variant="outline">{sat.protocol}</Badge>
-					<Button
-						variant="ghost"
-						size="icon"
-						disabled={demo || mutation.isPending}
-						onClick={() => onUnbind(sat.satelliteId)}
-					>
-						<Trash2 className="size-4" />
-					</Button>
-				</div>
+					sat={sat}
+					domiaKey={domiaKey}
+					demo={demo}
+					onUnbind={onUnbind}
+					unbindPending={mutation.isPending}
+				/>
 			))}
 		</div>
 	)

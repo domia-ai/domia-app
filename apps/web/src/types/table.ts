@@ -106,4 +106,4 @@ export type DataTableProps<TData, TValue> = {
 	onRowSelectionChange?: (value: RowSelectionState) => void
 }
 
-export type ViewMode = "table" | "cards"
+export type ViewMode = "table" | "cards" | "map"

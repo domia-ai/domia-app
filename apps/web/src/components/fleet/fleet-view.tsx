@@ -13,6 +13,7 @@ import { useConsolePrefs } from "@/components/providers/console-prefs"
 import { FleetStatsHeader } from "./fleet-stats-header"
 import { DomiaCard } from "./domia-card"
 import { fleetColumns } from "./columns"
+import { FleetTopology } from "./topology/topology-map"
 import type { FleetRow } from "@/types/fleet"
 
 export function FleetView() {
@@ -47,19 +48,25 @@ export function FleetView() {
 		<div className="space-y-4">
 			<FleetStatsHeader />
 			<div className="flex items-center justify-between gap-2">
-				<div className="relative max-w-xs flex-1">
-					<Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-					<Input
-						placeholder="Search Domias…"
-						value={searchInput}
-						onChange={(e) => setSearchInput(e.target.value)}
-						className="pl-9"
-					/>
-				</div>
-				<ViewToggle value={view} onChange={setView} />
+				{view === "map" ? (
+					<span />
+				) : (
+					<div className="relative max-w-xs flex-1">
+						<Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+						<Input
+							placeholder="Search Domias…"
+							value={searchInput}
+							onChange={(e) => setSearchInput(e.target.value)}
+							className="pl-9"
+						/>
+					</div>
+				)}
+				<ViewToggle value={view} onChange={setView} withMap />
 			</div>
 
-			{view === "table" ? (
+			{view === "map" ? (
+				<FleetTopology />
+			) : view === "table" ? (
 				<DataTable
 					columns={fleetColumns}
 					data={rows}

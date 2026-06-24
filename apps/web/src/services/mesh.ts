@@ -62,6 +62,7 @@ export const getMeshTopology = async (): Promise<
 			.select({
 				domiaKey: domiaRegistry.domiaKey,
 				name: domiaRegistry.name,
+				nodeId: domiaRegistry.nodeId,
 				localIp: domiaRegistry.localIp,
 				httpPort: domiaRegistry.httpPort,
 				isHosted: domiaRegistry.isHosted,
@@ -77,7 +78,7 @@ export const getMeshTopology = async (): Promise<
 		>()
 		for (const r of rows) {
 			if (!r.localIp || !r.httpPort) continue
-			const nodeId = nodeIdOf(r.localIp, r.httpPort)
+			const nodeId = r.nodeId ?? nodeIdOf(r.localIp, r.httpPort)
 			nodeOfKey.set(r.domiaKey, nodeId)
 			if (!r.isHosted) continue
 			const group = groups.get(nodeId) ?? { nodeName: "", identities: [] }

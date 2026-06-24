@@ -13,6 +13,7 @@ import {
 import { AvatarPicker } from "@/components/domia/avatar-picker"
 import { PerformanceCard } from "@/components/domia/performance-card"
 import { RestartButton } from "@/components/domia/restart-button"
+import { DomiaSatellites } from "@/components/satellites/domia-satellites"
 import { RoleBadge } from "@/components/fleet/columns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -155,6 +156,8 @@ function DomiaDetailPage() {
 						/>
 					)}
 					<SkillsCard servers={config.skillProviders} />
+
+					<DomiaSatellites domia={domia} />
 
 					<Card>
 						<CardHeader>

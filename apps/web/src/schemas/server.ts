@@ -41,6 +41,30 @@ export const unbindSatelliteInputSchema = z.object({
 	satelliteId: z.string().min(1).max(200),
 })
 
+export const setSatelliteWakeWordsInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+	wakeWords: z.array(z.string().min(1).max(120)).min(1).max(8),
+})
+
+export const setSatelliteNumberInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+	entityId: z.string().min(1).max(200),
+	value: z.number(),
+})
+
+export const setSatelliteFollowUpInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+	enabled: z.boolean(),
+})
+
+export const testSatelliteSpeakerInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+})
+
 export const tableParamsSchema = z.object({
 	page: z.number().int().min(0),
 	pageSize: z.number().int().min(1).max(200),

@@ -5,3 +5,4 @@ dist
 out
 drizzle
 package-lock.json
+.output

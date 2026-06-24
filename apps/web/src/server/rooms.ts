@@ -3,6 +3,7 @@ import { z } from "zod"
 import {
 	getRoomPresence,
 	broadcastToRooms,
+	announceToDomia,
 	setRoomIntercom,
 	cancelRoomTurn,
 } from "@/services/rooms"
@@ -19,6 +20,13 @@ export const broadcast = createServerFn({ method: "POST" })
 	.handler(({ data }) => {
 		assertWritable()
 		return broadcastToRooms(data.hostDomiaKey, data.text)
+	})
+
+export const announce = createServerFn({ method: "POST" })
+	.validator(z.object({ domiaKey: z.string().min(1), text: z.string().min(1) }))
+	.handler(({ data }) => {
+		assertWritable()
+		return announceToDomia(data.domiaKey, data.text)
 	})
 
 export const intercom = createServerFn({ method: "POST" })

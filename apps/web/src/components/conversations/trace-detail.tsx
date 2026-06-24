@@ -22,6 +22,33 @@ import type {
 	PipelineStep,
 } from "@/types/conversations"
 
+const LLM_CHIP_BUILDERS: Array<
+	(t: InteractionDetail["trace"]) => string | null
+> = [
+	(t) =>
+		t.llmTokensPerSec != null ? `${t.llmTokensPerSec.toFixed(1)} tok/s` : null,
+	(t) =>
+		t.llmPromptTokens != null || t.llmCompletionTokens != null
+			? `${t.llmPromptTokens ?? 0}+${t.llmCompletionTokens ?? 0} tok`
+			: null,
+	(t) =>
+		t.llmContextWindow && t.llmPromptTokens != null
+			? `ctx ${Math.round((t.llmPromptTokens / t.llmContextWindow) * 100)}%`
+			: null,
+	(t) => (t.llmTtftMs != null ? `ttft ${t.llmTtftMs}ms` : null),
+	(t) => t.llmFinishReason ?? null,
+	(t) =>
+		t.toolCallCount != null
+			? `${t.toolCallCount} tool${t.toolCallCount === 1 ? "" : "s"}${
+					t.toolErrorCount ? ` · ${t.toolErrorCount} err` : ""
+				}`
+			: null,
+	(t) =>
+		t.inputAudioMs != null
+			? `heard ${(t.inputAudioMs / 1000).toFixed(1)}s`
+			: null,
+]
+
 export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 	const { trace, inputAudio, ttsAudio } = detail
 	const isVoice = trace.inputType === "VOICE"
@@ -52,6 +79,10 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 					.join(" · ")
 			: undefined) ||
 		undefined
+	const llmRuntimeChips = LLM_CHIP_BUILDERS.map((build) => build(trace)).filter(
+		(chip): chip is string => chip != null,
+	)
+
 	const steps: PipelineStep[] = []
 
 	if (isVoice && trace.wakewordUsed) {
@@ -191,9 +222,23 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 		model: llmModel,
 		...execInfo(trace.llmExecutorKey),
 		body: (
-			<p className="bg-muted/30 rounded-lg border px-4 py-3 text-sm">
-				{trace.llmResponse ?? "—"}
-			</p>
+			<div className="space-y-2">
+				<p className="bg-muted/30 rounded-lg border px-4 py-3 text-sm">
+					{trace.llmResponse ?? "—"}
+				</p>
+				{llmRuntimeChips.length > 0 ? (
+					<div className="flex flex-wrap gap-1.5">
+						{llmRuntimeChips.map((chip) => (
+							<span
+								key={chip}
+								className="bg-muted text-muted-foreground rounded-md px-2 py-0.5 font-mono text-[11px]"
+							>
+								{chip}
+							</span>
+						))}
+					</div>
+				) : null}
+			</div>
 		),
 	})
 

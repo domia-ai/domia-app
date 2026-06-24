@@ -7,7 +7,8 @@ export function useViewMode(key: string, fallback: ViewMode = "cards") {
 
 	useEffect(() => {
 		const stored = window.localStorage.getItem(storageKey)
-		if (stored === "table" || stored === "cards") setViewState(stored)
+		if (stored === "table" || stored === "cards" || stored === "map")
+			setViewState(stored)
 	}, [storageKey])
 
 	const setView = (next: ViewMode) => {
