@@ -18,6 +18,14 @@ import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { StatusPill } from "@/components/domia/status"
 import { CapabilityChips } from "@/components/domia/capability-chips"
 import { MoodRadar } from "@/components/domia/mood-radar"
+import {
+	MessageScrollerProvider,
+	MessageScroller,
+	MessageScrollerViewport,
+	MessageScrollerContent,
+	MessageScrollerItem,
+	MessageScrollerButton,
+} from "@/components/ui/message-scroller"
 import { Composer } from "./composer"
 import { TurnBubble } from "./turn-bubble"
 import { LiveVoice } from "./live-voice"
@@ -31,7 +39,6 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 	const selectedKey = initialKey
 	const [threads, setThreads] = useState<Record<string, ChatTurn[]>>({})
 	const [pending, setPending] = useState(false)
-	const scrollRef = useRef<HTMLDivElement | null>(null)
 	const activeRef = useRef<{ key: string; id: string } | null>(null)
 	const cancelledRef = useRef<Set<string>>(new Set())
 
@@ -58,10 +65,6 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 			)
 		}
 	}, [history.data, selectedKey, seeded])
-
-	useEffect(() => {
-		scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-	}, [turns])
 
 	const append = (key: string, ...t: ChatTurn[]) =>
 		setThreads((prev) => ({ ...prev, [key]: [...(prev[key] ?? []), ...t] }))
@@ -157,6 +160,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 			role: "user",
 			kind: "voice",
 			text: fileName,
+			audioUrl: `data:audio/wav;base64,${audioBase64}`,
 			at: new Date().toISOString(),
 		}
 		const domiaTurnId = crypto.randomUUID()
@@ -205,27 +209,44 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 					<StatusPill online={online} />
 				</CardHeader>
 
-				<div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
-					{turns.length === 0 ? (
-						<div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 text-center text-sm">
-							<MessagesSquare className="size-8 opacity-40" />
-							<p>Start a conversation with {selected.name}.</p>
-							<p className="text-xs">
-								Type, toggle “Speak replies”, or upload a WAV to test any flow.
-							</p>
-						</div>
-					) : (
-						turns.map((turn) => (
-							<TurnBubble
-								key={turn.id}
-								turn={turn}
-								domiaKey={selected.domiaKey}
-								domiaName={selected.name}
-								domiaAvatarId={selected.avatarId}
-							/>
-						))
-					)}
-				</div>
+				{turns.length === 0 ? (
+					<div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center text-sm">
+						<MessagesSquare className="size-8 opacity-40" />
+						<p>Start a conversation with {selected.name}.</p>
+						<p className="text-xs">
+							Type, toggle “Speak replies”, or upload a WAV to test any flow.
+						</p>
+					</div>
+				) : (
+					<MessageScrollerProvider
+						key={selectedKey}
+						autoScroll
+						defaultScrollPosition="last-anchor"
+						scrollPreviousItemPeek={64}
+					>
+						<MessageScroller className="min-h-0 flex-1">
+							<MessageScrollerViewport>
+								<MessageScrollerContent className="p-4">
+									{turns.map((turn) => (
+										<MessageScrollerItem
+											key={turn.id}
+											messageId={turn.id}
+											scrollAnchor={turn.role === "user"}
+										>
+											<TurnBubble
+												turn={turn}
+												domiaKey={selected.domiaKey}
+												domiaName={selected.name}
+												domiaAvatarId={selected.avatarId}
+											/>
+										</MessageScrollerItem>
+									))}
+								</MessageScrollerContent>
+							</MessageScrollerViewport>
+							<MessageScrollerButton />
+						</MessageScroller>
+					</MessageScrollerProvider>
+				)}
 
 				<div className="space-y-3 border-t p-3">
 					{pending && (

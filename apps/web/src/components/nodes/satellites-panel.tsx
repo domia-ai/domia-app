@@ -424,7 +424,7 @@ function BoundSatellites({
 		const result = await mutation.mutateAsync(satelliteId)
 		if (result.ok) {
 			toast.success("Satellite unbound", {
-				description: "The node restarts to drop the connection.",
+				description: "Connection dropped live — no restart needed.",
 			})
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["satellites", domiaKey] }),
@@ -502,7 +502,7 @@ function BindDialog({
 			})
 			if (result.ok) {
 				toast.success("Satellite bound", {
-					description: "The node restarts — confirming the connection…",
+					description: "Connecting live — no restart needed.",
 				})
 				onOpenChange(false)
 				onBound(value.targetKey, device.satelliteId)
@@ -525,7 +525,7 @@ function BindDialog({
 					<DialogTitle>Bind {device.name}</DialogTitle>
 					<DialogDescription>
 						Assign this device to a room. Paste the device&apos;s API encryption
-						key (from its ESPHome setup). The node restarts to connect.
+						key (from its ESPHome setup). It connects live.
 					</DialogDescription>
 				</DialogHeader>
 				<form

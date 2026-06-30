@@ -1,3 +1,13 @@
+import type { LucideIcon } from "lucide-react"
+import type {
+	SatelliteNumberEntity,
+	SatelliteCapabilities,
+	SatelliteEvent,
+} from "@/types/rooms"
+import type { ConfigApplyResult } from "@/types/config"
+
+export type { SatelliteNumberEntity }
+
 export type DiscoveredSatellite = {
 	satelliteId: string
 	name: string
@@ -15,10 +25,6 @@ export type BoundSatelliteRow = {
 	isActive: boolean
 	followUpEnabled: boolean
 }
-
-import type { SatelliteNumberEntity } from "@/types/rooms"
-
-export type { SatelliteNumberEntity }
 
 export type SatelliteWakeWord = {
 	id: string
@@ -40,6 +46,15 @@ export type BoundSatellite = BoundSatelliteRow & {
 	availableWakeWords: SatelliteWakeWord[]
 	activeWakeWords: string[]
 	numberEntities: SatelliteNumberEntity[]
+	capabilities: SatelliteCapabilities
+	firmwareVersion: string | null
+	recentEvents: SatelliteEvent[]
+}
+
+export type SatelliteWithContext = BoundSatellite & {
+	domiaKey: string
+	domiaName: string
+	avatarId: string | null
 }
 
 export type SetWakeWordsResult = {
@@ -77,10 +92,56 @@ export type BindSatelliteBody = {
 
 export type BindSatelliteResult = {
 	bound: boolean
-	restarting: boolean
+	apply: ConfigApplyResult
 }
 
 export type UnbindSatelliteResult = {
 	removed: boolean
-	restarting: boolean
+	apply: ConfigApplyResult
+}
+
+export type StatusIndicatorProps = {
+	status: string
+	className?: string
+}
+
+export type ProtocolBadgeProps = {
+	protocol: string
+}
+
+export type CapabilityChipsProps = {
+	caps: Record<string, boolean>
+	className?: string
+}
+
+export type MetricCardProps = {
+	icon: LucideIcon
+	label: string
+	value: number
+	tone?: "success" | "danger" | "primary" | "muted"
+}
+
+export type SatellitesTableProps = {
+	satellites: SatelliteWithContext[]
+	selectedId: string | null
+	onSelect: (s: SatelliteWithContext) => void
+	onTestSpeaker: (s: SatelliteWithContext) => void
+	onAnnounce: (s: SatelliteWithContext) => void
+}
+
+export type SatelliteDetailProps = {
+	satellite: SatelliteWithContext
+	onTestSpeaker: (s: SatelliteWithContext) => void
+	onAnnounce: (s: SatelliteWithContext) => void
+	onToggleFollowUp: (s: SatelliteWithContext, on: boolean) => void
+}
+
+export type SectionLabelProps = {
+	children: string
+}
+
+export type InfoRowProps = {
+	icon: LucideIcon
+	label: string
+	value: string
 }

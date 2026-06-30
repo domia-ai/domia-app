@@ -4,7 +4,12 @@ import dbAdapter from "@/db/adapter"
 import { env } from "@/config"
 import { fetchSync, fetchAudio } from "@/services/node-api"
 import { ingestionLogger } from "@/utils"
-import type { AudioKind, DomiaSnapshot, NodeInteraction } from "@/types"
+import type {
+	AudioKind,
+	DomiaSnapshot,
+	NodeInteraction,
+	NodeAnnouncement,
+} from "@/types"
 
 const SYNC_LIMIT = env.DOMIA_APP_SYNC_PAGE_SIZE
 const MAX_PAGES = env.DOMIA_APP_SYNC_MAX_PAGES
@@ -74,10 +79,19 @@ const archiveAudios = async (
 	}
 }
 
+const archiveAnnouncementAudios = async (
+	snapshot: DomiaSnapshot,
+	announcements: NodeAnnouncement[],
+) => {
+	for (const a of announcements) {
+		if (a.audioPath) await archiveAudioSafe(snapshot, a.id, "announce")
+	}
+}
+
 const AUDIO_RETRY_LIMIT = 10
 
 const retryMissingAudio = async (snapshot: DomiaSnapshot): Promise<void> => {
-	for (const kind of ["tts", "input"] as const) {
+	for (const kind of ["tts", "input", "announce"] as const) {
 		const missing = dbAdapter.listMissingAudio(
 			snapshot.domiaKey,
 			kind,
@@ -108,10 +122,12 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				data.interactions.length > 0 ||
 				data.emotionEvents.length > 0 ||
 				data.facts.length > 0 ||
-				data.sessions.length > 0
+				data.sessions.length > 0 ||
+				data.announcements.length > 0
 			if (hasData) {
 				dbAdapter.mirrorSync(domiaKey, data)
 				await archiveAudios(snapshot, data.interactions)
+				await archiveAnnouncementAudios(snapshot, data.announcements)
 				total += data.interactions.length
 			}
 
@@ -119,7 +135,8 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				data.interactions.length >= SYNC_LIMIT ||
 				data.sessions.length >= SYNC_LIMIT ||
 				data.emotionEvents.length >= SYNC_LIMIT ||
-				data.facts.length >= SYNC_LIMIT
+				data.facts.length >= SYNC_LIMIT ||
+				data.announcements.length >= SYNC_LIMIT
 
 			if (data.nextCursor && data.nextCursor !== cursor) {
 				cursor = data.nextCursor

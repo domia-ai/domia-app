@@ -11,6 +11,7 @@ import {
 	MessageSquareText,
 	MessagesSquare,
 	Network,
+	RadioTower,
 	Settings,
 } from "lucide-react"
 import {
@@ -34,6 +35,7 @@ const NAV: NavItem[] = [
 		activeFor: ["/domias", "/nodes"],
 	},
 	{ href: "/broadcast", label: "Broadcast", icon: Megaphone },
+	{ href: "/satellites", label: "Satellites", icon: RadioTower },
 	{ href: "/templates", label: "Templates", icon: LayoutTemplate },
 	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },
 	{ href: "/chat", label: "Chat", icon: MessageSquareText },

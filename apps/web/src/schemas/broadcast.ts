@@ -1,8 +1,20 @@
 import { z } from "zod"
 
-export const announceFormSchema = z.object({
-	text: z.string().trim().min(1, "Type something to announce"),
-})
+export const announceFormSchema = z
+	.object({
+		text: z.string(),
+		clip: z.string().nullable(),
+		delivery: z.enum(["original", "domia-voice"]),
+		targets: z.array(z.string()),
+	})
+	.refine((v) => v.text.trim().length > 0 || !!v.clip, {
+		message: "Type a message or record a clip",
+		path: ["text"],
+	})
+	.refine((v) => v.targets.length > 0, {
+		message: "Pick at least one target",
+		path: ["targets"],
+	})
 
 export const intercomFormSchema = z
 	.object({

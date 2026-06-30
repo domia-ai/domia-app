@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/shell/page-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChatConsole } from "@/components/chat/chat-console"
-import { RoomsPanel } from "@/components/rooms/rooms-panel"
 import { getMeshDomiasFn } from "@/server/overview"
 
 export const Route = createFileRoute("/_dashboard/chat")({
@@ -31,7 +30,6 @@ function ChatPage() {
 			{domias.length ? (
 				<>
 					<ChatConsole domias={domias} initialKey={initialKey} />
-					<RoomsPanel domias={domias} />
 				</>
 			) : (
 				<Card>

@@ -28,8 +28,29 @@ export type ConfigSnapshot = {
 
 export type ConfigFetchSource = "live" | "snapshot"
 
+export type ConfigApplySubsystemStatus =
+	| "live"
+	| "reloaded"
+	| "failed"
+	| "skipped"
+
+export type ConfigApplySubsystem = {
+	subsystem: string
+	status: ConfigApplySubsystemStatus
+	runningRevision?: number
+	error?: string
+}
+
+export type ConfigApplyResult = {
+	result: "live" | "reloaded" | "partial" | "restart"
+	desiredRevision: number
+	subsystems: ConfigApplySubsystem[]
+	drained: string[]
+}
+
 export type ConfigImportResult = {
 	config: ConfigSnapshot
+	apply?: ConfigApplyResult
 }
 
 export type ConfigHealthEntry = {

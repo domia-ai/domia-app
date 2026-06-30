@@ -96,6 +96,7 @@ export type DataTableProps<TData, TValue> = {
 	isLoading?: boolean
 	emptyLabel?: string
 	onRowClick?: (row: TData) => void
+	selectedRowId?: string | null
 	toolbar?: ReactNode
 	rowActions?: (row: TData) => ReactNode
 	columnVisibility?: VisibilityState

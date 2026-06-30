@@ -14,15 +14,9 @@ import {
 import { intercom } from "@/server/rooms"
 import { intercomFormSchema } from "@/schemas/broadcast"
 import { isDemoMode } from "@/lib/demo"
-import type { LiveRoom } from "@/types/live"
+import type { IntercomControlProps } from "@/types/live"
 
-export function IntercomControl({
-	hostDomiaKey,
-	rooms,
-}: {
-	hostDomiaKey: string
-	rooms: LiveRoom[]
-}) {
+export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 	const demo = isDemoMode()
 	const [intercomOn, setIntercomOn] = useState(false)
 	const [stopping, setStopping] = useState(false)
@@ -36,11 +30,15 @@ export function IntercomControl({
 			const result = await intercom({
 				data: { hostDomiaKey, from: value.from, to: value.to },
 			})
-			if (result.ok) {
+			if (result.ok && result.data?.intercom === "started") {
 				setIntercomOn(true)
 				toast.success("Intercom live")
 			} else {
-				toast.error("Could not start intercom", { description: result.error })
+				toast.error("Could not start intercom", {
+					description: result.ok
+						? "No reachable audio endpoint in the target room"
+						: result.error,
+				})
 			}
 		},
 	})

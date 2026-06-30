@@ -33,6 +33,7 @@ export function DataTable<TData, TValue>({
 	isLoading,
 	emptyLabel = "No results.",
 	onRowClick,
+	selectedRowId,
 	toolbar,
 	rowActions,
 	columnVisibility,
@@ -198,7 +199,11 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
+									data-state={
+										(row.getIsSelected() ||
+											(selectedRowId != null && row.id === selectedRowId)) &&
+										"selected"
+									}
 									className={cn(onRowClick && "cursor-pointer")}
 									onClick={
 										onRowClick ? () => onRowClick(row.original) : undefined

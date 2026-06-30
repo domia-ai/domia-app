@@ -10,12 +10,11 @@ export type NodeIdentity = {
 
 export type CreateIdentityResult = {
 	identity: { domiaKey: string; name: string }
-	restarting: boolean
+	restored?: boolean
 }
 
 export type RemoveIdentityResult = {
 	removed: boolean
-	restarting: boolean
 }
 
 export type NodeIdentitySummary = {

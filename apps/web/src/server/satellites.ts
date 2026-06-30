@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start"
 import {
 	discoverSatellites,
 	listSatellites,
+	listAllSatellites,
 	bindSatellite,
 	unbindSatellite,
 	setSatelliteWakeWords,
@@ -73,11 +74,22 @@ export const testSatelliteSpeakerFn = createServerFn({ method: "POST" })
 		return testSatelliteSpeaker(data)
 	})
 
+export const listAllSatellitesFn = createServerFn({ method: "GET" }).handler(
+	() => listAllSatellites(),
+)
+
 export const satellitesQueryOptions = (domiaKey: string) =>
 	queryOptions({
 		queryKey: ["satellites", domiaKey],
 		queryFn: () => listSatellitesFn({ data: domiaKey }),
 		refetchInterval: 3000,
+	})
+
+export const allSatellitesQueryOptions = () =>
+	queryOptions({
+		queryKey: ["satellites-all"],
+		queryFn: () => listAllSatellitesFn(),
+		refetchInterval: 4000,
 	})
 
 export const discoverSatellitesQueryOptions = (anchorDomiaKey: string) =>

@@ -4,7 +4,7 @@ import { db } from "@/db"
 
 export const getAudioAsset = async (
 	interactionId: string,
-	kind: "input" | "tts",
+	kind: "input" | "tts" | "announce",
 ): Promise<AudioAssetRow | null> => {
 	const [row] = await db
 		.select()

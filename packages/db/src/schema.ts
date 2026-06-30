@@ -311,6 +311,39 @@ export const mindTemplate = sqliteTable(
 	(t) => [uniqueIndex("mind_template_name_idx").on(t.name)],
 )
 
+export const announcement = sqliteTable(
+	"announcement",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		broadcastId: text("broadcast_id").notNull(),
+		text: text("text").notNull().default(""),
+		kind: text("kind").notNull(),
+		delivery: text("delivery").notNull(),
+		target: text("target"),
+		delivered: integer("delivered", { mode: "boolean" })
+			.notNull()
+			.default(false),
+		audioPath: text("audio_path"),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+		updatedAt: text("updated_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("announcement_source_idx").on(t.sourceDomiaKey),
+		index("announcement_broadcast_idx").on(t.broadcastId),
+	],
+)
+
+export const announcementRelations = relations(announcement, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [announcement.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+}))
+
+export type AnnouncementRow = typeof announcement.$inferSelect
+export type AnnouncementInsert = typeof announcement.$inferInsert
+
 export type DomiaRegistryRow = typeof domiaRegistry.$inferSelect
 export type DomiaRegistryInsert = typeof domiaRegistry.$inferInsert
 export type InteractionTraceRow = typeof interactionTrace.$inferSelect

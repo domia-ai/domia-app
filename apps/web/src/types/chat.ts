@@ -65,6 +65,15 @@ export type LiveVoiceTarget = {
 	httpPort: number | null
 }
 
+export type AudioRecorderControls = {
+	recording: boolean
+	converting: boolean
+	seconds: number
+	level: number
+	start: () => Promise<void>
+	stop: () => void
+}
+
 export type ComposerProps = {
 	disabled: boolean
 	onSendText: (text: string, speak: boolean) => void
@@ -76,4 +85,10 @@ export type TurnBubbleProps = {
 	domiaKey: string
 	domiaName: string
 	domiaAvatarId: string | null
+}
+
+export type RecordingIndicatorProps = {
+	seconds: number
+	level: number
+	className?: string
 }

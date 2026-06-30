@@ -27,7 +27,12 @@ export const listLivePresence = async (): Promise<ActionResult<LiveNode[]>> => {
 						nodeId: node.nodeId,
 						nodeName: node.principalName ?? base,
 						hostDomiaKey: principal.domiaKey,
-						rooms: hosted.map((i) => ({ domiaKey: i.domiaKey, name: i.name })),
+						rooms: hosted.map((i) => ({
+							domiaKey: i.domiaKey,
+							name: i.name,
+							canIntercom: byKey.get(i.domiaKey)?.canIntercom ?? false,
+							canBroadcast: byKey.get(i.domiaKey)?.canBroadcast ?? false,
+						})),
 						entries: hosted.map(
 							(i) => byKey.get(i.domiaKey) ?? idleEntry(i.domiaKey),
 						),

@@ -2,6 +2,7 @@ import standalone from "./system-templates/standalone.json"
 import fullHub from "./system-templates/full-hub.json"
 import thinClient from "./system-templates/thin-client.json"
 import homeAssistant from "./system-templates/home-assistant.json"
+import jetson from "./system-templates/jetson.json"
 import type { ConfigSnapshot } from "@/types/config"
 
 export const SYSTEM_TEMPLATES: {
@@ -37,5 +38,12 @@ export const SYSTEM_TEMPLATES: {
 		description:
 			"A thin room device (wake word, mic, playback) that controls Home Assistant over MCP — tools run locally while STT, LLM and TTS auto-delegate to a capable Domia on the mesh. After applying, set the provider URL and paste a long-lived token in the Skills section.",
 		config: homeAssistant as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:jetson",
+		name: "Jetson Orin Nano",
+		description:
+			"Full local pipeline tuned for the NVIDIA Jetson Orin Nano — a small 3B model that fits the 8 GB unified memory, with the LLM on the GPU and STT/TTS on CPU. A starting point: the exact 3B model and quantization are still to be confirmed against on-device benchmarks. Pull the model in Ollama first.",
+		config: jetson as unknown as ConfigSnapshot,
 	},
 ]

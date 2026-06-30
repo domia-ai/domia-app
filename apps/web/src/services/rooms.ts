@@ -1,12 +1,12 @@
 import { getNodeEndpoint } from "@/services/fleet"
 import {
-	nodePresence,
 	nodeSpeak,
+	nodeAnnounceAudio,
 	nodeIntercom,
 	nodeCancelTurn,
 } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
-import type { PresenceEntry, IntercomResult } from "@/types/rooms"
+import type { IntercomResult } from "@/types/rooms"
 
 const baseFor = async (domiaKey: string): Promise<string | null> => {
 	const endpoint = await getNodeEndpoint(domiaKey)
@@ -14,53 +14,54 @@ const baseFor = async (domiaKey: string): Promise<string | null> => {
 	return `http://${endpoint.localIp}:${endpoint.httpPort}`
 }
 
-export const getRoomPresence = async (
-	domiaKey: string,
-): Promise<ActionResult<PresenceEntry[]>> => {
-	try {
-		const base = await baseFor(domiaKey)
-		if (!base) return { ok: false, error: "Host has no reachable address" }
-		const { presence } = await nodePresence(base)
-		return { ok: true, data: presence }
-	} catch (err) {
-		return {
-			ok: false,
-			error: err instanceof Error ? err.message : "Presence failed",
-		}
-	}
-}
-
-export const broadcastToRooms = async (
-	hostDomiaKey: string,
-	text: string,
-): Promise<ActionResult<{ delivered: string[] }>> => {
-	try {
-		const base = await baseFor(hostDomiaKey)
-		if (!base) return { ok: false, error: "Host has no reachable address" }
-		const res = await nodeSpeak(base, { broadcast: true, text })
-		const delivered = Array.isArray(res.delivered) ? res.delivered : []
-		return { ok: true, data: { delivered } }
-	} catch (err) {
-		return {
-			ok: false,
-			error: err instanceof Error ? err.message : "Broadcast failed",
-		}
-	}
-}
-
 export const announceToDomia = async (
 	domiaKey: string,
 	text: string,
+	broadcastId?: string,
 ): Promise<ActionResult<{ delivered: boolean; target?: string }>> => {
 	try {
 		const base = await baseFor(domiaKey)
 		if (!base)
 			return { ok: false, error: "This Domia has no reachable address" }
-		const res = await nodeSpeak(base, { domiaKey, text })
+		const res = await nodeSpeak(base, { domiaKey, text, broadcastId })
 		const delivered = Array.isArray(res.delivered)
 			? res.delivered.length > 0
 			: !!res.delivered
 		return { ok: true, data: { delivered, target: res.target } }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Announce failed",
+		}
+	}
+}
+
+export const announceAudioToDomia = async (
+	domiaKey: string,
+	audioBase64: string,
+	mode: "voice" | "transcribe",
+	broadcastId?: string,
+): Promise<
+	ActionResult<{ delivered: boolean; target?: string; transcript?: string }>
+> => {
+	try {
+		const base = await baseFor(domiaKey)
+		if (!base)
+			return { ok: false, error: "This Domia has no reachable address" }
+		const res = await nodeAnnounceAudio(base, {
+			domiaKey,
+			audioBase64,
+			mode,
+			broadcastId,
+		})
+		return {
+			ok: true,
+			data: {
+				delivered: !!res.delivered,
+				target: res.target,
+				transcript: res.transcript,
+			},
+		}
 	} catch (err) {
 		return {
 			ok: false,

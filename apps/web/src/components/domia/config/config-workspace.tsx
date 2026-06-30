@@ -28,6 +28,7 @@ import { useConfigDraft } from "@/hooks/use-config-draft"
 import { importConfigFn } from "@/server/config"
 import { CONFIG_SECTIONS, SECTION_GROUPS } from "@/constants/config"
 import { cn } from "@/lib/utils"
+import { summarizeApply } from "@/lib/config-apply"
 import type { ConfigSnapshot } from "@/types/config"
 
 const ICONS: Record<string, typeof User> = {
@@ -101,9 +102,15 @@ export function ConfigWorkspace({
 			queryClient.invalidateQueries({ queryKey: ["fleet"] })
 			queryClient.invalidateQueries({ queryKey: ["config", domiaKey] })
 			void router.invalidate()
-			toast.success("Configuration saved", {
-				description: `${domiaName} is restarting to apply it.`,
-			})
+			const apply = result.data.apply
+			const description = apply
+				? summarizeApply(apply)
+				: `${domiaName} applied the change.`
+			if (apply && (apply.result === "partial" || apply.result === "restart")) {
+				toast.warning("Configuration saved", { description })
+			} else {
+				toast.success("Configuration saved", { description })
+			}
 		} else {
 			toast.error("Could not save", {
 				description: result.ok ? "Empty response" : result.error,

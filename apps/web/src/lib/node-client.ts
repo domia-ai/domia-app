@@ -105,8 +105,25 @@ export const nodeSpeak = (
 		broadcast?: boolean
 		active?: boolean
 		text: string
+		broadcastId?: string
 	},
 ) => post<SpeakResult>(base, "/speak", body)
+
+export const nodeAnnounceAudio = (
+	base: string,
+	body: {
+		domiaKey?: string
+		audioBase64: string
+		mode: "voice" | "transcribe"
+		broadcastId?: string
+	},
+) =>
+	post<{
+		mode: "voice" | "transcribe"
+		delivered: boolean
+		target?: string
+		transcript?: string
+	}>(base, "/announce-audio", body)
 
 export const nodeIntercom = (
 	base: string,

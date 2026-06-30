@@ -1,3 +1,19 @@
+CREATE TABLE `announcement` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`broadcast_id` text NOT NULL,
+	`text` text DEFAULT '' NOT NULL,
+	`kind` text NOT NULL,
+	`delivery` text NOT NULL,
+	`target` text,
+	`delivered` integer DEFAULT false NOT NULL,
+	`audio_path` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `announcement_source_idx` ON `announcement` (`source_domia_key`);--> statement-breakpoint
+CREATE INDEX `announcement_broadcast_idx` ON `announcement` (`broadcast_id`);--> statement-breakpoint
 CREATE TABLE `audio_asset` (
 	`id` text PRIMARY KEY NOT NULL,
 	`source_domia_key` text NOT NULL,

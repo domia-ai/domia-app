@@ -17,6 +17,21 @@ export type SatelliteNumberEntity = {
 	unit: string | null
 }
 
+export type SatelliteCapabilities = {
+	canHear: boolean
+	canSpeak: boolean
+	canAnnounce: boolean
+	canIntercom: boolean
+	canFollowUp: boolean
+}
+
+export type SatelliteEvent = {
+	id: string
+	kind: string
+	detail: string
+	at: number
+}
+
 export type SatellitePresence = {
 	satelliteId: string
 	protocol: SatelliteProtocol
@@ -33,6 +48,9 @@ export type SatellitePresence = {
 	availableWakeWords?: SatelliteWakeWordInfo[]
 	activeWakeWords?: string[]
 	numberEntities?: SatelliteNumberEntity[]
+	capabilities?: SatelliteCapabilities
+	firmwareVersion?: string | null
+	recentEvents?: SatelliteEvent[]
 }
 
 export type PresenceEntry = {
@@ -40,6 +58,8 @@ export type PresenceEntry = {
 	status: PresenceStatus
 	lastActiveAt: number | null
 	satellites: SatellitePresence[]
+	canIntercom?: boolean
+	canBroadcast?: boolean
 }
 
 export type SpeakResult = {

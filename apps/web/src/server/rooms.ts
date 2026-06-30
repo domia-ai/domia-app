@@ -1,32 +1,43 @@
 import { createServerFn } from "@tanstack/react-start"
 import { z } from "zod"
 import {
-	getRoomPresence,
-	broadcastToRooms,
 	announceToDomia,
+	announceAudioToDomia,
 	setRoomIntercom,
 	cancelRoomTurn,
 } from "@/services/rooms"
 import { assertWritable } from "@/lib/demo"
 
-export const roomPresence = createServerFn({ method: "GET" })
-	.validator(z.object({ hostDomiaKey: z.string().min(1) }))
-	.handler(({ data }) => getRoomPresence(data.hostDomiaKey))
-
-export const broadcast = createServerFn({ method: "POST" })
+export const announce = createServerFn({ method: "POST" })
 	.validator(
-		z.object({ hostDomiaKey: z.string().min(1), text: z.string().min(1) }),
+		z.object({
+			domiaKey: z.string().min(1),
+			text: z.string().min(1),
+			broadcastId: z.string().min(1).optional(),
+		}),
 	)
 	.handler(({ data }) => {
 		assertWritable()
-		return broadcastToRooms(data.hostDomiaKey, data.text)
+		return announceToDomia(data.domiaKey, data.text, data.broadcastId)
 	})
 
-export const announce = createServerFn({ method: "POST" })
-	.validator(z.object({ domiaKey: z.string().min(1), text: z.string().min(1) }))
+export const announceAudio = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			domiaKey: z.string().min(1),
+			audioBase64: z.string().min(1),
+			mode: z.enum(["voice", "transcribe"]),
+			broadcastId: z.string().min(1).optional(),
+		}),
+	)
 	.handler(({ data }) => {
 		assertWritable()
-		return announceToDomia(data.domiaKey, data.text)
+		return announceAudioToDomia(
+			data.domiaKey,
+			data.audioBase64,
+			data.mode,
+			data.broadcastId,
+		)
 	})
 
 export const intercom = createServerFn({ method: "POST" })

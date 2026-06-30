@@ -7,6 +7,7 @@ import {
 	memoryFact,
 	syncCursor,
 	audioAsset,
+	announcement,
 	type DomiaRegistryInsert,
 	type AudioAssetInsert,
 } from "@domia-app/db"
@@ -92,19 +93,34 @@ const dbAdapter = {
 	},
 	listMissingAudio: (
 		domiaKey: string,
-		kind: "tts" | "input",
+		kind: "tts" | "input" | "announce",
 		limit: number,
 	): string[] => {
-		const pathCol =
-			kind === "tts"
-				? interactionTrace.ttsAudioPath
-				: interactionTrace.inputAudioPath
 		const archived = db
 			.select({ id: audioAsset.interactionId })
 			.from(audioAsset)
 			.where(
 				and(eq(audioAsset.sourceDomiaKey, domiaKey), eq(audioAsset.kind, kind)),
 			)
+		if (kind === "announce") {
+			return db
+				.select({ id: announcement.id })
+				.from(announcement)
+				.where(
+					and(
+						eq(announcement.sourceDomiaKey, domiaKey),
+						isNotNull(announcement.audioPath),
+						notInArray(announcement.id, archived),
+					),
+				)
+				.limit(limit)
+				.all()
+				.map((r) => r.id)
+		}
+		const pathCol =
+			kind === "tts"
+				? interactionTrace.ttsAudioPath
+				: interactionTrace.inputAudioPath
 		return db
 			.select({ id: interactionTrace.id })
 			.from(interactionTrace)
@@ -257,6 +273,25 @@ const dbAdapter = {
 							updatedAt: values.updatedAt,
 						},
 					})
+					.run()
+			}
+			for (const r of data.announcements) {
+				const values = {
+					id: r.id,
+					sourceDomiaKey: domiaKey,
+					broadcastId: r.broadcastId,
+					text: r.text ?? "",
+					kind: r.kind,
+					delivery: r.delivery,
+					target: r.target ?? null,
+					delivered: r.delivered ?? false,
+					audioPath: r.audioPath ?? null,
+					createdAt: r.createdAt,
+					updatedAt: r.updatedAt,
+				}
+				tx.insert(announcement)
+					.values(values)
+					.onConflictDoUpdate({ target: announcement.id, set: values })
 					.run()
 			}
 		})

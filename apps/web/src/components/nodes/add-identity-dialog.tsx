@@ -41,7 +41,7 @@ export function AddIdentityDialog({
 			})
 			if (result.ok) {
 				toast.success("Identity created", {
-					description: `${trimmed} is being added — the node restarts and it will appear shortly.`,
+					description: `${trimmed} is now hosted live — no restart needed.`,
 				})
 				form.reset()
 				setOpen(false)
@@ -71,9 +71,8 @@ export function AddIdentityDialog({
 				<DialogHeader>
 					<DialogTitle>Add a hosted identity</DialogTitle>
 					<DialogDescription>
-						Creates a new neutral identity hosted on this node. The node
-						restarts to bring it online (all identities it hosts are briefly
-						unavailable), then you can configure it.
+						Creates a new neutral identity hosted on this node. It comes online
+						live — other identities stay up — then you can configure it.
 					</DialogDescription>
 				</DialogHeader>
 				<form

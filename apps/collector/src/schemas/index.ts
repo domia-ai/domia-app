@@ -29,5 +29,6 @@ export const syncResponseSchema = z.object({
 	sessions: z.array(traceRowSchema),
 	emotionEvents: z.array(traceRowSchema),
 	facts: z.array(traceRowSchema),
+	announcements: z.array(traceRowSchema).optional().default([]),
 	nextCursor: z.string(),
 })

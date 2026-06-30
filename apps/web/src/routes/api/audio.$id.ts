@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/audio/$id")({
 		handlers: {
 			GET: async ({ request, params }) => {
 				const kind = new URL(request.url).searchParams.get("kind")
-				if (kind !== "input" && kind !== "tts") {
+				if (kind !== "input" && kind !== "tts" && kind !== "announce") {
 					return new Response("Invalid kind", { status: 400 })
 				}
 

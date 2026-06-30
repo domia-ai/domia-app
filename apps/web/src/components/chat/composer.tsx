@@ -1,11 +1,24 @@
 import { useRef, useState } from "react"
-import { Loader2, Mic, Paperclip, Send, Square, Volume2 } from "lucide-react"
-import { toast } from "sonner"
+import {
+	Loader2,
+	Mic,
+	Paperclip,
+	Send,
+	Square,
+	Type,
+	Volume2,
+	X,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Toggle } from "@/components/ui/toggle"
-import { cn } from "@/lib/utils"
-import { blobToWav16kBase64 } from "@/lib/wav-encode"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupTextarea,
+} from "@/components/ui/input-group"
+import { RecordingIndicator } from "@/components/audio/recording-indicator"
+import { useAudioRecorder } from "@/hooks/use-audio-recorder"
 import { isDemoMode } from "@/lib/demo"
 import type { ComposerProps } from "@/types/chat"
 
@@ -29,121 +42,55 @@ export function Composer({
 	const disabled = disabledProp || demoMode
 	const [draft, setDraft] = useState("")
 	const [speak, setSpeak] = useState(false)
-	const [recording, setRecording] = useState(false)
-	const [converting, setConverting] = useState(false)
+	const [clip, setClip] = useState<string | null>(null)
 	const fileRef = useRef<HTMLInputElement | null>(null)
-	const recorderRef = useRef<MediaRecorder | null>(null)
-	const chunksRef = useRef<Blob[]>([])
-	const speakRef = useRef(speak)
-	speakRef.current = speak
 
-	const submit = () => {
+	const recorder = useAudioRecorder(setClip)
+
+	const submitText = () => {
 		const text = draft.trim()
 		if (!text || disabled) return
 		onSendText(text, speak)
 		setDraft("")
 	}
 
+	const submitVoice = () => {
+		if (!clip || disabled) return
+		onSendVoice(clip, "recording.wav", speak)
+		setClip(null)
+	}
+
 	const pickFile = async (file: File | undefined) => {
 		if (!file || disabled) return
 		const audioBase64 = await toBase64(file)
-		if (audioBase64) onSendVoice(audioBase64, file.name, speak)
+		if (audioBase64) setClip(audioBase64)
 		if (fileRef.current) fileRef.current.value = ""
 	}
 
-	const startRecording = async () => {
-		if (disabled || recording) return
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-			const recorder = new MediaRecorder(stream)
-			chunksRef.current = []
-			recorder.ondataavailable = (e) => {
-				if (e.data.size > 0) chunksRef.current.push(e.data)
-			}
-			recorder.onstop = async () => {
-				for (const track of stream.getTracks()) track.stop()
-				setRecording(false)
-				const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
-				if (blob.size === 0) return
-				setConverting(true)
-				try {
-					const audioBase64 = await blobToWav16kBase64(blob)
-					onSendVoice(audioBase64, "recording.wav", speakRef.current)
-				} catch {
-					toast.error("Could not process the recording")
-				} finally {
-					setConverting(false)
-				}
-			}
-			recorderRef.current = recorder
-			recorder.start()
-			setRecording(true)
-		} catch {
-			toast.error("Microphone access was denied")
-		}
-	}
-
-	const stopRecording = () => recorderRef.current?.stop()
+	const reviewing = clip !== null && !recorder.recording
 
 	return (
-		<div className="space-y-2">
-			<div className="relative">
-				<Textarea
-					value={draft}
-					onChange={(e) => setDraft(e.target.value)}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" && !e.shiftKey) {
-							e.preventDefault()
-							submit()
-						}
-					}}
-					placeholder={
-						demoMode
-							? "Chat needs a live mesh — disabled in this read-only demo"
-							: "Type a message… (Enter to send, Shift+Enter for newline)"
-					}
-					disabled={disabled}
-					className="max-h-40 min-h-[3rem] resize-none pr-12"
-				/>
-				<Button
-					type="button"
-					size="icon"
-					onClick={submit}
-					disabled={disabled || !draft.trim()}
-					className="absolute right-2 bottom-2 size-8"
-				>
-					<Send className="size-4" />
-				</Button>
-			</div>
-
+		<div className="flex flex-col gap-2">
 			<div className="flex items-center gap-2">
-				<Toggle
-					pressed={speak}
-					onPressedChange={setSpeak}
+				<span className="text-muted-foreground text-xs font-medium">
+					Reply as
+				</span>
+				<ToggleGroup
 					variant="outline"
 					size="sm"
-					className={cn(speak && "border-primary text-primary")}
+					value={[speak ? "voice" : "text"]}
+					onValueChange={(group) => {
+						const next = group[0]
+						if (next === "text" || next === "voice") setSpeak(next === "voice")
+					}}
 				>
-					<Volume2 className="size-3.5" />
-					Speak replies
-				</Toggle>
-
-				<Button
-					type="button"
-					variant={recording ? "destructive" : "outline"}
-					size="sm"
-					disabled={disabled || converting}
-					onClick={recording ? stopRecording : startRecording}
-				>
-					{converting ? (
-						<Loader2 className="size-3.5 animate-spin" />
-					) : recording ? (
-						<Square className="size-3.5" />
-					) : (
-						<Mic className="size-3.5" />
-					)}
-					{converting ? "Processing…" : recording ? "Stop" : "Record"}
-				</Button>
+					<ToggleGroupItem value="text">
+						<Type className="size-3.5" /> Text
+					</ToggleGroupItem>
+					<ToggleGroupItem value="voice">
+						<Volume2 className="size-3.5" /> Voice
+					</ToggleGroupItem>
+				</ToggleGroup>
 
 				<input
 					ref={fileRef}
@@ -154,21 +101,120 @@ export function Composer({
 				/>
 				<Button
 					type="button"
-					variant="outline"
+					variant="ghost"
 					size="sm"
-					disabled={disabled || recording || converting}
+					className="ml-auto"
+					disabled={disabled || recorder.recording || recorder.converting}
 					onClick={() => fileRef.current?.click()}
 				>
 					<Paperclip className="size-3.5" />
 					Upload WAV
 				</Button>
-
-				<span className="text-muted-foreground ml-auto text-xs">
-					{recording
-						? "recording…"
-						: `${speak ? "spoken reply" : "text reply"} · captured at 16 kHz mono`}
-				</span>
 			</div>
+
+			{reviewing ? (
+				<div className="border-border bg-muted/20 flex flex-col gap-2 rounded-lg border p-3">
+					<div className="flex items-center gap-2 text-sm">
+						<Volume2 className="text-primary size-4" />
+						<span className="font-medium">Review voice message</span>
+						<div className="ml-auto flex items-center gap-1">
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								disabled={disabled}
+								onClick={() => {
+									setClip(null)
+									void recorder.start()
+								}}
+							>
+								<Mic className="size-3.5" /> Re-record
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								disabled={disabled}
+								onClick={() => setClip(null)}
+							>
+								<X className="size-3.5" /> Discard
+							</Button>
+						</div>
+					</div>
+					<audio
+						controls
+						src={`data:audio/wav;base64,${clip}`}
+						className="h-9 w-full"
+					/>
+					<div className="flex items-center justify-between">
+						<span className="text-muted-foreground text-xs">
+							Reply as {speak ? "voice" : "text"}
+						</span>
+						<Button
+							type="button"
+							size="sm"
+							disabled={disabled}
+							onClick={submitVoice}
+						>
+							<Send className="size-4" /> Send
+						</Button>
+					</div>
+				</div>
+			) : (
+				<InputGroup>
+					<InputGroupTextarea
+						value={draft}
+						onChange={(e) => setDraft(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && !e.shiftKey) {
+								e.preventDefault()
+								submitText()
+							}
+						}}
+						placeholder={
+							demoMode
+								? "Chat needs a live mesh — disabled in this read-only demo"
+								: "Type a message… (Enter to send, Shift+Enter for newline)"
+						}
+						disabled={disabled || recorder.recording}
+						rows={1}
+					/>
+					<InputGroupAddon align="block-end" className="pt-1">
+						<InputGroupButton
+							type="button"
+							size="icon-sm"
+							variant={recorder.recording ? "default" : "outline"}
+							disabled={disabled || recorder.converting}
+							className={recorder.recording ? "animate-pulse" : ""}
+							onClick={recorder.recording ? recorder.stop : recorder.start}
+						>
+							{recorder.converting ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : recorder.recording ? (
+								<Square className="size-4" />
+							) : (
+								<Mic className="size-4" />
+							)}
+						</InputGroupButton>
+						{recorder.recording ? (
+							<RecordingIndicator
+								seconds={recorder.seconds}
+								level={recorder.level}
+							/>
+						) : null}
+						<InputGroupButton
+							type="button"
+							size="icon-sm"
+							variant="default"
+							className="ml-auto"
+							disabled={disabled || !draft.trim()}
+							onClick={submitText}
+						>
+							<Send className="size-4" />
+						</InputGroupButton>
+					</InputGroupAddon>
+				</InputGroup>
+			)}
 		</div>
 	)
 }

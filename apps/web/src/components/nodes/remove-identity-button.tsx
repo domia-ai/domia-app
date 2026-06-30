@@ -70,8 +70,8 @@ export function RemoveIdentityButton({
 					<DialogTitle>Remove {name}?</DialogTitle>
 					<DialogDescription>
 						This soft-disables the identity on this node — its history and
-						configuration are kept, and it stops responding. The node restarts
-						to apply the change. You can re-add it later.
+						configuration are kept, and it stops responding live (no restart,
+						other identities stay up). You can re-add it later.
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>

@@ -10,7 +10,7 @@ const CAPTURE_SAMPLE_RATE = 16000
 const wsUrlFor = (target: LiveVoiceTarget): string | null => {
 	if (!target.localIp || !target.httpPort) return null
 	const scheme = window.location.protocol === "https:" ? "wss" : "ws"
-	return `${scheme}://${target.localIp}:${target.httpPort}/satellite`
+	return `${scheme}://${target.localIp}:${target.httpPort}/satellite?live=1`
 }
 
 export const useLiveVoice = (target: LiveVoiceTarget) => {
@@ -27,7 +27,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 	const playbackCtxRef = useRef<AudioContext | null>(null)
 	const streamRef = useRef<MediaStream | null>(null)
 	const workletRef = useRef<AudioWorkletNode | null>(null)
-	const sendingRef = useRef(false)
+	const listeningRef = useRef(false)
 	const playHeadRef = useRef(0)
 	const playFmtRef = useRef<{ sampleRate: number; channels: number }>({
 		sampleRate: 24000,
@@ -61,7 +61,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 	}, [])
 
 	const teardown = useCallback(() => {
-		sendingRef.current = false
+		listeningRef.current = false
 		wsRef.current?.close()
 		wsRef.current = null
 		workletRef.current?.disconnect()
@@ -82,7 +82,13 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 		}
 		patch({ status: "connecting", error: null, transcript: "", reply: "" })
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: {
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true,
+				},
+			})
 			streamRef.current = stream
 
 			const captureCtx = new AudioContext({ sampleRate: CAPTURE_SAMPLE_RATE })
@@ -92,7 +98,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 			const worklet = new AudioWorkletNode(captureCtx, "pcm-capture")
 			worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
 				if (
-					sendingRef.current &&
+					listeningRef.current &&
 					wsRef.current?.readyState === WebSocket.OPEN
 				) {
 					wsRef.current.send(event.data)
@@ -129,9 +135,15 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 				}
 				const msg = JSON.parse(String(event.data))
 				if (msg.type === "ready") {
-					patch({ status: "ready" })
+					void captureCtxRef.current?.resume()
+					void playbackCtxRef.current?.resume()
+					listeningRef.current = true
+					patch({ status: "listening", transcript: "", reply: "" })
 				} else if (msg.type === "transcript") {
 					patch({ transcript: msg.text })
+				} else if (msg.type === "speech_end") {
+					listeningRef.current = false
+					patch({ status: "thinking" })
 				} else if (msg.type === "audio_stream_begin") {
 					playFmtRef.current = {
 						sampleRate: msg.sampleRate ?? 24000,
@@ -139,15 +151,20 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 					}
 					playHeadRef.current = playbackCtxRef.current?.currentTime ?? 0
 					patch({ status: "speaking" })
+				} else if (msg.type === "audio_stream_end") {
+					listeningRef.current = true
+					patch({ status: "listening" })
 				} else if (msg.type === "reply_done") {
-					patch({ status: "ready", reply: msg.reply })
+					patch({ reply: msg.reply })
 				} else if (msg.type === "error") {
 					patch({ status: "error", error: msg.message })
 				}
 			}
 			ws.onerror = () => patch({ status: "error", error: "connection error" })
 			ws.onclose = () => {
-				if (sendingRef.current) sendingRef.current = false
+				if (wsRef.current !== ws) return
+				teardown()
+				patch({ status: "error", error: "connection lost" })
 			}
 		} catch (err) {
 			teardown()
@@ -157,23 +174,6 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 			})
 		}
 	}, [target, patch, playFrame, teardown])
-
-	const startTalk = useCallback(() => {
-		if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
-		void captureCtxRef.current?.resume()
-		void playbackCtxRef.current?.resume()
-		sendingRef.current = true
-		patch({ status: "listening", transcript: "", reply: "" })
-	}, [patch])
-
-	const stopTalk = useCallback(() => {
-		if (!sendingRef.current) return
-		sendingRef.current = false
-		if (wsRef.current?.readyState === WebSocket.OPEN) {
-			wsRef.current.send(JSON.stringify({ type: "speech_end" }))
-		}
-		patch({ status: "thinking" })
-	}, [patch])
 
 	const disconnect = useCallback(() => {
 		teardown()
@@ -196,7 +196,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 		state.status !== "connecting" &&
 		state.status !== "error"
 
-	return { state, connect, disconnect, startTalk, stopTalk, connected }
+	return { state, connect, disconnect, connected }
 }
 
 export type UseLiveVoiceReturn = ReturnType<typeof useLiveVoice>
@@ -204,7 +204,7 @@ export type UseLiveVoiceReturn = ReturnType<typeof useLiveVoice>
 export const liveVoiceStatusLabel: Record<LiveVoiceStatus, string> = {
 	idle: "Off",
 	connecting: "Connecting…",
-	ready: "Hold to talk",
+	ready: "Listening…",
 	listening: "Listening…",
 	thinking: "Thinking…",
 	speaking: "Speaking…",
