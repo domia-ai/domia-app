@@ -8,6 +8,7 @@ import {
 	nodeSetSatelliteWakeWords,
 	nodeSetSatelliteNumber,
 	nodeSetSatelliteFollowUp,
+	nodeSetSatelliteVolume,
 	nodeTestSatelliteSpeaker,
 	nodePresence,
 } from "@/lib/node-client"
@@ -20,6 +21,7 @@ import type {
 	SetWakeWordsResult,
 	SetNumberResult,
 	SetFollowUpResult,
+	SetVolumeResult,
 	TestSpeakerResult,
 	SatelliteWithContext,
 } from "@/types/satellites"
@@ -54,6 +56,7 @@ const enrichSatellite = (
 		availableWakeWords: live?.availableWakeWords ?? [],
 		activeWakeWords: live?.activeWakeWords ?? [],
 		numberEntities: live?.numberEntities ?? [],
+		volume: live?.volume ?? null,
 		capabilities: live?.capabilities ?? NO_CAPABILITIES,
 		firmwareVersion: live?.firmwareVersion ?? null,
 		recentEvents: live?.recentEvents ?? [],
@@ -250,6 +253,29 @@ export const setSatelliteFollowUp = async (input: {
 		return {
 			ok: false,
 			error: err instanceof Error ? err.message : "Could not set follow-up",
+		}
+	}
+}
+
+export const setSatelliteVolume = async (input: {
+	domiaKey: string
+	satelliteId: string
+	volume: number
+}): Promise<ActionResult<SetVolumeResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const result = await nodeSetSatelliteVolume(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+			input.volume,
+		)
+		return { ok: true, data: result }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not set volume",
 		}
 	}
 }

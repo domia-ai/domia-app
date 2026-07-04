@@ -32,6 +32,7 @@ import type {
 	SetWakeWordsResult,
 	SetNumberResult,
 	SetFollowUpResult,
+	SetVolumeResult,
 	TestSpeakerResult,
 } from "@/types/satellites"
 
@@ -241,6 +242,18 @@ export const nodeSetSatelliteFollowUp = (
 			domiaKey,
 		),
 		{ enabled },
+	)
+
+export const nodeSetSatelliteVolume = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	volume: number,
+) =>
+	patch<SetVolumeResult>(
+		base,
+		withKey(`/satellites/${encodeURIComponent(satelliteId)}/volume`, domiaKey),
+		{ volume },
 	)
 
 export const nodeTestSatelliteSpeaker = (

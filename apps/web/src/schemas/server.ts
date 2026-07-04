@@ -60,6 +60,12 @@ export const setSatelliteFollowUpInputSchema = z.object({
 	enabled: z.boolean(),
 })
 
+export const setSatelliteVolumeInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+	volume: z.number().min(0).max(1),
+})
+
 export const testSatelliteSpeakerInputSchema = z.object({
 	domiaKey: z.string().min(1).max(200),
 	satelliteId: z.string().min(1).max(200),

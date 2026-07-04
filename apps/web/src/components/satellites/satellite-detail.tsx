@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { cn } from "@/lib/utils"
@@ -36,6 +37,40 @@ function SectionLabel({ children }: SectionLabelProps) {
 		<p className="text-muted-foreground mb-1.5 text-[11px] font-medium tracking-wide uppercase">
 			{children}
 		</p>
+	)
+}
+
+function VolumeControl({
+	volume,
+	disabled,
+	onCommit,
+}: {
+	volume: number
+	disabled: boolean
+	onCommit: (v: number) => void
+}) {
+	return (
+		<div className="border-border flex flex-col gap-2 rounded-md border px-3 py-2">
+			<div className="flex items-center justify-between">
+				<span className="flex items-center gap-1.5 text-sm font-medium">
+					<Volume2 className="size-4" /> Speaker volume
+				</span>
+				<span className="text-muted-foreground text-sm tabular-nums">
+					{Math.round(volume * 100)}%
+				</span>
+			</div>
+			<Slider
+				key={volume}
+				defaultValue={[volume]}
+				min={0}
+				max={1}
+				step={0.05}
+				disabled={disabled}
+				onValueCommitted={(v: number | readonly number[]) =>
+					onCommit(Array.isArray(v) ? v[0] : (v as number))
+				}
+			/>
+		</div>
 	)
 }
 
@@ -65,6 +100,7 @@ export function SatelliteDetail({
 	onTestSpeaker,
 	onAnnounce,
 	onToggleFollowUp,
+	onSetVolume,
 }: SatelliteDetailProps) {
 	const status = satelliteStatus(s)
 	const caps = satelliteCaps(s)
@@ -204,6 +240,13 @@ export function SatelliteDetail({
 						onCheckedChange={(on) => onToggleFollowUp(s, on)}
 					/>
 				</div>
+				{s.volume !== null ? (
+					<VolumeControl
+						volume={s.volume}
+						disabled={!s.online}
+						onCommit={(v) => onSetVolume(s, v)}
+					/>
+				) : null}
 			</div>
 
 			{s.recentEvents.length > 0 ? (

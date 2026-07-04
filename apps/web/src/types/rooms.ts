@@ -48,6 +48,7 @@ export type SatellitePresence = {
 	availableWakeWords?: SatelliteWakeWordInfo[]
 	activeWakeWords?: string[]
 	numberEntities?: SatelliteNumberEntity[]
+	volume?: number | null
 	capabilities?: SatelliteCapabilities
 	firmwareVersion?: string | null
 	recentEvents?: SatelliteEvent[]

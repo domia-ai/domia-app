@@ -25,6 +25,7 @@ import {
 	allSatellitesQueryOptions,
 	testSatelliteSpeakerFn,
 	setSatelliteFollowUpFn,
+	setSatelliteVolumeFn,
 } from "@/server/satellites"
 import { MetricCard } from "./satellite-bits"
 import { SatellitesTable } from "./satellites-table"
@@ -77,6 +78,16 @@ export function SatellitesView() {
 		})
 		if (res.ok) {
 			toast.success(on ? "Follow-up enabled" : "Follow-up disabled")
+			refresh()
+		} else toast.error(res.error)
+	}
+
+	const setVolume = async (s: SatelliteWithContext, volume: number) => {
+		const res = await setSatelliteVolumeFn({
+			data: { domiaKey: s.domiaKey, satelliteId: s.satelliteId, volume },
+		})
+		if (res.ok) {
+			toast.success(`Volume set to ${Math.round(volume * 100)}%`)
 			refresh()
 		} else toast.error(res.error)
 	}
@@ -167,6 +178,7 @@ export function SatellitesView() {
 										satellite={selected}
 										onTestSpeaker={testSpeaker}
 										onAnnounce={announce}
+										onSetVolume={setVolume}
 										onToggleFollowUp={toggleFollowUp}
 									/>
 								) : (
@@ -194,6 +206,7 @@ export function SatellitesView() {
 							satellite={selected}
 							onTestSpeaker={testSpeaker}
 							onAnnounce={announce}
+							onSetVolume={setVolume}
 							onToggleFollowUp={toggleFollowUp}
 						/>
 					) : null}

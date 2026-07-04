@@ -4,8 +4,8 @@
 		"wakeword": true,
 		"record": true,
 		"stt": true,
-		"intentDetection": true,
-		"intentExecution": true,
+		"intentDetection": false,
+		"intentExecution": false,
 		"promptGeneration": true,
 		"llm": true,
 		"tts": true,
@@ -17,18 +17,18 @@
 		"memoryEngine": true,
 		"factCapture": true,
 		"factRecall": true,
-		"collectiveMind": true,
-		"narrativeEngine": true,
+		"collectiveMind": false,
+		"narrativeEngine": false,
 		"identityEngine": true,
-		"remoteAccessEngine": true,
+		"remoteAccessEngine": false,
 		"skillsEngine": false
 	},
 	"stt": {
 		"name": "Default",
-		"engine": "ZIPFORMER",
-		"modelName": "streaming-zipformer-en",
+		"engine": "PARAKEET",
+		"modelName": "parakeet-tdt-06b-v2",
 		"language": "en",
-		"modelPath": "data/models/streaming-zipformer-en",
+		"modelPath": "data/models/parakeet-tdt-06b-v2",
 		"quantization": "int8",
 		"silenceThreshold": null,
 		"bufferSize": null,
@@ -58,10 +58,13 @@
 		"pitch": 1,
 		"speed": 1,
 		"silenceScale": 0.2,
-		"numThreads": 2,
+		"numThreads": 4,
 		"provider": "cpu",
 		"maxNumSentences": 1,
-		"streamingEnabled": false,
+		"streamingEnabled": true,
+		"sentenceFirstUnitMaxWords": 6,
+		"sentenceSoftFlushMinChars": 12,
+		"sentenceFirstFlushMaxMs": 500,
 		"poolWarmWorkers": 1,
 		"poolMaxWorkers": 0,
 		"poolAutoScaleEnabled": true,
@@ -71,14 +74,15 @@
 		"workerRecycleAfterJobs": 0
 	},
 	"llm": {
-		"name": "Edge 3B",
+		"name": "Rich 8B",
 		"engine": "OLLAMA",
-		"modelName": "llama3.2:3b",
+		"modelName": "llama3.1:8b",
 		"temperature": 0.7,
-		"contextWindow": 4096,
-		"numPredict": 80,
+		"contextWindow": 8192,
+		"numPredict": 160,
 		"llmConcurrency": 3,
-		"useCompactPrompt": false
+		"useCompactPrompt": false,
+		"reflectionModelName": "llama3.2:3b"
 	},
 	"wakeWord": {
 		"name": "Default",
@@ -97,7 +101,11 @@
 		"sampleRate": 16000,
 		"bitsPerSample": 16,
 		"channels": 1,
-		"maxRecordingMs": 15000
+		"maxRecordingMs": 15000,
+		"semanticEndpointingEnabled": true,
+		"endpointCompleteMs": 400,
+		"endpointIncompleteMs": 900,
+		"speculativeTtsEnabled": true
 	},
 	"playback": {
 		"name": "Default",
@@ -105,5 +113,8 @@
 		"volume": 100,
 		"streamingEnabled": true,
 		"outputDevice": null
+	},
+	"domia": {
+		"memoryWindowTurns": 10
 	}
 }

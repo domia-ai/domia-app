@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, TriangleAlert } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
@@ -16,6 +16,7 @@ import { RawTrace } from "@/components/conversations/raw-trace"
 import { getInteractionFn } from "@/server/conversations"
 import { listRunTargetsFn } from "@/server/fleet"
 import { formatTs } from "@/utils/format"
+import { getIncompleteReason } from "@/utils/conversation-status"
 import type { UserMoodSnapshot } from "@/types/conversations"
 
 export const Route = createFileRoute("/_dashboard/conversations/$id")({
@@ -39,6 +40,7 @@ function ConversationPage() {
 	const userMood = trace.userEmotionSnapshot as UserMoodSnapshot | null
 	const failed =
 		!trace.llmResponse || (trace.inputType === "VOICE" && !trace.sttResult)
+	const incomplete = getIncompleteReason(trace)
 
 	return (
 		<div className="space-y-6">
@@ -103,6 +105,19 @@ function ConversationPage() {
 								<MeshJourney trace={trace} originKey={trace.sourceDomiaKey} />
 							</CardHeader>
 							<CardContent>
+								{incomplete && (
+									<div className="mb-4 flex gap-3 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm dark:border-amber-900/50 dark:bg-amber-950/30">
+										<TriangleAlert className="size-4 shrink-0 translate-y-0.5 text-amber-600 dark:text-amber-400" />
+										<div className="min-w-0">
+											<p className="font-medium text-amber-900 dark:text-amber-200">
+												{incomplete.title}
+											</p>
+											<p className="mt-0.5 text-amber-800/80 dark:text-amber-200/70">
+												{incomplete.detail}
+											</p>
+										</div>
+									</div>
+								)}
 								<TraceDetail detail={detail} />
 							</CardContent>
 						</Card>

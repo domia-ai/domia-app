@@ -46,6 +46,7 @@ export type BoundSatellite = BoundSatelliteRow & {
 	availableWakeWords: SatelliteWakeWord[]
 	activeWakeWords: string[]
 	numberEntities: SatelliteNumberEntity[]
+	volume: number | null
 	capabilities: SatelliteCapabilities
 	firmwareVersion: string | null
 	recentEvents: SatelliteEvent[]
@@ -68,6 +69,11 @@ export type SetNumberResult = {
 }
 
 export type SetFollowUpResult = {
+	applied: boolean
+	live: boolean
+}
+
+export type SetVolumeResult = {
 	applied: boolean
 	live: boolean
 }
@@ -134,6 +140,7 @@ export type SatelliteDetailProps = {
 	onTestSpeaker: (s: SatelliteWithContext) => void
 	onAnnounce: (s: SatelliteWithContext) => void
 	onToggleFollowUp: (s: SatelliteWithContext, on: boolean) => void
+	onSetVolume: (s: SatelliteWithContext, volume: number) => void
 }
 
 export type SectionLabelProps = {

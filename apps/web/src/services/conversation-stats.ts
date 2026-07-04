@@ -1,4 +1,4 @@
-import { and, avg, count, eq, isNull } from "drizzle-orm"
+import { and, asc, avg, count, eq, isNotNull, isNull } from "drizzle-orm"
 import { interactionLabel, interactionTrace } from "@domia-app/db"
 import { db } from "@/db"
 import { buildSearchWhere } from "@/utils/table-builders"
@@ -61,12 +61,32 @@ export const getConversationStats = async (
 		flowCounts.set(key, (flowCounts.get(key) ?? 0) + row.c)
 	}
 
+	const perceivedRows = await db
+		.select({ v: interactionTrace.perceivedTtfaMs })
+		.from(interactionTrace)
+		.leftJoin(interactionLabel, label())
+		.where(and(where, isNotNull(interactionTrace.perceivedTtfaMs)))
+		.orderBy(asc(interactionTrace.perceivedTtfaMs))
+	const perceivedValues = perceivedRows
+		.map((r) => r.v)
+		.filter((v): v is number => v !== null)
+	const percentile = (p: number): number | null =>
+		perceivedValues.length === 0
+			? null
+			: perceivedValues[
+					Math.min(
+						perceivedValues.length - 1,
+						Math.floor(perceivedValues.length * p),
+					)
+				]
+
 	const total = main?.total ?? 0
 	return {
 		total,
 		avgMs: main?.avgMs ? Number(main.avgMs) : null,
 		errorRate: total ? (errors?.c ?? 0) / total : 0,
 		ungraded: ungraded?.c ?? 0,
+		perceived: { p50: percentile(0.5), p95: percentile(0.95) },
 		flows: [...flowCounts.entries()].map(([key, c]) => ({ key, count: c })),
 	}
 }

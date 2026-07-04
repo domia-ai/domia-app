@@ -3,6 +3,9 @@ import fullHub from "./system-templates/full-hub.json"
 import thinClient from "./system-templates/thin-client.json"
 import homeAssistant from "./system-templates/home-assistant.json"
 import jetson from "./system-templates/jetson.json"
+import snappy from "./system-templates/snappy.json"
+import balanced from "./system-templates/balanced.json"
+import rich from "./system-templates/rich.json"
 import type { ConfigSnapshot } from "@/types/config"
 
 export const SYSTEM_TEMPLATES: {
@@ -45,5 +48,26 @@ export const SYSTEM_TEMPLATES: {
 		description:
 			"Full local pipeline tuned for the NVIDIA Jetson Orin Nano — a small 3B model that fits the 8 GB unified memory, with the LLM on the GPU and STT/TTS on CPU. A starting point: the exact 3B model and quantization are still to be confirmed against on-device benchmarks. Pull the model in Ollama first.",
 		config: jetson as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:snappy",
+		name: "Snappy",
+		description:
+			"Standalone tuned for the lowest time-to-first-audio — a fast 3B model (llama3.2:3b) and Parakeet STT (accurate, punctuation + case), with a minimal prompt: no emotion, facts or recent-turn memory injected on the hot path (capture still runs, so nothing is lost). Trades rich context for responsiveness — a snappy ~1s TTFA on a capable machine. Pull llama3.2:3b in Ollama and run `npm run setup:models:parakeet` first.",
+		config: snappy as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:balanced",
+		name: "Balanced",
+		description:
+			"The middle of the quality ladder — fast 3B voice loop (Parakeet + Kokoro, speculation on) WITH the companion layers on: emotion, memory window, facts. Reflection runs on a separate 1B model so it never evicts the voice KV cache. Pull llama3.2:3b and llama3.2:1b in Ollama first.",
+		config: balanced as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:rich",
+		name: "Rich",
+		description:
+			"Top of the quality ladder — 8B model for fuller, more personal replies, wider memory window, all companion layers on, reflection on a separate 3B. Slower per turn; for capable machines. Pull llama3.1:8b and llama3.2:3b in Ollama first.",
+		config: rich as unknown as ConfigSnapshot,
 	},
 ]

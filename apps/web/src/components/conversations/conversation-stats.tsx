@@ -24,8 +24,8 @@ export function ConversationStatsHeader() {
 
 	if (isLoading) {
 		return (
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-				{Array.from({ length: 4 }).map((_, i) => (
+			<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+				{Array.from({ length: 5 }).map((_, i) => (
 					<div
 						key={i}
 						className="bg-muted/40 h-[68px] animate-pulse rounded-lg"
@@ -53,13 +53,20 @@ export function ConversationStatsHeader() {
 	const cards = [
 		{ label: "Total", value: String(data.total) },
 		{ label: "Avg latency", value: formatMs(data.avgMs) },
+		{
+			label: "Felt TTFA p50 · p95",
+			value:
+				data.perceived.p50 === null
+					? "—"
+					: `${formatMs(data.perceived.p50)} · ${formatMs(data.perceived.p95)}`,
+		},
 		{ label: "Error rate", value: `${Math.round(data.errorRate * 100)}%` },
 		{ label: "Ungraded", value: String(data.ungraded) },
 	]
 
 	return (
 		<div className="space-y-3">
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			<div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
 				{cards.map((c) => (
 					<div key={c.label} className="rounded-lg border p-3">
 						<p className="text-muted-foreground text-xs">{c.label}</p>

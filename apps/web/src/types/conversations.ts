@@ -16,6 +16,11 @@ export type AdjacentTurns = {
 	total: number
 }
 
+export type IncompleteReason = {
+	title: string
+	detail: string
+}
+
 export type ConversationRow = InteractionTraceRow & {
 	domiaName: string | null
 	domiaAvatarId: string | null
@@ -73,6 +78,7 @@ export type ConversationStats = {
 	avgMs: number | null
 	errorRate: number
 	ungraded: number
+	perceived: { p50: number | null; p95: number | null }
 	flows: { key: FlowKey; count: number }[]
 }
 

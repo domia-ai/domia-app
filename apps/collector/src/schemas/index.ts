@@ -6,7 +6,7 @@ export const domiaSnapshotSchema = z.looseObject({
 	name: z.string().min(1),
 	nodeId: z.string().nullish(),
 	isActive: z.boolean().optional(),
-	localIp: z.string().optional(),
+	localIp: z.string().nullish(),
 	grpcPort: z.number().optional(),
 	httpPort: z.number().optional(),
 	isHosted: z.boolean().optional(),
