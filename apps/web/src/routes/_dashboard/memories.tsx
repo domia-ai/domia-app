@@ -4,10 +4,11 @@ import { PageHeader } from "@/components/shell/page-header"
 import { MemoriesView } from "@/components/memories/memories-view"
 import { getFactCountFn } from "@/server/memories"
 import { validateTableSearch } from "@/utils/table-params"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/memories")({
 	validateSearch: validateTableSearch,
-	head: () => ({ meta: [{ title: "Memories | Domia Console" }] }),
+	head: () => ({ meta: [{ title: m.meta_title({ page: m.nav_memories() }) }] }),
 	component: MemoriesPage,
 })
 
@@ -20,12 +21,14 @@ function MemoriesPage() {
 	const count = countQuery.data
 	const description =
 		count != null
-			? `${count} fact${count === 1 ? "" : "s"} learned across the mesh — what each Domia remembers about you.`
-			: "What each Domia — and the mesh — remembers about you."
+			? count === 1
+				? m.route_memories_description_one()
+				: m.route_memories_description_many({ count })
+			: m.route_memories_description()
 
 	return (
 		<div className="space-y-6">
-			<PageHeader title="Memories" description={description} />
+			<PageHeader title={m.nav_memories()} description={description} />
 			<MemoriesView />
 		</div>
 	)

@@ -12,6 +12,7 @@ import type {
 	ModelsReport,
 	ModelJob,
 } from "@/types/config"
+import type { KnowledgeEntry, KnowledgeInput } from "@/types/knowledge"
 import type {
 	PresenceEntry,
 	SpeakResult,
@@ -36,6 +37,10 @@ import type {
 	TestSpeakerResult,
 } from "@/types/satellites"
 
+export const meshHeaders = (): Record<string, string> => ({
+	authorization: `Bearer ${env.DOMIA_MESH_SECRET}`,
+})
+
 const withKey = (path: string, domiaKey?: string): string =>
 	domiaKey
 		? `${path}${path.includes("?") ? "&" : "?"}domiaKey=${encodeURIComponent(domiaKey)}`
@@ -43,6 +48,7 @@ const withKey = (path: string, domiaKey?: string): string =>
 
 const get = async <T>(base: string, path: string): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
+		headers: meshHeaders(),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
 	if (!res.ok) {
@@ -58,7 +64,7 @@ const post = async <T>(
 ): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		headers: { "Content-Type": "application/json", ...meshHeaders() },
 		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
@@ -71,6 +77,7 @@ const post = async <T>(
 const del = async <T>(base: string, path: string): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
 		method: "DELETE",
+		headers: meshHeaders(),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
 	if (!res.ok) {
@@ -86,7 +93,7 @@ const patch = async <T>(
 ): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
 		method: "PATCH",
-		headers: { "Content-Type": "application/json" },
+		headers: { "Content-Type": "application/json", ...meshHeaders() },
 		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
@@ -151,6 +158,25 @@ export const nodeImportConfig = (
 
 export const nodeGetConfigHealth = (base: string, domiaKey?: string) =>
 	get<{ health: ConfigHealth }>(base, withKey("/config/health", domiaKey))
+
+export const nodeGetKnowledge = (base: string, domiaKey?: string) =>
+	get<{ entries: KnowledgeEntry[] }>(base, withKey("/knowledge", domiaKey))
+
+export const nodeUpsertKnowledge = (
+	base: string,
+	body: KnowledgeInput,
+	domiaKey?: string,
+) => post<{ ok: boolean }>(base, withKey("/knowledge", domiaKey), body)
+
+export const nodeDeleteKnowledge = (
+	base: string,
+	id: string,
+	domiaKey?: string,
+) =>
+	del<{ ok: boolean }>(
+		base,
+		withKey(`/knowledge/${encodeURIComponent(id)}`, domiaKey),
+	)
 
 export const nodeRestart = (base: string) =>
 	post<{ restarting: boolean }>(base, "/admin/restart", {})

@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 import {
 	Tooltip,
@@ -43,15 +44,15 @@ export function CapabilityChips({
 							}
 						>
 							<Icon className={size === "sm" ? "size-3" : "size-3.5"} />
-							{meta.short}
+							{meta.short()}
 						</TooltipTrigger>
 						<TooltipContent>
-							{meta.label}
+							{meta.label()} ·{" "}
 							{isDelegated
-								? " · delegated"
+								? m.domia_cap_delegated()
 								: enabled
-									? " · local"
-									: " · disabled"}
+									? m.domia_cap_local()
+									: m.domia_cap_disabled()}
 						</TooltipContent>
 					</Tooltip>
 				)

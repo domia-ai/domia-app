@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Loader2, PhoneOff, Radio } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
@@ -31,17 +32,17 @@ export function LiveVoice({
 					) : (
 						<Radio className="size-4" />
 					)}
-					Go live
+					{m.chat_go_live()}
 				</Button>
 				{state.status === "error" && state.error ? (
 					<span className="text-destructive text-xs">{state.error}</span>
 				) : !reachable ? (
 					<span className="text-muted-foreground text-xs">
-						{domiaName} address unknown
+						{m.chat_address_unknown({ name: domiaName })}
 					</span>
 				) : (
 					<span className="text-muted-foreground text-xs">
-						Hands-free conversation — just talk
+						{m.chat_live_hint()}
 					</span>
 				)}
 			</div>

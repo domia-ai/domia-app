@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table"
+import { m } from "@/paraglide/messages"
 import { Link } from "@tanstack/react-router"
 import { ExternalLink } from "lucide-react"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
@@ -9,7 +10,7 @@ import type { MemoryFactRow } from "@/types/memories"
 export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
 	{
 		id: "domia",
-		header: "Domia",
+		header: () => m.mem_col_domia(),
 		enableSorting: false,
 		cell: ({ row }) => {
 			const r = row.original
@@ -34,7 +35,7 @@ export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
 	},
 	{
 		id: "fact",
-		header: "Fact",
+		header: () => m.mem_col_fact(),
 		enableSorting: false,
 		cell: ({ row }) => {
 			const r = row.original
@@ -49,12 +50,12 @@ export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
 	},
 	{
 		id: "confidence",
-		header: "Confidence",
+		header: () => m.mem_col_confidence(),
 		cell: ({ row }) => <ConfidenceBar value={row.original.confidence ?? 0} />,
 	},
 	{
 		id: "source",
-		header: "Source",
+		header: () => m.mem_col_source(),
 		enableSorting: false,
 		cell: ({ row }) =>
 			row.original.sourceInteractionId ? (
@@ -72,7 +73,7 @@ export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
 	},
 	{
 		id: "updatedAt",
-		header: "Learned",
+		header: () => m.mem_col_learned(),
 		cell: ({ row }) => (
 			<span className="text-muted-foreground">
 				{relativeTime(row.original.updatedAt)}

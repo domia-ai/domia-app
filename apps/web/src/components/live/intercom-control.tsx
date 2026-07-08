@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { Radio, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldError } from "@/components/ui/field"
 import {
@@ -12,7 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { intercom } from "@/server/rooms"
-import { intercomFormSchema } from "@/schemas/broadcast"
+import { buildIntercomFormSchema } from "@/schemas/broadcast"
 import { isDemoMode } from "@/lib/demo"
 import type { IntercomControlProps } from "@/types/live"
 
@@ -25,19 +27,19 @@ export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 
 	const form = useForm({
 		defaultValues: { from: "", to: "" },
-		validators: { onChange: intercomFormSchema },
+		validators: { onChange: buildIntercomFormSchema() },
 		onSubmit: async ({ value }) => {
 			const result = await intercom({
 				data: { hostDomiaKey, from: value.from, to: value.to },
 			})
 			if (result.ok && result.data?.intercom === "started") {
 				setIntercomOn(true)
-				toast.success("Intercom live")
+				toast.success(m.toast_intercom_live())
 			} else {
-				toast.error("Could not start intercom", {
+				toast.error(m.toast_intercom_start_failed(), {
 					description: result.ok
-						? "No reachable audio endpoint in the target room"
-						: result.error,
+						? m.toast_intercom_no_endpoint()
+						: errText(result.error),
 				})
 			}
 		},
@@ -51,9 +53,11 @@ export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 		setStopping(false)
 		if (result.ok) {
 			setIntercomOn(false)
-			toast.success("Intercom stopped")
+			toast.success(m.toast_intercom_stopped())
 		} else {
-			toast.error("Could not stop intercom", { description: result.error })
+			toast.error(m.toast_intercom_stop_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
@@ -68,8 +72,10 @@ export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 			disabled={demo || intercomOn}
 		>
 			<SelectTrigger className="h-8 flex-1" onBlur={field.handleBlur}>
-				<SelectValue placeholder="Room">
-					{(value) => (value ? nameOf(String(value)) : "Room")}
+				<SelectValue placeholder={m.broadcast_room_placeholder()}>
+					{(value) =>
+						value ? nameOf(String(value)) : m.broadcast_room_placeholder()
+					}
 				</SelectValue>
 			</SelectTrigger>
 			<SelectContent>
@@ -128,7 +134,7 @@ export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 					) : (
 						<Radio className="size-4" />
 					)}
-					Stop intercom
+					{m.broadcast_stop_intercom()}
 				</Button>
 			) : (
 				<form.Subscribe selector={(s) => [s.isSubmitting, s.canSubmit]}>
@@ -144,7 +150,7 @@ export function IntercomControl({ hostDomiaKey, rooms }: IntercomControlProps) {
 							) : (
 								<Radio className="size-4" />
 							)}
-							Start intercom
+							{m.broadcast_start_intercom()}
 						</Button>
 					)}
 				</form.Subscribe>

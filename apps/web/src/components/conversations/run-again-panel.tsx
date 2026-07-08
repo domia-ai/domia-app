@@ -1,6 +1,8 @@
 import { useState, useTransition } from "react"
 import { Play, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import {
 	Select,
@@ -50,9 +52,9 @@ export function RunAgainPanel({
 			})
 			if (res.ok && res.data) {
 				setResult(res.data)
-				toast.success("Re-ran the interaction")
+				toast.success(m.toast_reran())
 			} else if (!res.ok) {
-				toast.error(res.error)
+				toast.error(errText(res.error))
 			}
 		})
 
@@ -69,7 +71,7 @@ export function RunAgainPanel({
 					items={targets.map((t) => ({
 						value: t.domiaKey,
 						label: t.isOrigin
-							? `${humanizeDomiaKey(t.domiaKey)} (origin)`
+							? m.conv_origin_suffix({ name: humanizeDomiaKey(t.domiaKey) })
 							: humanizeDomiaKey(t.domiaKey),
 					}))}
 				>
@@ -84,9 +86,9 @@ export function RunAgainPanel({
 								disabled={!t.isOrigin && !t.online}
 							>
 								{t.isOrigin
-									? `${humanizeDomiaKey(t.domiaKey)} (origin)`
+									? m.conv_origin_suffix({ name: humanizeDomiaKey(t.domiaKey) })
 									: humanizeDomiaKey(t.domiaKey)}
-								{!t.isOrigin && !t.online ? " · offline" : ""}
+								{!t.isOrigin && !t.online ? m.tpl_new_offline_suffix() : ""}
 							</SelectItem>
 						))}
 					</SelectContent>
@@ -97,19 +99,19 @@ export function RunAgainPanel({
 					) : (
 						<Play className="size-4" />
 					)}
-					Run
+					{m.conv_run()}
 				</Button>
 			</div>
 
 			{demoMode && (
 				<p className="text-muted-foreground text-xs">
-					Re-running needs a live mesh — disabled in this read-only demo.
+					{m.conv_rerun_demo_note()}
 				</p>
 			)}
 
 			{mode === "transcript-as-voice" && (
 				<p className="text-muted-foreground text-xs">
-					Cross-node voice re-run uses the transcript re-spoken (approximation).
+					{m.conv_rerun_transcript_note()}
 				</p>
 			)}
 
@@ -118,7 +120,7 @@ export function RunAgainPanel({
 					<div className="grid grid-cols-2 gap-3 text-sm">
 						<div className="space-y-1">
 							<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-								Original
+								{m.conv_original()}
 							</p>
 							<p className="bg-muted/30 rounded-lg border px-3 py-2">
 								{originalReply ?? "—"}
@@ -126,7 +128,7 @@ export function RunAgainPanel({
 						</div>
 						<div className="space-y-1">
 							<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-								New
+								{m.conv_new()}
 							</p>
 							<p className="border-primary/20 bg-primary/5 rounded-lg border px-3 py-2">
 								{result.reply}
@@ -135,7 +137,9 @@ export function RunAgainPanel({
 					</div>
 
 					<div className="flex items-center gap-3 text-sm">
-						<span className="text-muted-foreground">Latency</span>
+						<span className="text-muted-foreground">
+							{m.conv_col_latency()}
+						</span>
 						<span className="font-mono tabular-nums">
 							{formatMs(origMs)} → {formatMs(newMs)}
 						</span>
@@ -151,8 +155,9 @@ export function RunAgainPanel({
 
 					{result.newInteractionId && (
 						<p className="text-muted-foreground text-xs">
-							New interaction {result.newInteractionId.slice(0, 8)} — appears in
-							Conversations after the next sync.
+							{m.conv_new_interaction_note({
+								id: result.newInteractionId.slice(0, 8),
+							})}
 						</p>
 					)}
 				</div>

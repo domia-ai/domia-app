@@ -81,7 +81,7 @@ export function EmotionTrend({
 						key={k}
 						type="monotone"
 						dataKey={k}
-						name={EMOTION_META[k].label}
+						name={EMOTION_META[k].label()}
 						stroke={EMOTION_META[k].color}
 						strokeWidth={2}
 						dot={false}

@@ -12,10 +12,11 @@ import { SatellitesPanel } from "@/components/nodes/satellites-panel"
 import { RemoveIdentityButton } from "@/components/nodes/remove-identity-button"
 import { RestartButton } from "@/components/domia/restart-button"
 import { nodeQueryOptions } from "@/server/nodes"
+import { m } from "@/paraglide/messages"
 import type { NodeIdentitySummary } from "@/types/nodes"
 
 export const Route = createFileRoute("/_dashboard/nodes/$nodeId")({
-	head: () => ({ meta: [{ title: "Node | Domia Console" }] }),
+	head: () => ({ meta: [{ title: m.meta_title({ page: m.route_node() }) }] }),
 	component: NodeDetailPage,
 })
 
@@ -60,7 +61,7 @@ function IdentityRow({
 					render={
 						<Link to="/domias/$key/config" params={{ key: identity.domiaKey }}>
 							<Settings2 className="size-4" />
-							Configure
+							{m.sat_configure()}
 						</Link>
 					}
 				/>
@@ -83,9 +84,9 @@ function NodeDetailPage() {
 	const { data: node, isLoading, isError } = useQuery(nodeQueryOptions(nodeId))
 
 	if (isLoading)
-		return <p className="text-muted-foreground text-sm">Loading…</p>
+		return <p className="text-muted-foreground text-sm">{m.nodes_loading()}</p>
 	if (isError || !node)
-		return <p className="text-destructive text-sm">Node not found.</p>
+		return <p className="text-destructive text-sm">{m.nodes_not_found()}</p>
 
 	const anchor =
 		node.hosted.find((i) => i.isPrincipal)?.domiaKey ??
@@ -95,7 +96,7 @@ function NodeDetailPage() {
 	return (
 		<div className="space-y-6">
 			<PageHeader
-				title={node.principalName ?? "Node"}
+				title={node.principalName ?? m.route_node()}
 				description={`${node.localIp}:${node.httpPort}`}
 				actions={
 					anchor ? (
@@ -106,12 +107,12 @@ function NodeDetailPage() {
 									className="text-muted-foreground gap-1.5"
 								>
 									<span className="bg-muted-foreground size-1.5 animate-pulse rounded-full" />
-									Restarting…
+									{m.nodes_restarting()}
 								</Badge>
 							)}
 							<RestartButton
 								domiaKey={anchor}
-								domiaName={node.principalName ?? "this node"}
+								domiaName={node.principalName ?? m.nodes_this_node()}
 								online={node.online}
 							/>
 							<AddIdentityDialog anchorDomiaKey={anchor} nodeId={nodeId} />
@@ -122,11 +123,11 @@ function NodeDetailPage() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Hosted identities</CardTitle>
+					<CardTitle>{m.nodes_hosted_identities()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{node.hosted.length === 0 ? (
-						<p className="text-muted-foreground text-sm">None.</p>
+						<p className="text-muted-foreground text-sm">{m.nodes_none()}</p>
 					) : (
 						node.hosted.map((identity) => (
 							<IdentityRow
@@ -152,7 +153,7 @@ function NodeDetailPage() {
 			{node.peers.length > 0 && (
 				<Card>
 					<CardHeader>
-						<CardTitle>Discovered peers</CardTitle>
+						<CardTitle>{m.nodes_discovered_peers()}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{node.peers.map((identity) => (

@@ -8,6 +8,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	ChartContainer,
@@ -24,11 +25,11 @@ import type {
 	StagePerfRow,
 } from "@/types/analytics"
 
-const FLOW_LABEL: Record<string, string> = {
-	s2s: "Speech → Speech",
-	t2s: "Text → Speech",
-	v2t: "Voice → Text",
-	t2t: "Text → Text",
+const FLOW_LABEL: Record<string, () => string> = {
+	s2s: m.analytics_flow_s2s,
+	t2s: m.analytics_flow_t2s,
+	v2t: m.analytics_flow_v2t,
+	t2t: m.analytics_flow_t2t,
 }
 const STAGE_LABEL: Record<string, string> = {
 	stt: "STT",
@@ -43,18 +44,18 @@ const DONUT_COLORS = [
 	"var(--chart-4)",
 	"var(--chart-5)",
 ]
-const flowConfig = {
-	p50: { label: "TTFA p50 (ms)", color: "var(--chart-2)" },
-	p95: { label: "TTFA p95 (ms)", color: "var(--chart-4)" },
-} satisfies ChartConfig
-const modelConfig = {
-	avgMs: { label: "Avg (ms)", color: "var(--chart-3)" },
-} satisfies ChartConfig
+const flowConfig = (): ChartConfig => ({
+	p50: { label: m.analytics_ttfa_p50_ms(), color: "var(--chart-2)" },
+	p95: { label: m.analytics_ttfa_p95_ms(), color: "var(--chart-4)" },
+})
+const modelConfig = (): ChartConfig => ({
+	avgMs: { label: m.analytics_series_avg_ms(), color: "var(--chart-3)" },
+})
 
-const latConfig = {
+const latConfig = (): ChartConfig => ({
 	p50: { label: "p50 (ms)", color: "var(--chart-2)" },
 	p95: { label: "p95 (ms)", color: "var(--chart-4)" },
-} satisfies ChartConfig
+})
 
 const chartHeight = (n: number) => Math.max(140, n * 36 + 24)
 
@@ -67,11 +68,13 @@ export function LatencyChart({ rows }: { rows: LatencyDistRow[] }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Latency breakdown</CardTitle>
+				<CardTitle className="text-base">
+					{m.analytics_chart_latency_breakdown()}
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer
-					config={latConfig}
+					config={latConfig()}
 					className="w-full"
 					style={{ height: chartHeight(data.length * 2) }}
 				>
@@ -114,7 +117,9 @@ export function DomiaChart({ rows }: { rows: DomiaLatencyRow[] }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Turns by Domia</CardTitle>
+				<CardTitle className="text-base">
+					{m.analytics_chart_turns_by_domia()}
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				{pieData.length ? (
@@ -155,7 +160,7 @@ export function DomiaChart({ rows }: { rows: DomiaLatencyRow[] }) {
 					</div>
 				) : (
 					<p className="text-muted-foreground py-10 text-center text-sm">
-						No data yet.
+						{m.analytics_no_data()}
 					</p>
 				)}
 			</CardContent>
@@ -165,19 +170,21 @@ export function DomiaChart({ rows }: { rows: DomiaLatencyRow[] }) {
 
 export function FlowChart({ rows }: { rows: FlowLatencyRow[] }) {
 	const data = rows.map((f) => ({
-		name: FLOW_LABEL[f.flow] ?? f.flow,
+		name: FLOW_LABEL[f.flow]?.() ?? f.flow,
 		p50: f.ttfa.p50 ?? 0,
 		p95: f.ttfa.p95 ?? 0,
 	}))
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">TTFA by flow</CardTitle>
+				<CardTitle className="text-base">
+					{m.analytics_chart_ttfa_by_flow()}
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				{data.length ? (
 					<ChartContainer
-						config={flowConfig}
+						config={flowConfig()}
 						className="w-full"
 						style={{ height: chartHeight(data.length * 2) }}
 					>
@@ -204,7 +211,7 @@ export function FlowChart({ rows }: { rows: FlowLatencyRow[] }) {
 					</ChartContainer>
 				) : (
 					<p className="text-muted-foreground py-10 text-center text-sm">
-						No data yet.
+						{m.analytics_no_data()}
 					</p>
 				)}
 			</CardContent>
@@ -221,12 +228,14 @@ export function ModelChart({ rows }: { rows: StagePerfRow[] }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Model performance</CardTitle>
+				<CardTitle className="text-base">
+					{m.analytics_chart_model_perf()}
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				{data.length ? (
 					<ChartContainer
-						config={modelConfig}
+						config={modelConfig()}
 						className="w-full"
 						style={{ height: chartHeight(data.length) }}
 					>
@@ -251,7 +260,7 @@ export function ModelChart({ rows }: { rows: StagePerfRow[] }) {
 					</ChartContainer>
 				) : (
 					<p className="text-muted-foreground py-10 text-center text-sm">
-						No model data yet.
+						{m.analytics_no_model_data()}
 					</p>
 				)}
 			</CardContent>

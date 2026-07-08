@@ -7,6 +7,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	ChartContainer,
@@ -18,18 +19,18 @@ import {
 } from "@/components/ui/chart"
 import type { AnalyticsChartsProps } from "@/types/analytics"
 
-const volumeConfig = {
-	count: { label: "Interactions", color: "var(--chart-1)" },
-	errors: { label: "Errors", color: "var(--chart-4)" },
-} satisfies ChartConfig
+const volumeConfig = (): ChartConfig => ({
+	count: { label: m.analytics_interactions(), color: "var(--chart-1)" },
+	errors: { label: m.analytics_errors(), color: "var(--chart-4)" },
+})
 
-const latencyConfig = {
-	avgMs: { label: "Avg latency (ms)", color: "var(--chart-2)" },
-} satisfies ChartConfig
+const latencyConfig = (): ChartConfig => ({
+	avgMs: { label: m.analytics_series_avg_latency(), color: "var(--chart-2)" },
+})
 
-const histConfig = {
-	count: { label: "Interactions", color: "var(--chart-3)" },
-} satisfies ChartConfig
+const histConfig = (): ChartConfig => ({
+	count: { label: m.analytics_interactions(), color: "var(--chart-3)" },
+})
 
 const shortDate = (b: string) => b.slice(5)
 
@@ -41,10 +42,12 @@ export function AnalyticsCharts({
 		<div className="grid gap-4 lg:grid-cols-3">
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">TTFA distribution</CardTitle>
+					<CardTitle className="text-base">
+						{m.analytics_chart_ttfa_dist()}
+					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<ChartContainer config={histConfig} className="h-52 w-full">
+					<ChartContainer config={histConfig()} className="h-52 w-full">
 						<BarChart data={histogram} accessibilityLayer>
 							<CartesianGrid vertical={false} />
 							<XAxis
@@ -68,10 +71,12 @@ export function AnalyticsCharts({
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Volume over time</CardTitle>
+					<CardTitle className="text-base">
+						{m.analytics_chart_volume()}
+					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<ChartContainer config={volumeConfig} className="h-52 w-full">
+					<ChartContainer config={volumeConfig()} className="h-52 w-full">
 						<BarChart data={timeSeries} accessibilityLayer>
 							<CartesianGrid vertical={false} />
 							<XAxis
@@ -98,10 +103,12 @@ export function AnalyticsCharts({
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Latency trend</CardTitle>
+					<CardTitle className="text-base">
+						{m.analytics_chart_latency_trend()}
+					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<ChartContainer config={latencyConfig} className="h-52 w-full">
+					<ChartContainer config={latencyConfig()} className="h-52 w-full">
 						<LineChart data={timeSeries} accessibilityLayer>
 							<CartesianGrid vertical={false} />
 							<XAxis

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/shell/page-header"
 import { EmotionsView } from "@/components/emotions/emotions-view"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/emotions")({
-	head: () => ({ meta: [{ title: "Emotions | Domia Console" }] }),
+	head: () => ({ meta: [{ title: m.meta_title({ page: m.nav_emotions() }) }] }),
 	component: EmotionsPage,
 })
 
@@ -11,8 +12,8 @@ function EmotionsPage() {
 	return (
 		<div className="space-y-6">
 			<PageHeader
-				title="Emotions"
-				description="Pick a Domia to see its mood right now and how it shifts as it talks with you."
+				title={m.nav_emotions()}
+				description={m.route_emotions_description()}
 			/>
 			<EmotionsView />
 		</div>

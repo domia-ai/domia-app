@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useState } from "react"
 import { X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -30,7 +31,7 @@ export function TagEditor({
 							<button
 								type="button"
 								onClick={() => onChange(values.filter((t) => t !== tag))}
-								aria-label={`Remove ${tag}`}
+								aria-label={m.aria_remove_tag({ tag })}
 							>
 								<X className="size-3" />
 							</button>

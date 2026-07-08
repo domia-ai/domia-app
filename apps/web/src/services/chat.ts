@@ -75,6 +75,7 @@ export const recentChatTurns = async (
 				responseType: interactionTrace.responseType,
 				inputRaw: interactionTrace.inputRaw,
 				sttResult: interactionTrace.sttResult,
+				inputAudioPath: interactionTrace.inputAudioPath,
 				llmResponse: interactionTrace.llmResponse,
 				createdAt: interactionTrace.createdAt,
 			})
@@ -93,6 +94,8 @@ export const recentChatTurns = async (
 				kind: isVoice ? "voice" : "text",
 				text: (isVoice ? r.sttResult : r.inputRaw) ?? "",
 				transcript: isVoice ? r.sttResult : null,
+				interactionId: r.id,
+				audioUrl: isVoice && r.inputAudioPath ? "input" : null,
 				at,
 			})
 			turns.push({

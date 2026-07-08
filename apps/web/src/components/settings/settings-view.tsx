@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTheme } from "next-themes"
+import { Languages } from "lucide-react"
+import { m } from "@/paraglide/messages"
+import { getLocale, setLocale, locales } from "@/paraglide/runtime"
 import { Download, Monitor, Moon, Sun } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,9 +17,9 @@ import { relativeTime, relativeTimeMs, formatBytes } from "@/utils/format"
 import { cn } from "@/lib/utils"
 
 const THEMES = [
-	{ id: "light", label: "Light", icon: Sun },
-	{ id: "dark", label: "Dark", icon: Moon },
-	{ id: "system", label: "System", icon: Monitor },
+	{ id: "light", label: m.settings_theme_light, icon: Sun },
+	{ id: "dark", label: m.settings_theme_dark, icon: Moon },
+	{ id: "system", label: m.settings_theme_system, icon: Monitor },
 ]
 
 const REFRESH_OPTIONS = [
@@ -26,14 +29,14 @@ const REFRESH_OPTIONS = [
 	{ ms: 30000, label: "30s" },
 ]
 
-const COUNT_LABELS: { key: string; label: string }[] = [
-	{ key: "domias", label: "Domias" },
-	{ key: "interactions", label: "Conversations" },
-	{ key: "sessions", label: "Sessions" },
-	{ key: "memoryFacts", label: "Memory facts" },
-	{ key: "emotionEvents", label: "Emotion events" },
-	{ key: "audioAssets", label: "Audio assets" },
-	{ key: "templates", label: "Templates" },
+const COUNT_LABELS: { key: string; label: () => string }[] = [
+	{ key: "domias", label: m.settings_count_domias },
+	{ key: "interactions", label: m.settings_count_conversations },
+	{ key: "sessions", label: m.settings_count_sessions },
+	{ key: "memoryFacts", label: m.settings_count_memory_facts },
+	{ key: "emotionEvents", label: m.settings_count_emotion_events },
+	{ key: "audioAssets", label: m.settings_count_audio_assets },
+	{ key: "templates", label: m.settings_count_templates },
 ]
 
 function OptionGroup({
@@ -86,16 +89,20 @@ export function SettingsView() {
 		<div className="grid gap-6 lg:grid-cols-2">
 			<Card>
 				<CardHeader>
-					<CardTitle>Appearance</CardTitle>
+					<CardTitle>{m.settings_appearance()}</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2">
 					<p className="text-muted-foreground text-sm">
-						Theme for the console. System follows your OS preference.
+						{m.settings_appearance_help()}
 					</p>
 					{mounted ? (
 						<OptionGroup
 							value={theme ?? "dark"}
-							options={THEMES}
+							options={THEMES.map((t) => ({
+								id: t.id,
+								label: t.label(),
+								icon: t.icon,
+							}))}
 							onChange={setTheme}
 						/>
 					) : (
@@ -106,12 +113,35 @@ export function SettingsView() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Live refresh</CardTitle>
+					<CardTitle>{m.settings_language()}</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2">
 					<p className="text-muted-foreground text-sm">
-						How often live views (Overview, Domias, Conversations in live mode)
-						poll for fresh data.
+						{m.settings_language_help()}
+					</p>
+					<div className="flex gap-2">
+						{locales.map((locale) => (
+							<Button
+								key={locale}
+								variant={getLocale() === locale ? "default" : "outline"}
+								size="sm"
+								onClick={() => setLocale(locale)}
+							>
+								<Languages className="mr-1 size-4" />
+								{locale === "en" ? m.lang_en() : m.lang_es()}
+							</Button>
+						))}
+					</div>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>{m.settings_live_refresh()}</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-2">
+					<p className="text-muted-foreground text-sm">
+						{m.settings_live_refresh_help()}
 					</p>
 					{mounted ? (
 						<OptionGroup
@@ -130,18 +160,18 @@ export function SettingsView() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Collector & sync</CardTitle>
+					<CardTitle>{m.settings_collector_sync()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{overviewQuery.isLoading && <Skeleton className="h-24 w-full" />}
 					{overviewQuery.isError && (
 						<p className="text-destructive text-sm">
-							Couldn't load sync status.
+							{m.settings_sync_load_error()}
 						</p>
 					)}
 					{overview && overview.sync.length === 0 && (
 						<p className="text-muted-foreground text-sm">
-							No Domias discovered yet.
+							{m.settings_no_domias()}
 						</p>
 					)}
 					{overview && overview.sync.length > 0 && (
@@ -163,9 +193,12 @@ export function SettingsView() {
 										</div>
 										<p className="text-muted-foreground text-xs">
 											{s.lastSyncedAt
-												? `Synced ${relativeTimeMs(s.lastSyncedAt)}`
-												: "Never synced"}
-											{s.cursorAt && ` · cursor at ${relativeTime(s.cursorAt)}`}
+												? m.settings_synced({
+														time: relativeTimeMs(s.lastSyncedAt),
+													})
+												: m.settings_never_synced()}
+											{s.cursorAt &&
+												` · ${m.settings_cursor_at({ time: relativeTime(s.cursorAt) })}`}
 										</p>
 									</div>
 								</div>
@@ -177,26 +210,30 @@ export function SettingsView() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Data & about</CardTitle>
+					<CardTitle>{m.settings_data_about()}</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{overviewQuery.isLoading && <Skeleton className="h-24 w-full" />}
 					{overviewQuery.isError && (
-						<p className="text-destructive text-sm">Couldn't load data info.</p>
+						<p className="text-destructive text-sm">
+							{m.settings_data_load_error()}
+						</p>
 					)}
 					{overview && (
 						<>
 							<div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
 								{COUNT_LABELS.map(({ key, label }) => (
 									<div key={key} className="rounded-lg border p-3">
-										<p className="text-muted-foreground text-xs">{label}</p>
+										<p className="text-muted-foreground text-xs">{label()}</p>
 										<p className="text-lg font-semibold tabular-nums">
 											{overview.counts[key as keyof typeof overview.counts]}
 										</p>
 									</div>
 								))}
 								<div className="rounded-lg border p-3">
-									<p className="text-muted-foreground text-xs">Database size</p>
+									<p className="text-muted-foreground text-xs">
+										{m.settings_database_size()}
+									</p>
 									<p className="text-lg font-semibold tabular-nums">
 										{formatBytes(overview.dbBytes)}
 									</p>
@@ -209,10 +246,10 @@ export function SettingsView() {
 									render={<a href="/api/conversations/export" />}
 								>
 									<Download className="size-4" />
-									Export conversations (JSONL)
+									{m.settings_export_conversations()}
 								</Button>
 								<Badge variant="secondary">
-									Domia Console v{overview.version}
+									{m.settings_console_version({ version: overview.version })}
 								</Badge>
 							</div>
 						</>

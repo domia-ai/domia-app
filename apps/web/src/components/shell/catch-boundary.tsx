@@ -1,4 +1,5 @@
 import { useRouter } from "@tanstack/react-router"
+import { m } from "@/paraglide/messages"
 import { TriangleAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -11,13 +12,13 @@ export function CatchBoundary() {
 				<TriangleAlert className="size-8" />
 			</div>
 			<h1 className="text-2xl font-semibold tracking-tight">
-				Something went wrong
+				{m.shell_error_title()}
 			</h1>
 			<p className="text-muted-foreground mt-2 max-w-md text-sm">
-				An unexpected error occurred while loading this view.
+				{m.shell_error_desc()}
 			</p>
 			<Button className="mt-6" onClick={() => router.invalidate()}>
-				Try again
+				{m.shell_try_again()}
 			</Button>
 		</div>
 	)

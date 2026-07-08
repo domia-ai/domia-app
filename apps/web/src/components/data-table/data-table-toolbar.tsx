@@ -1,4 +1,5 @@
 import { ChevronDown, Download, Search, X } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,7 +34,7 @@ const toggleInList = (current: string, value: string) => {
 export function DataTableToolbar({
 	searchInput,
 	setSearchInput,
-	searchPlaceholder = "Search…",
+	searchPlaceholder = m.table_search_placeholder(),
 	facets = [],
 	facetOptions = {},
 	filters,
@@ -75,7 +76,7 @@ export function DataTableToolbar({
 					className="h-8"
 					onClick={() => setFilter(facet.key, current === "1" ? null : "1")}
 				>
-					{facet.label}
+					{facet.label()}
 				</Button>
 			)
 		}
@@ -89,7 +90,10 @@ export function DataTableToolbar({
 						setFilter(facet.key, !v || v === "all" ? null : v)
 					}
 					items={[
-						{ value: "all", label: `Any ${facet.label.toLowerCase()}` },
+						{
+							value: "all",
+							label: m.table_any({ label: facet.label().toLowerCase() }),
+						},
 						...optionsFor(facet).map((o) => ({
 							value: o.value,
 							label: o.label,
@@ -97,10 +101,12 @@ export function DataTableToolbar({
 					]}
 				>
 					<SelectTrigger className="h-8 w-[140px]">
-						<SelectValue placeholder={facet.label} />
+						<SelectValue placeholder={facet.label()} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">{`Any ${facet.label.toLowerCase()}`}</SelectItem>
+						<SelectItem value="all">
+							{m.table_any({ label: facet.label().toLowerCase() })}
+						</SelectItem>
 						{optionsFor(facet).map((o) => (
 							<SelectItem key={o.value} value={o.value}>
 								{o.label}
@@ -143,7 +149,7 @@ export function DataTableToolbar({
 		return (
 			<Popover key={facet.key}>
 				<PopoverTrigger className="text-muted-foreground hover:text-foreground inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm outline-none">
-					{facet.label}
+					{facet.label()}
 					{active.size > 0 && (
 						<Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
 							{active.size}
@@ -192,7 +198,7 @@ export function DataTableToolbar({
 							className="h-8"
 							onClick={() => applyParams(preset.params)}
 						>
-							{preset.label}
+							{preset.label()}
 						</Button>
 					))}
 					{exportHref && (
@@ -204,7 +210,7 @@ export function DataTableToolbar({
 							render={<a href={exportHref} download />}
 						>
 							<Download className="size-3.5" />
-							Export
+							{m.table_export()}
 						</Button>
 					)}
 					{columnToggles && columnVisibility && setColumnVisibility && (
@@ -228,7 +234,7 @@ export function DataTableToolbar({
 							onClick={clearAll}
 						>
 							<X className="size-3.5" />
-							Clear
+							{m.table_clear()}
 						</Button>
 					)}
 				</div>

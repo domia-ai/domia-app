@@ -10,29 +10,58 @@ import {
 	Volume2,
 	type LucideIcon,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import type { CapabilityKey } from "@/types"
 
 export const CAPABILITY_META: Record<
 	CapabilityKey,
-	{ label: string; short: string; icon: LucideIcon }
+	{ label: () => string; short: () => string; icon: LucideIcon }
 > = {
-	wakeword: { label: "Wake word", short: "Wake", icon: Radio },
-	record: { label: "Record", short: "Rec", icon: Mic },
-	stt: { label: "Speech to text", short: "STT", icon: Ear },
+	wakeword: {
+		label: m.enum_capability_wakeword,
+		short: m.enum_capability_wakeword_short,
+		icon: Radio,
+	},
+	record: {
+		label: m.enum_capability_record,
+		short: m.enum_capability_record_short,
+		icon: Mic,
+	},
+	stt: {
+		label: m.enum_capability_stt,
+		short: m.enum_capability_stt_short,
+		icon: Ear,
+	},
 	intentDetection: {
-		label: "Intent detection",
-		short: "Intent",
+		label: m.enum_capability_intent_detection,
+		short: m.enum_capability_intent_detection_short,
 		icon: Crosshair,
 	},
-	intentExecution: { label: "Intent execution", short: "Exec", icon: Play },
+	intentExecution: {
+		label: m.enum_capability_intent_execution,
+		short: m.enum_capability_intent_execution_short,
+		icon: Play,
+	},
 	promptGeneration: {
-		label: "Prompt generation",
-		short: "Prompt",
+		label: m.enum_capability_prompt_generation,
+		short: m.enum_capability_prompt_generation_short,
 		icon: FileText,
 	},
-	llm: { label: "Language model", short: "LLM", icon: Brain },
-	tts: { label: "Text to speech", short: "TTS", icon: AudioLines },
-	playback: { label: "Playback", short: "Play", icon: Volume2 },
+	llm: {
+		label: m.enum_capability_llm,
+		short: m.enum_capability_llm_short,
+		icon: Brain,
+	},
+	tts: {
+		label: m.enum_capability_tts,
+		short: m.enum_capability_tts_short,
+		icon: AudioLines,
+	},
+	playback: {
+		label: m.enum_capability_playback,
+		short: m.enum_capability_playback_short,
+		icon: Volume2,
+	},
 }
 
 export const CAPABILITY_ORDER: CapabilityKey[] = [

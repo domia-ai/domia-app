@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Download, Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -77,7 +79,7 @@ export function ModelPicker({
 			<Input
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
-				placeholder="Model path or name…"
+				placeholder={m.models_picker_placeholder()}
 			/>
 		)
 
@@ -107,8 +109,8 @@ export function ModelPicker({
 					return
 				}
 				setInstalling(null)
-				toast.error("Install status unavailable", {
-					description: "Lost contact with the node — check it directly.",
+				toast.error(m.toast_install_status_unavailable(), {
+					description: m.toast_install_status_unavailable_desc(),
 				})
 				return
 			}
@@ -119,10 +121,10 @@ export function ModelPicker({
 			}
 			setInstalling(null)
 			if (res.data.status === "done") {
-				toast.success(`Installed ${label}`)
+				toast.success(m.toast_installed_name({ name: label }))
 				queryClient.invalidateQueries({ queryKey: ["models", domiaKey] })
 			} else {
-				toast.error("Install failed", { description: res.data.detail })
+				toast.error(m.toast_install_failed(), { description: res.data.detail })
 			}
 		}
 		schedule()
@@ -133,14 +135,14 @@ export function ModelPicker({
 		setInstalling(label)
 		const result = await installMutation.mutateAsync(specFromCatalog(entry))
 		if (result.ok && result.data) {
-			toast.info(`Installing ${label}…`)
+			toast.info(m.toast_installing_name({ name: label }))
 			if (entry.target) onChange(entry.target)
 			pollJob(result.data.id, label)
 			setOpen(false)
 		} else {
 			setInstalling(null)
-			toast.error("Could not start install", {
-				description: result.ok ? "Empty response" : result.error,
+			toast.error(m.err_start_install(), {
+				description: errText(result.ok ? undefined : result.error),
 			})
 		}
 	}
@@ -149,17 +151,17 @@ export function ModelPicker({
 		<div className="flex items-center gap-2">
 			<Select value={value} onValueChange={(v) => v && onChange(v)}>
 				<SelectTrigger className="h-9 flex-1">
-					<SelectValue placeholder="Choose a model…" />
+					<SelectValue placeholder={m.models_choose()} />
 				</SelectTrigger>
 				<SelectContent>
 					{query.isLoading ? (
 						<div className="text-muted-foreground flex items-center gap-2 px-2 py-1.5 text-xs">
 							<Loader2 className="size-3.5 animate-spin" />
-							Loading models…
+							{m.models_loading()}
 						</div>
 					) : query.isError || (query.data && !query.data.ok) ? (
 						<div className="text-destructive px-2 py-1.5 text-xs">
-							Couldn't load installed models
+							{m.models_picker_error()}
 						</div>
 					) : options.length ? (
 						options.map((name) => (
@@ -169,7 +171,7 @@ export function ModelPicker({
 						))
 					) : (
 						<div className="text-muted-foreground px-2 py-1.5 text-xs">
-							None installed
+							{m.models_none_installed_short()}
 						</div>
 					)}
 				</SelectContent>
@@ -193,7 +195,7 @@ export function ModelPicker({
 				/>
 				<PopoverContent align="end" className="w-72 p-2">
 					<p className="text-muted-foreground px-1 pb-1.5 text-xs">
-						Install a {stage} model
+						{m.models_install_stage({ stage })}
 					</p>
 					<div className="space-y-1">
 						{catalog.length ? (
@@ -212,7 +214,7 @@ export function ModelPicker({
 										</span>
 										{done ? (
 											<span className="text-muted-foreground text-[11px]">
-												Installed
+												{m.models_installed_badge()}
 											</span>
 										) : (
 											<Button
@@ -230,7 +232,7 @@ export function ModelPicker({
 							})
 						) : (
 							<p className="text-muted-foreground px-1.5 py-1 text-xs">
-								No catalog entries for this stage.
+								{m.models_no_catalog()}
 							</p>
 						)}
 					</div>

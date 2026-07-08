@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 
 export function NotFound() {
@@ -13,14 +14,13 @@ export function NotFound() {
 			/>
 			<p className="text-muted-foreground text-sm font-medium">404</p>
 			<h1 className="mt-1 text-2xl font-semibold tracking-tight">
-				Page not found
+				{m.shell_not_found_title()}
 			</h1>
 			<p className="text-muted-foreground mt-2 max-w-md text-sm">
-				This page may have moved or never existed. Let’s get you back to the
-				fleet.
+				{m.shell_not_found_desc()}
 			</p>
 			<Button className="mt-6" nativeButton={false} render={<Link to="/" />}>
-				Back to Overview
+				{m.shell_back_overview()}
 			</Button>
 		</div>
 	)

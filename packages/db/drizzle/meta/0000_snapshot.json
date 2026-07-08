@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3757d9d0-db2c-4b6d-8f27-e39eed70ceb1",
+  "id": "debba5aa-7d5e-4ff2-9d6f-079ecba38a1d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "announcement": {
@@ -765,6 +765,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "llm_queue_ms": {
+          "name": "llm_queue_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "llm_prompt_tokens": {
           "name": "llm_prompt_tokens",
           "type": "integer",
@@ -851,6 +858,27 @@
         },
         "perceived_ttfa_ms": {
           "name": "perceived_ttfa_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "llm_first_sentence_ms": {
+          "name": "llm_first_sentence_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tts_first_chunk_ms": {
+          "name": "tts_first_chunk_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rss_mb": {
+          "name": "rss_mb",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -1051,6 +1079,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "source_interaction_id": {
           "name": "source_interaction_id",
           "type": "text",
@@ -1182,6 +1217,20 @@
           "notNull": false,
           "autoincrement": false
         },
+        "last_turn_at": {
+          "name": "last_turn_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_turn_id": {
+          "name": "last_turn_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "last_synced_at": {
           "name": "last_synced_at",
           "type": "integer",
@@ -1191,6 +1240,118 @@
         }
       },
       "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "turn_event": {
+      "name": "turn_event",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_domia_key": {
+          "name": "source_domia_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "interaction_id": {
+          "name": "interaction_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ts": {
+          "name": "ts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "origin_domia_key": {
+          "name": "origin_domia_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "executor_domia_key": {
+          "name": "executor_domia_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "satellite_id": {
+          "name": "satellite_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "trace_id": {
+          "name": "trace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "turn_event_interaction_seq_idx": {
+          "name": "turn_event_interaction_seq_idx",
+          "columns": [
+            "interaction_id",
+            "seq"
+          ],
+          "isUnique": true
+        },
+        "turn_event_source_created_idx": {
+          "name": "turn_event_source_created_idx",
+          "columns": [
+            "source_domia_key",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

@@ -4,9 +4,12 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { ConfigWorkspace } from "@/components/domia/config/config-workspace"
 import { templatesQueryOptions } from "@/server/templates"
 import { accentFor } from "@/utils/accent"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/templates_/$id/edit")({
-	head: () => ({ meta: [{ title: "Edit template | Domia Console" }] }),
+	head: () => ({
+		meta: [{ title: m.meta_title({ page: m.route_template_edit() }) }],
+	}),
 	component: EditTemplatePage,
 })
 
@@ -25,30 +28,30 @@ function EditTemplatePage() {
 				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
 			>
 				<ArrowLeft className="size-4" />
-				Templates
+				{m.nav_templates()}
 			</Link>
 
 			<div className="space-y-1">
 				<h1 className="text-2xl font-semibold tracking-tight">
-					{template ? `Edit · ${template.name}` : "Edit template"}
+					{template
+						? m.tpl_edit_title({ name: template.name })
+						: m.route_template_edit()}
 				</h1>
-				<p className="text-muted-foreground text-sm">
-					Edit this template's configuration and save your changes.
-				</p>
+				<p className="text-muted-foreground text-sm">{m.tpl_edit_desc()}</p>
 			</div>
 
 			{templatesQuery.isLoading ? (
 				<div className="text-muted-foreground flex items-center justify-center gap-2 py-16 text-sm">
 					<Loader2 className="size-4 animate-spin" />
-					Loading template…
+					{m.tpl_edit_loading()}
 				</div>
 			) : templatesQuery.isError ? (
 				<p className="text-destructive py-16 text-center text-sm">
-					Could not load this template.
+					{m.tpl_edit_load_failed()}
 				</p>
 			) : !template ? (
 				<p className="text-muted-foreground py-16 text-center text-sm">
-					Template not found.
+					{m.tpl_edit_not_found()}
 				</p>
 			) : (
 				<ConfigWorkspace

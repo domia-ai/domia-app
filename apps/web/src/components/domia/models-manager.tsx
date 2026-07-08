@@ -8,6 +8,8 @@ import {
 	HardDrive,
 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -110,11 +112,13 @@ export function ModelsManager({
 						prev.map((j) => (j.id === updated.id ? updated : j)),
 					)
 					if (updated.status === "done") {
-						toast.success("Model installed")
+						toast.success(m.toast_model_installed())
 						queryClient.invalidateQueries({ queryKey: ["models", domiaKey] })
 					}
 					if (updated.status === "error")
-						toast.error("Install failed", { description: updated.detail })
+						toast.error(m.toast_install_failed(), {
+							description: updated.detail,
+						})
 				}
 			}
 		}, POLL_MS)
@@ -130,10 +134,10 @@ export function ModelsManager({
 		const result = await installMutation.mutateAsync(spec)
 		if (result.ok && result.data) {
 			setJobs((prev) => [result.data!, ...prev])
-			toast.info("Install started")
+			toast.info(m.toast_install_started())
 		} else {
-			toast.error("Could not start install", {
-				description: result.ok ? "Empty response" : result.error,
+			toast.error(m.err_start_install(), {
+				description: errText(result.ok ? undefined : result.error),
 			})
 		}
 	}
@@ -143,11 +147,11 @@ export function ModelsManager({
 		try {
 			parsed = JSON.parse(customSpec)
 		} catch {
-			toast.error("Invalid JSON spec")
+			toast.error(m.toast_invalid_json_spec())
 			return
 		}
 		if (!parsed || typeof parsed !== "object") {
-			toast.error("Spec must be an object")
+			toast.error(m.toast_spec_must_be_object())
 			return
 		}
 		await onInstall(parsed as Record<string, unknown>)
@@ -156,27 +160,27 @@ export function ModelsManager({
 	if (!online)
 		return (
 			<p className="text-muted-foreground py-8 text-center text-sm">
-				Offline — model management unavailable.
+				{m.models_offline()}
 			</p>
 		)
 	if (query.isLoading)
 		return (
 			<div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
 				<Loader2 className="size-4 animate-spin" />
-				Loading models…
+				{m.models_loading()}
 			</div>
 		)
 	if (query.isError)
 		return (
 			<p className="text-destructive py-8 text-center text-sm">
-				Could not load models.
+				{m.models_load_error()}
 			</p>
 		)
 	const result = query.data
 	if (!result?.ok || !result.data)
 		return (
 			<p className="text-destructive py-8 text-center text-sm">
-				{result && !result.ok ? result.error : "No models"}
+				{result && !result.ok ? errText(result.error) : m.models_none()}
 			</p>
 		)
 
@@ -194,7 +198,7 @@ export function ModelsManager({
 			)}
 
 			<div className="space-y-2">
-				<h3 className="text-sm font-medium">Available to install</h3>
+				<h3 className="text-sm font-medium">{m.models_available_title()}</h3>
 				{report.catalog.map((entry) => {
 					const key = catalogKey(entry)
 					const isInstalled = installed.has(key)
@@ -221,7 +225,7 @@ export function ModelsManager({
 							{isInstalled ? (
 								<Badge variant="secondary" className="gap-1 text-[11px]">
 									<CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400" />
-									Installed
+									{m.models_installed_badge()}
 								</Badge>
 							) : (
 								<Button
@@ -232,7 +236,7 @@ export function ModelsManager({
 									onClick={() => onInstall(specFromCatalog(entry))}
 								>
 									<Download className="size-4" />
-									Install
+									{m.models_install()}
 								</Button>
 							)}
 						</div>
@@ -241,7 +245,7 @@ export function ModelsManager({
 			</div>
 
 			<div className="space-y-2">
-				<h3 className="text-sm font-medium">Installed</h3>
+				<h3 className="text-sm font-medium">{m.models_installed_title()}</h3>
 				{report.installed.length ? (
 					<div className="space-y-1.5">
 						{report.installed.map((model) => (
@@ -265,14 +269,16 @@ export function ModelsManager({
 						))}
 					</div>
 				) : (
-					<p className="text-muted-foreground text-sm">No models installed.</p>
+					<p className="text-muted-foreground text-sm">
+						{m.models_none_installed()}
+					</p>
 				)}
 			</div>
 
 			<div className="space-y-2 rounded-lg border border-dashed p-3">
-				<p className="text-sm font-medium">Custom install</p>
+				<p className="text-sm font-medium">{m.models_custom_title()}</p>
 				<p className="text-muted-foreground text-xs">
-					Any model, no catalog edit. Spec:{" "}
+					{m.models_custom_hint()}{" "}
 					<code className="font-mono">{`{ "kind": "ollama", "model": "qwen2.5:7b" }`}</code>
 				</p>
 				<Textarea
@@ -291,7 +297,7 @@ export function ModelsManager({
 					onClick={onInstallCustom}
 				>
 					<Download className="size-4" />
-					Install from spec
+					{m.models_install_from_spec()}
 				</Button>
 			</div>
 		</div>

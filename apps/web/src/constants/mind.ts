@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import type {
 	CharacterEnumKey,
 	CharacterTagKey,
@@ -73,83 +74,98 @@ export const ROLE_MODE_VALUES = [
 
 export const CHARACTER_ENUM_FIELDS: {
 	key: CharacterEnumKey
-	label: string
+	label: () => string
 	values: readonly string[]
 }[] = [
-	{ key: "personality", label: "Personality", values: PERSONALITY_VALUES },
-	{ key: "profession", label: "Profession", values: PROFESSION_VALUES },
+	{
+		key: "personality",
+		label: m.mind_field_personality,
+		values: PERSONALITY_VALUES,
+	},
+	{
+		key: "profession",
+		label: m.mind_field_profession,
+		values: PROFESSION_VALUES,
+	},
 	{
 		key: "communicationStyle",
-		label: "Communication style",
+		label: m.mind_field_communication_style,
 		values: COMMUNICATION_STYLE_VALUES,
 	},
-	{ key: "perceivedAge", label: "Perceived age", values: PERCEIVED_AGE_VALUES },
+	{
+		key: "perceivedAge",
+		label: m.mind_field_perceived_age,
+		values: PERCEIVED_AGE_VALUES,
+	},
 	{
 		key: "knowledgeDepth",
-		label: "Knowledge depth",
+		label: m.mind_field_knowledge_depth,
 		values: KNOWLEDGE_DEPTH_VALUES,
 	},
 	{
 		key: "relationshipType",
-		label: "Relationship",
+		label: m.mind_field_relationship,
 		values: RELATIONSHIP_TYPE_VALUES,
 	},
-	{ key: "roleMode", label: "Role mode", values: ROLE_MODE_VALUES },
+	{ key: "roleMode", label: m.mind_field_role_mode, values: ROLE_MODE_VALUES },
 ]
 
-export const CHARACTER_TAG_FIELDS: { key: CharacterTagKey; label: string }[] = [
-	{ key: "languagesSpoken", label: "Languages spoken" },
-	{ key: "interests", label: "Interests" },
-	{ key: "hobbies", label: "Hobbies" },
-	{ key: "skills", label: "Skills" },
+export const CHARACTER_TAG_FIELDS: {
+	key: CharacterTagKey
+	label: () => string
+}[] = [
+	{ key: "languagesSpoken", label: m.mind_field_languages_spoken },
+	{ key: "interests", label: m.mind_field_interests },
+	{ key: "hobbies", label: m.mind_field_hobbies },
+	{ key: "skills", label: m.mind_field_skills },
 ]
 
 export const MIND_MODULE_FIELDS: {
 	key: keyof MindModules
-	label: string
-	hint: string
+	label: () => string
+	hint: () => string
 }[] = [
 	{
 		key: "emotionEngine",
-		label: "Emotion engine",
-		hint: "Applies a mood to replies.",
+		label: m.mind_module_emotion_engine,
+		hint: m.mind_module_emotion_engine_hint,
 	},
 	{
 		key: "memoryEngine",
-		label: "Memory engine",
-		hint: "Recalls prior turns and facts.",
+		label: m.mind_module_memory_engine,
+		hint: m.mind_module_memory_engine_hint,
 	},
 	{
 		key: "collectiveMind",
-		label: "Collective mind",
-		hint: "Shares knowledge across Domias.",
+		label: m.mind_module_collective_mind,
+		hint: m.mind_module_collective_mind_hint,
 	},
 	{
 		key: "remoteAccessEngine",
-		label: "Remote access",
-		hint: "Allows delegating work to peers.",
+		label: m.mind_module_remote_access,
+		hint: m.mind_module_remote_access_hint,
 	},
 	{
 		key: "narrativeEngine",
-		label: "Narrative engine",
-		hint: "Maintains a running story arc.",
+		label: m.mind_module_narrative_engine,
+		hint: m.mind_module_narrative_engine_hint,
 	},
 	{
 		key: "identityEngine",
-		label: "Identity engine",
-		hint: "Recognizes who is speaking.",
+		label: m.mind_module_identity_engine,
+		hint: m.mind_module_identity_engine_hint,
 	},
 ]
 
-export const EMOTION_FIELDS: { key: EmotionKey; label: string }[] = [
-	{ key: "joy", label: "Joy" },
-	{ key: "sadness", label: "Sadness" },
-	{ key: "anger", label: "Anger" },
-	{ key: "fear", label: "Fear" },
-	{ key: "trust", label: "Trust" },
-	{ key: "disgust", label: "Disgust" },
-	{ key: "anticipation", label: "Anticipation" },
-	{ key: "surprise", label: "Surprise" },
+export const EMOTION_FIELDS: { key: EmotionKey; label: () => string }[] = [
+	{ key: "joy", label: m.enum_emotion_joy },
+	{ key: "sadness", label: m.enum_emotion_sadness },
+	{ key: "anger", label: m.enum_emotion_anger },
+	{ key: "fear", label: m.enum_emotion_fear },
+	{ key: "trust", label: m.enum_emotion_trust },
+	{ key: "disgust", label: m.enum_emotion_disgust },
+	{ key: "anticipation", label: m.enum_emotion_anticipation },
+	{ key: "surprise", label: m.enum_emotion_surprise },
 ]
 
 export const DEFAULT_TEMPLATE_MIND: MindSnapshot = {

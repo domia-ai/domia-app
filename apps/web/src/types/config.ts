@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react"
+
 export type JsonValue =
 	| string
 	| number
@@ -78,7 +80,7 @@ export type ConfigFieldKind =
 
 export type ConfigField = {
 	key: string
-	label: string
+	label: () => string
 	kind: ConfigFieldKind
 	options?: readonly string[]
 	min?: number
@@ -86,7 +88,7 @@ export type ConfigField = {
 	step?: number
 	unit?: string
 	stage?: string
-	hint?: string
+	hint?: () => string
 }
 
 export type ConfigSectionKind =
@@ -95,6 +97,47 @@ export type ConfigSectionKind =
 	| "diagnostics"
 	| "models"
 	| "skill"
+
+export type SkillFinalizeMode = "agent_loop" | "template" | "async" | "deadline"
+
+export type SkillFinalizeRule = {
+	mode: SkillFinalizeMode
+	ack?: string
+	error?: string
+	done?: string
+	ackAfterMs?: number
+}
+
+export type SkillRoutingDescriptor = {
+	aliases?: Record<string, string[]>
+	exampleUtterances?: string[]
+	keywords?: string[]
+}
+
+export type SkillExecutionDescriptor = {
+	coreTools?: string[]
+	toolPolicy?: Record<string, "allow" | "block">
+	paramAllow?: Record<string, string[]>
+	finalize?: Record<string, SkillFinalizeRule>
+	genericWords?: string[]
+}
+
+export type SkillDescriptorI18n = {
+	aliases?: Record<string, string[]>
+	exampleUtterances?: string[]
+	keywords?: string[]
+	finalize?: Record<string, SkillFinalizeRule>
+	genericWords?: string[]
+}
+
+export type DomiaSkillDescriptor = {
+	version: 1
+	kind?: string
+	description?: string
+	routing?: SkillRoutingDescriptor
+	execution?: SkillExecutionDescriptor
+	i18n?: Record<string, SkillDescriptorI18n>
+}
 
 export type SkillProviderDraft = {
 	id: string
@@ -107,24 +150,33 @@ export type SkillProviderDraft = {
 	headers: string
 	whitelist: string[]
 	config: string
+	descriptor?: DomiaSkillDescriptor
 }
 
 export type ConfigSectionDef = {
 	id: string
-	label: string
+	label: () => string
 	icon: string
 	group: string
 	kind: ConfigSectionKind
 	source?: string
-	description?: string
+	description?: () => string
 	fields: ConfigField[]
 }
 
 export type ArchetypePreset = {
 	id: string
-	label: string
-	description: string
+	label: () => string
+	description: () => string
 	capabilities: Record<string, boolean>
+}
+
+export type SkillPreset = {
+	id: string
+	labelKey: () => string
+	descriptionKey: () => string
+	icon?: LucideIcon
+	draft: Partial<SkillProviderDraft>
 }
 
 export type ImportConfigInput = {

@@ -25,10 +25,10 @@
 	},
 	"stt": {
 		"name": "Default",
-		"engine": "ZIPFORMER",
-		"modelName": "streaming-zipformer-en",
+		"engine": "PARAKEET",
+		"modelName": "parakeet-tdt-06b-v2",
 		"language": "en",
-		"modelPath": "data/models/streaming-zipformer-en",
+		"modelPath": "data/models/parakeet-tdt-06b-v2",
 		"quantization": "int8",
 		"silenceThreshold": null,
 		"bufferSize": null,
@@ -51,7 +51,7 @@
 	"tts": {
 		"name": "Default",
 		"engine": "KOKORO",
-		"voiceName": "af_heart",
+		"voiceName": "am_michael",
 		"language": "en",
 		"modelPath": "data/models/kokoro-multi-lang-v1_0",
 		"quantization": null,
@@ -73,7 +73,7 @@
 	"llm": {
 		"name": "Default",
 		"engine": "OLLAMA",
-		"modelName": "llama3.1:8b",
+		"modelName": "llama3.2:3b",
 		"temperature": 0.7,
 		"contextWindow": 4096,
 		"numPredict": 80,

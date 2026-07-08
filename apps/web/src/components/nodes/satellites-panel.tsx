@@ -9,6 +9,8 @@ import {
 	ChevronDown,
 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { StatusDot } from "@/components/domia/status"
@@ -16,7 +18,7 @@ import { relativeTimeMs } from "@/utils/format"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { bindSatelliteFormSchema } from "@/schemas/satellites"
+import { buildBindSatelliteFormSchema } from "@/schemas/satellites"
 import {
 	Dialog,
 	DialogClose,
@@ -94,15 +96,15 @@ function NumberSlider({
 		if (result.ok) {
 			toast.success(
 				result.data?.live
-					? `${entity.name} applied`
-					: `${entity.name} saved — applies on reconnect`,
+					? m.toast_entity_applied({ name: entity.name })
+					: m.toast_entity_saved_reconnect({ name: entity.name }),
 			)
 			await queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
 		} else {
-			toast.error(`Could not set ${entity.name}`, {
-				description: result.error,
+			toast.error(m.toast_entity_set_failed({ name: entity.name }), {
+				description: errText(result.error),
 			})
 		}
 	}
@@ -156,19 +158,21 @@ function FollowUpToggle({
 	const onToggle = async (next: boolean) => {
 		const result = await mutation.mutateAsync(next)
 		if (result.ok) {
-			toast.success(next ? "Hands-free follow-up on" : "Follow-up off")
+			toast.success(next ? m.toast_follow_up_on() : m.toast_follow_up_off())
 			await queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
 		} else {
-			toast.error("Could not change follow-up", { description: result.error })
+			toast.error(m.toast_follow_up_change_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
 	return (
 		<div className="flex items-center justify-between gap-2 pt-1">
 			<span className="text-muted-foreground text-xs">
-				Hands-free follow-up
+				{m.sat_follow_up_hands_free()}
 			</span>
 			<Switch
 				checked={enabled}
@@ -211,12 +215,14 @@ function SatelliteRow({
 	const onTest = async () => {
 		const result = await testMutation.mutateAsync()
 		if (result.ok && result.data?.delivered) {
-			toast.success("Playing test on device")
+			toast.success(m.toast_test_playing())
 		} else {
-			toast.error("Could not play test", {
+			toast.error(m.toast_test_play_failed(), {
 				description: result.ok
-					? `Nothing played (target: ${result.data?.target ?? "none"})`
-					: result.error,
+					? m.toast_test_play_failed_desc({
+							target: result.data?.target ?? "none",
+						})
+					: errText(result.error),
 			})
 		}
 	}
@@ -227,14 +233,16 @@ function SatelliteRow({
 		if (result.ok) {
 			toast.success(
 				result.data?.live
-					? "Wake word applied"
-					: "Wake word saved — applies on reconnect",
+					? m.toast_wake_applied()
+					: m.toast_wake_saved_reconnect(),
 			)
 			await queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
 		} else {
-			toast.error("Could not set wake word", { description: result.error })
+			toast.error(m.toast_wake_set_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
@@ -243,9 +251,15 @@ function SatelliteRow({
 
 	const diagnostics = [
 		sat.sampleRate ? `${Math.round(sat.sampleRate / 1000)}kHz` : null,
-		sat.reconnectCount > 0 ? `${sat.reconnectCount} reconnects` : null,
-		sat.lastTurnAt ? `turn ${relativeTimeMs(sat.lastTurnAt)}` : null,
-		sat.lastPlaybackAt ? `play ${relativeTimeMs(sat.lastPlaybackAt)}` : null,
+		sat.reconnectCount > 0
+			? m.sat_diag_reconnects({ count: sat.reconnectCount })
+			: null,
+		sat.lastTurnAt
+			? m.sat_diag_turn({ time: relativeTimeMs(sat.lastTurnAt) })
+			: null,
+		sat.lastPlaybackAt
+			? m.sat_diag_play({ time: relativeTimeMs(sat.lastPlaybackAt) })
+			: null,
 	].filter(Boolean)
 
 	return (
@@ -253,7 +267,7 @@ function SatelliteRow({
 			<div className="flex items-center gap-2">
 				<StatusDot online={sat.online} />
 				{sat.online && sat.micActive ? (
-					<span className="relative flex size-2" title="hearing audio">
+					<span className="relative flex size-2" title={m.sat_hearing_audio()}>
 						<span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
 						<span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
 					</span>
@@ -269,23 +283,27 @@ function SatelliteRow({
 					</div>
 					{sat.online ? (
 						<span className="text-muted-foreground text-xs">
-							{`${sat.status ?? "idle"}${sat.connectedAt ? ` · up ${relativeTimeMs(sat.connectedAt)}` : ""}`}
+							{`${sat.status ?? "idle"}${sat.connectedAt ? ` · ${m.sat_up_time({ time: relativeTimeMs(sat.connectedAt) })}` : ""}`}
 						</span>
 					) : sat.connecting ? (
-						<span className="text-muted-foreground text-xs">connecting…</span>
+						<span className="text-muted-foreground text-xs">
+							{m.sat_connecting()}
+						</span>
 					) : sat.lastError ? (
 						<span className="text-destructive text-xs">
-							offline · {sat.lastError}
+							{m.sat_offline_error({ error: sat.lastError })}
 						</span>
 					) : (
-						<span className="text-muted-foreground text-xs">offline</span>
+						<span className="text-muted-foreground text-xs">
+							{m.sat_offline()}
+						</span>
 					)}
 				</div>
 				<Badge variant="outline">{sat.protocol}</Badge>
 				<Button
 					variant="ghost"
 					size="icon"
-					title="Test speaker"
+					title={m.sat_test_speaker()}
 					disabled={demo || !sat.online || testMutation.isPending}
 					onClick={onTest}
 				>
@@ -294,7 +312,7 @@ function SatelliteRow({
 				<Button
 					variant="ghost"
 					size="icon"
-					title="Unbind"
+					title={m.sat_unbind()}
 					disabled={demo || unbindPending}
 					onClick={() => onUnbind(sat.satelliteId)}
 				>
@@ -306,7 +324,7 @@ function SatelliteRow({
 				<Collapsible open={tuneOpen} onOpenChange={setTuneOpen}>
 					<CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs">
 						<SlidersHorizontal className="size-3.5" />
-						Tune
+						{m.sat_tune()}
 						<ChevronDown
 							className={`size-3 transition-transform ${tuneOpen ? "rotate-180" : ""}`}
 						/>
@@ -319,7 +337,7 @@ function SatelliteRow({
 								disabled={demo || wakeMutation.isPending}
 							>
 								<SelectTrigger size="sm" className="h-7 text-xs">
-									<SelectValue placeholder="Wake word" />
+									<SelectValue placeholder={m.sat_wake_word_placeholder()} />
 								</SelectTrigger>
 								<SelectContent>
 									{sat.availableWakeWords.map((w) => (
@@ -402,14 +420,16 @@ function BoundSatellites({
 		}
 		const target = sats.find((s) => s.satelliteId === confirming)
 		if (target?.online) {
-			toast.success("Device connected", {
-				description: `${target.name ?? target.satelliteId} is online in ${name}.`,
+			toast.success(m.toast_device_connected(), {
+				description: m.toast_device_connected_desc({
+					device: target.name ?? target.satelliteId,
+					room: name,
+				}),
 			})
 			onConfirmResolved()
 		} else if (Date.now() > deadlineRef.current) {
-			toast.warning("Device isn't responding", {
-				description:
-					"Bound, but it didn't connect. Check the encryption key and that the device is on the network.",
+			toast.warning(m.toast_device_not_responding(), {
+				description: m.toast_device_not_responding_desc(),
 			})
 			onConfirmResolved()
 		}
@@ -423,30 +443,32 @@ function BoundSatellites({
 	const onUnbind = async (satelliteId: string) => {
 		const result = await mutation.mutateAsync(satelliteId)
 		if (result.ok) {
-			toast.success("Satellite unbound", {
-				description: "Connection dropped live — no restart needed.",
+			toast.success(m.toast_satellite_unbound(), {
+				description: m.toast_satellite_unbound_desc(),
 			})
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["satellites", domiaKey] }),
 				queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
 			])
 		} else {
-			toast.error("Could not unbind", { description: result.error })
+			toast.error(m.toast_unbind_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
 	if (isLoading)
-		return <p className="text-muted-foreground text-xs">Loading…</p>
+		return <p className="text-muted-foreground text-xs">{m.sat_loading()}</p>
 	if (isError || !data || !data.ok)
 		return (
 			<p className="text-destructive text-xs">
-				{data && !data.ok ? data.error : "Could not load satellites."}
+				{data && !data.ok ? errText(data.error) : m.sat_load_failed()}
 			</p>
 		)
 	if (sats.length === 0)
 		return (
 			<p className="text-muted-foreground text-xs">
-				No device bound to {name}.
+				{m.sat_none_bound_to({ name })}
 			</p>
 		)
 
@@ -488,7 +510,7 @@ function BindDialog({
 			targetKey: hosted[0]?.domiaKey ?? "",
 			encryptionKey: "",
 		},
-		validators: { onChange: bindSatelliteFormSchema },
+		validators: { onChange: buildBindSatelliteFormSchema() },
 		onSubmit: async ({ value }) => {
 			const result = await bindSatelliteFn({
 				data: {
@@ -501,8 +523,8 @@ function BindDialog({
 				},
 			})
 			if (result.ok) {
-				toast.success("Satellite bound", {
-					description: "Connecting live — no restart needed.",
+				toast.success(m.toast_satellite_bound(), {
+					description: m.toast_satellite_bound_desc(),
 				})
 				onOpenChange(false)
 				onBound(value.targetKey, device.satelliteId)
@@ -513,7 +535,9 @@ function BindDialog({
 					queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
 				])
 			} else {
-				toast.error("Could not bind", { description: result.error })
+				toast.error(m.toast_bind_failed(), {
+					description: errText(result.error),
+				})
 			}
 		},
 	})
@@ -522,11 +546,8 @@ function BindDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Bind {device.name}</DialogTitle>
-					<DialogDescription>
-						Assign this device to a room. Paste the device&apos;s API encryption
-						key (from its ESPHome setup). It connects live.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_bind_title({ name: device.name })}</DialogTitle>
+					<DialogDescription>{m.dlg_bind_desc()}</DialogDescription>
 				</DialogHeader>
 				<form
 					onSubmit={(e) => {
@@ -539,13 +560,17 @@ function BindDialog({
 						<form.Field name="targetKey">
 							{(field) => (
 								<Field>
-									<FieldLabel htmlFor="bind-room">Room</FieldLabel>
+									<FieldLabel htmlFor="bind-room">
+										{m.dlg_bind_room_label()}
+									</FieldLabel>
 									<Select
 										value={field.state.value}
 										onValueChange={(v) => v && field.handleChange(v)}
 									>
 										<SelectTrigger id="bind-room" className="w-full">
-											<SelectValue placeholder="Pick a room" />
+											<SelectValue
+												placeholder={m.dlg_bind_room_placeholder()}
+											/>
 										</SelectTrigger>
 										<SelectContent>
 											{hosted.map((i) => (
@@ -561,12 +586,14 @@ function BindDialog({
 						<form.Field name="encryptionKey">
 							{(field) => (
 								<Field>
-									<FieldLabel htmlFor="bind-key">Encryption key</FieldLabel>
+									<FieldLabel htmlFor="bind-key">
+										{m.dlg_bind_key_label()}
+									</FieldLabel>
 									<Input
 										id="bind-key"
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder="base64 API key"
+										placeholder={m.dlg_bind_key_placeholder()}
 									/>
 								</Field>
 							)}
@@ -576,7 +603,7 @@ function BindDialog({
 						<DialogClose
 							render={
 								<Button type="button" variant="outline">
-									Cancel
+									{m.dlg_cancel()}
 								</Button>
 							}
 						/>
@@ -588,7 +615,7 @@ function BindDialog({
 						>
 							{({ canSubmit, isSubmitting }) => (
 								<Button type="submit" disabled={!canSubmit || isSubmitting}>
-									{isSubmitting ? "Binding…" : "Bind"}
+									{isSubmitting ? m.dlg_binding() : m.dlg_bind_action()}
 								</Button>
 							)}
 						</form.Subscribe>
@@ -623,7 +650,7 @@ export function SatellitesPanel({
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
-				<CardTitle>Satellites</CardTitle>
+				<CardTitle>{m.sat_title()}</CardTitle>
 				<Button
 					variant="outline"
 					size="sm"
@@ -631,29 +658,29 @@ export function SatellitesPanel({
 					onClick={() => void discovery.refetch()}
 				>
 					<RadarIcon className="size-4" />
-					{discovery.isFetching ? "Scanning…" : "Scan network"}
+					{discovery.isFetching ? m.sat_scanning() : m.sat_scan()}
 				</Button>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				<div className="space-y-2">
 					{discovery.isFetching && (
 						<p className="text-muted-foreground text-sm">
-							Scanning the network…
+							{m.sat_scanning_network()}
 						</p>
 					)}
 					{!discovery.isFetching &&
 						(discovery.isError || (discovery.data && !discovery.data.ok)) && (
 							<p className="text-destructive text-sm">
 								{discovery.data && !discovery.data.ok
-									? discovery.data.error
-									: "Discovery failed."}
+									? errText(discovery.data.error)
+									: m.sat_discovery_failed()}
 							</p>
 						)}
 					{!discovery.isFetching &&
 						discovery.isFetched &&
 						found.length === 0 && (
 							<p className="text-muted-foreground text-sm">
-								No Satellites devices found on the network.
+								{m.sat_none_found()}
 							</p>
 						)}
 					{found.map((device) => (
@@ -673,7 +700,7 @@ export function SatellitesPanel({
 								disabled={demo || hosted.length === 0}
 								onClick={() => setBindingDevice(device)}
 							>
-								Bind
+								{m.dlg_bind_action()}
 							</Button>
 						</div>
 					))}

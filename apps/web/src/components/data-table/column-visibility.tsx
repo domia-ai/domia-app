@@ -1,4 +1,5 @@
 import { SlidersHorizontal } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -18,10 +19,10 @@ export function ColumnVisibility({
 		<DropdownMenu>
 			<DropdownMenuTrigger className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm outline-none">
 				<SlidersHorizontal className="size-3.5" />
-				Columns
+				{m.table_columns()}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+				<DropdownMenuLabel>{m.table_toggle_columns()}</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				{columns.map((col) => (
 					<DropdownMenuCheckboxItem
@@ -31,7 +32,7 @@ export function ColumnVisibility({
 							onChange({ ...visibility, [col.id]: !!value })
 						}
 					>
-						{col.label}
+						{col.label()}
 					</DropdownMenuCheckboxItem>
 				))}
 			</DropdownMenuContent>

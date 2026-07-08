@@ -10,6 +10,8 @@ import {
 	Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -22,7 +24,7 @@ import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { RecordingIndicator } from "@/components/audio/recording-indicator"
 import { useAudioRecorder } from "@/hooks/use-audio-recorder"
 import { announce, announceAudio } from "@/server/rooms"
-import { announceFormSchema } from "@/schemas/broadcast"
+import { buildAnnounceFormSchema } from "@/schemas/broadcast"
 import { cn } from "@/lib/utils"
 import { isDemoMode } from "@/lib/demo"
 import type {
@@ -84,7 +86,7 @@ export function AnnounceControl({
 					? [initialTarget]
 					: ([] as string[]),
 		},
-		validators: { onChange: announceFormSchema },
+		validators: { onChange: buildAnnounceFormSchema() },
 		onSubmit: async ({ value }) => {
 			const list = value.targets
 			const body = value.text.trim()
@@ -123,14 +125,16 @@ export function AnnounceControl({
 			if (delivered > 0) {
 				toast.success(
 					failed > 0
-						? `Sent to ${delivered} Domia(s) · ${failed} failed`
-						: `Sent to ${delivered} Domia(s)`,
+						? m.toast_announce_sent_partial({ count: delivered, failed })
+						: m.toast_announce_sent({ count: delivered }),
 				)
 				onSent()
 				form.setFieldValue("text", "")
 				form.setFieldValue("clip", null)
 			} else {
-				toast.error("No Domia played it", { description: firstError })
+				toast.error(m.toast_announce_none_played(), {
+					description: firstError ? errText(firstError) : undefined,
+				})
 			}
 		},
 	})
@@ -170,13 +174,15 @@ export function AnnounceControl({
 						<div className="flex flex-col gap-5">
 							<div className="flex flex-col gap-2">
 								<p className="text-muted-foreground text-xs font-medium uppercase">
-									Message
+									{m.broadcast_message()}
 								</p>
 								{clip ? (
 									<div className="border-border bg-muted/20 flex flex-col gap-2 rounded-lg border p-3">
 										<div className="flex items-center gap-2 text-sm">
 											<Volume2 className="text-primary size-4" />
-											<span className="font-medium">Voice clip</span>
+											<span className="font-medium">
+												{m.broadcast_voice_clip()}
+											</span>
 											<Button
 												variant="ghost"
 												size="sm"
@@ -184,7 +190,7 @@ export function AnnounceControl({
 												disabled={demo}
 												onClick={() => form.setFieldValue("clip", null)}
 											>
-												<X className="size-3.5" /> Discard
+												<X className="size-3.5" /> {m.chat_discard()}
 											</Button>
 										</div>
 										<audio
@@ -207,7 +213,7 @@ export function AnnounceControl({
 															void form.handleSubmit()
 														}
 													}}
-													placeholder="Type a message, or record audio with the mic…"
+													placeholder={m.broadcast_text_placeholder()}
 													disabled={demo || recorder.recording}
 													rows={2}
 												/>
@@ -241,7 +247,7 @@ export function AnnounceControl({
 														/>
 													) : (
 														<span className="text-muted-foreground text-xs">
-															Record audio
+															{m.broadcast_record_audio()}
 														</span>
 													)}
 												</InputGroupAddon>
@@ -253,7 +259,7 @@ export function AnnounceControl({
 
 							<div className="flex flex-col gap-1.5">
 								<p className="text-muted-foreground text-xs font-medium uppercase">
-									Playback voice
+									{m.broadcast_playback_voice()}
 								</p>
 								<div className="grid gap-2 sm:grid-cols-2">
 									<DeliveryCard
@@ -262,19 +268,19 @@ export function AnnounceControl({
 											form.setFieldValue("delivery", "domia-voice")
 										}
 										icon={Radio}
-										title="Domia voice"
-										desc="Each target re-speaks it in its own voice."
+										title={m.broadcast_domia_voice()}
+										desc={m.broadcast_domia_voice_desc()}
 									/>
 									<DeliveryCard
 										active={effectiveDelivery === "original"}
 										disabled={!clip}
 										onClick={() => form.setFieldValue("delivery", "original")}
 										icon={Volume2}
-										title="Original audio"
+										title={m.broadcast_original_audio()}
 										desc={
 											clip
-												? "Play your recording as-is."
-												: "Record a clip to play it."
+												? m.broadcast_original_desc_ready()
+												: m.broadcast_original_desc_record()
 										}
 									/>
 								</div>
@@ -293,7 +299,9 @@ export function AnnounceControl({
 										}
 										className="text-primary text-xs font-medium hover:underline disabled:opacity-50"
 									>
-										{allSelected ? "Clear all" : "Select all"}
+										{allSelected
+											? m.broadcast_clear_all()
+											: m.broadcast_select_all()}
 									</button>
 								</div>
 								<div className="flex flex-wrap gap-2">
@@ -332,10 +340,10 @@ export function AnnounceControl({
 									variant="outline"
 									className="text-[10px] tracking-wide uppercase"
 								>
-									{clip ? "Audio" : "Text"} ·{" "}
+									{clip ? m.broadcast_audio() : m.broadcast_text()} ·{" "}
 									{effectiveDelivery === "original"
-										? "Original"
-										: "Domia voice"}
+										? m.broadcast_original()
+										: m.broadcast_domia_voice()}
 								</Badge>
 								<form.Subscribe
 									selector={(s) => [s.isSubmitting, s.canSubmit] as const}
@@ -350,7 +358,7 @@ export function AnnounceControl({
 											) : (
 												<Megaphone className="size-4" />
 											)}
-											Broadcast
+											{m.broadcast_send()}
 										</Button>
 									)}
 								</form.Subscribe>

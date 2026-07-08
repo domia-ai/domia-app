@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { ChevronDown } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import {
@@ -16,9 +17,9 @@ export function RawTrace({ trace }: RawTraceProps) {
 				<div className="flex items-center justify-between px-6 py-4">
 					<CollapsibleTrigger className="group flex items-center gap-2 text-base font-semibold outline-none">
 						<ChevronDown className="size-4 transition-transform group-data-[panel-open]:rotate-180" />
-						Raw trace JSON
+						{m.conv_raw_trace()}
 					</CollapsibleTrigger>
-					<CopyButton text={json} label="Copy" />
+					<CopyButton text={json} label={m.conv_copy()} />
 				</div>
 				<CollapsibleContent>
 					<div className="px-6 pb-6">

@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -10,7 +11,7 @@ export function ThemeToggle() {
 			variant="ghost"
 			size="icon"
 			className="size-8"
-			aria-label="Toggle theme"
+			aria-label={m.aria_toggle_theme()}
 			onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
 		>
 			<Sun className="size-4 dark:hidden" />

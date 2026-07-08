@@ -19,6 +19,7 @@ const envSchema = z.object({
 		.int()
 		.positive()
 		.default(60_000),
+	DOMIA_MESH_SECRET: z.string().min(8),
 })
 
 export const env = envSchema.parse(process.env)

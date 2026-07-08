@@ -20,13 +20,19 @@ import {
 	User,
 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ConfigSection } from "./config-section"
 import { SaveTemplateDialog } from "./save-template-dialog"
 import { useConfigDraft } from "@/hooks/use-config-draft"
 import { importConfigFn } from "@/server/config"
-import { CONFIG_SECTIONS, SECTION_GROUPS } from "@/constants/config"
+import {
+	CONFIG_SECTIONS,
+	SECTION_GROUP_LABELS,
+	SECTION_GROUPS,
+} from "@/constants/config"
 import { cn } from "@/lib/utils"
 import { summarizeApply } from "@/lib/config-apply"
 import type { ConfigSnapshot } from "@/types/config"
@@ -105,15 +111,15 @@ export function ConfigWorkspace({
 			const apply = result.data.apply
 			const description = apply
 				? summarizeApply(apply)
-				: `${domiaName} applied the change.`
+				: m.toast_config_applied_fallback({ name: domiaName })
 			if (apply && (apply.result === "partial" || apply.result === "restart")) {
-				toast.warning("Configuration saved", { description })
+				toast.warning(m.toast_config_saved(), { description })
 			} else {
-				toast.success("Configuration saved", { description })
+				toast.success(m.toast_config_saved(), { description })
 			}
 		} else {
-			toast.error("Could not save", {
-				description: result.ok ? "Empty response" : result.error,
+			toast.error(m.toast_config_save_failed(), {
+				description: errText(result.ok ? undefined : result.error),
 			})
 		}
 	}
@@ -129,7 +135,7 @@ export function ConfigWorkspace({
 						<Input
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
-							placeholder="Search settings…"
+							placeholder={m.config_search_placeholder()}
 							className="h-9 pl-8"
 						/>
 					</div>
@@ -138,7 +144,7 @@ export function ConfigWorkspace({
 					).map((group) => (
 						<div key={group} className="space-y-1">
 							<p className="text-muted-foreground px-2 text-[11px] font-medium tracking-wide uppercase">
-								{group}
+								{SECTION_GROUP_LABELS[group]()}
 							</p>
 							{sections
 								.filter((s) => s.group === group)
@@ -158,7 +164,9 @@ export function ConfigWorkspace({
 											)}
 										>
 											<Icon className="size-4 shrink-0" />
-											<span className="flex-1 text-left">{section.label}</span>
+											<span className="flex-1 text-left">
+												{section.label()}
+											</span>
 											{count > 0 && (
 												<span className="bg-primary text-primary-foreground flex size-4 items-center justify-center rounded-full text-[10px] font-medium tabular-nums">
 													{count}
@@ -196,13 +204,15 @@ export function ConfigWorkspace({
 						<span className="text-sm">
 							<span className="text-muted-foreground">
 								{draft.impact.totalChanged > 0
-									? `${draft.impact.totalChanged} edits from the starting Domia`
-									: "Editing a copy — nothing is applied to a live Domia"}
+									? m.config_template_edits_count({
+											count: draft.impact.totalChanged,
+										})
+									: m.config_template_editing_copy()}
 							</span>
 							{!draft.isValid && (
 								<span className="text-destructive">
 									{" "}
-									· fix invalid fields to save
+									· {m.config_fix_invalid()}
 								</span>
 							)}
 						</span>
@@ -210,14 +220,18 @@ export function ConfigWorkspace({
 							{dirty && (
 								<Button variant="ghost" onClick={draft.reset}>
 									<RotateCcw className="size-4" />
-									Reset
+									{m.config_reset()}
 								</Button>
 							)}
 							<SaveTemplateDialog
 								config={snapshotConfig}
 								onSaved={onSaved}
 								variant="default"
-								label={editTemplate ? "Save changes" : "Save template"}
+								label={
+									editTemplate
+										? m.config_save_changes()
+										: m.config_save_template()
+								}
 								template={editTemplate}
 								disabled={!draft.isValid}
 							/>
@@ -230,27 +244,29 @@ export function ConfigWorkspace({
 						<div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3">
 							<span className="flex items-center gap-2 text-sm">
 								<span className="font-medium">
-									{draft.impact.totalChanged} unsaved
+									{m.config_unsaved_count({ count: draft.impact.totalChanged })}
 								</span>
 								<span className="text-muted-foreground">
-									· applying restarts {domiaName}
+									· {m.config_applying_restarts({ name: domiaName })}
 								</span>
 								{!draft.isValid && (
 									<span className="text-destructive">
-										· fix invalid fields to save
+										· {m.config_fix_invalid()}
 									</span>
 								)}
 							</span>
 							<div className="ml-auto flex items-center gap-2">
 								<Button variant="ghost" onClick={draft.reset}>
 									<RotateCcw className="size-4" />
-									Reset
+									{m.config_reset()}
 								</Button>
 								<Button
 									disabled={importMutation.isPending || !draft.isValid}
 									onClick={onApply}
 								>
-									{importMutation.isPending ? "Saving…" : "Save & restart"}
+									{importMutation.isPending
+										? m.config_saving()
+										: m.config_save_restart()}
 								</Button>
 							</div>
 						</div>

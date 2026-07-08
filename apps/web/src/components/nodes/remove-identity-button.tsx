@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -40,8 +42,8 @@ export function RemoveIdentityButton({
 	const onConfirm = async () => {
 		const result = await mutation.mutateAsync()
 		if (result.ok) {
-			toast.success("Identity removed", {
-				description: `${name} was soft-disabled — its history and config are kept. You can re-add it later.`,
+			toast.success(m.toast_identity_removed(), {
+				description: m.toast_identity_removed_desc({ name }),
 			})
 			setOpen(false)
 			await Promise.all([
@@ -51,7 +53,9 @@ export function RemoveIdentityButton({
 				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 			])
 		} else {
-			toast.error("Could not remove identity", { description: result.error })
+			toast.error(m.err_remove_identity(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
@@ -61,27 +65,27 @@ export function RemoveIdentityButton({
 				render={
 					<Button variant="outline" size="sm" disabled={demo || !online}>
 						<Trash2 className="size-4" />
-						Remove
+						{m.dlg_remove_identity_trigger()}
 					</Button>
 				}
 			/>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Remove {name}?</DialogTitle>
-					<DialogDescription>
-						This soft-disables the identity on this node — its history and
-						configuration are kept, and it stops responding live (no restart,
-						other identities stay up). You can re-add it later.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_remove_identity_title({ name })}</DialogTitle>
+					<DialogDescription>{m.dlg_remove_identity_desc()}</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
-					<DialogClose render={<Button variant="outline">Cancel</Button>} />
+					<DialogClose
+						render={<Button variant="outline">{m.dlg_cancel()}</Button>}
+					/>
 					<Button
 						variant="destructive"
 						onClick={onConfirm}
 						disabled={mutation.isPending}
 					>
-						{mutation.isPending ? "Removing…" : "Remove"}
+						{mutation.isPending
+							? m.dlg_removing()
+							: m.dlg_remove_identity_trigger()}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

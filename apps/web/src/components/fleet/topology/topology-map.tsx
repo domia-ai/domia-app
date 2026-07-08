@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -18,7 +19,7 @@ export function FleetTopology() {
 	const [hovered, setHovered] = useState<string | null>(null)
 
 	if (isLoading)
-		return <p className="text-muted-foreground text-sm">Loading…</p>
+		return <p className="text-muted-foreground text-sm">{m.nodes_loading()}</p>
 	if (isError || !data?.ok)
 		return (
 			<p className="text-destructive text-sm">
@@ -31,7 +32,7 @@ export function FleetTopology() {
 		return (
 			<div className="text-muted-foreground flex flex-col items-center gap-2 py-16 text-center text-sm">
 				<Workflow className="size-8 opacity-40" />
-				<p>No nodes discovered yet.</p>
+				<p>{m.nodes_empty()}</p>
 			</div>
 		)
 

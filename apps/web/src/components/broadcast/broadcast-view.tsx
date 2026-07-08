@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Megaphone, Radio, Mic, Type, Check, Clock, X } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -27,23 +28,27 @@ function statusOf(entry: RecentBroadcast) {
 	if (entry.total > 0 && entry.delivered === entry.total)
 		return {
 			icon: Check,
-			label: "Delivered",
+			label: m.broadcast_status_delivered(),
 			cls: "bg-[var(--success)]/12 text-[var(--success)]",
 		}
 	if (entry.delivered > 0)
 		return {
 			icon: Clock,
-			label: "Partial",
+			label: m.broadcast_status_partial(),
 			cls: "bg-[var(--warning)]/12 text-[var(--warning)]",
 		}
-	return { icon: X, label: "Failed", cls: "bg-destructive/12 text-destructive" }
+	return {
+		icon: X,
+		label: m.broadcast_status_failed(),
+		cls: "bg-destructive/12 text-destructive",
+	}
 }
 
 function RecentBroadcasts({ list }: RecentBroadcastsProps) {
 	if (list.length === 0)
 		return (
 			<p className="text-muted-foreground py-10 text-center text-sm">
-				Announcements you send show up here.
+				{m.broadcast_recent_empty()}
 			</p>
 		)
 
@@ -65,7 +70,7 @@ function RecentBroadcasts({ list }: RecentBroadcastsProps) {
 									<Type className="text-muted-foreground size-3.5 shrink-0" />
 								)}
 								<p className="truncate text-sm leading-snug font-medium">
-									{entry.text || "Voice clip"}
+									{entry.text || m.broadcast_voice_clip()}
 								</p>
 							</div>
 							<span
@@ -105,7 +110,9 @@ function RecentBroadcasts({ list }: RecentBroadcastsProps) {
 
 						<div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
 							<span className="bg-muted rounded px-1.5 py-0.5">
-								{entry.delivery === "original" ? "Original" : "Domia voice"}
+								{entry.delivery === "original"
+									? m.broadcast_original()
+									: m.broadcast_domia_voice()}
 							</span>
 							<span>{relativeTime(entry.createdAt)}</span>
 						</div>
@@ -124,16 +131,18 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 	const [intercomNode, setIntercomNode] = useState("")
 
 	if (domias.isLoading)
-		return <p className="text-muted-foreground text-sm">Loading…</p>
+		return <p className="text-muted-foreground text-sm">{m.cmd_loading()}</p>
 	if (domias.isError || !domias.data)
-		return <p className="text-destructive text-sm">Could not load Domias.</p>
+		return (
+			<p className="text-destructive text-sm">{m.broadcast_load_error()}</p>
+		)
 
 	const allDomias = domias.data
 	if (allDomias.length === 0)
 		return (
 			<div className="text-muted-foreground flex flex-col items-center gap-2 py-16 text-center text-sm">
 				<Megaphone className="size-8 opacity-40" />
-				<p>No Domias discovered yet.</p>
+				<p>{m.settings_no_domias()}</p>
 			</div>
 		)
 
@@ -165,10 +174,10 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 		<Tabs defaultValue="broadcast" className="gap-6">
 			<TabsList>
 				<TabsTrigger value="broadcast">
-					<Megaphone className="size-4" /> Broadcast
+					<Megaphone className="size-4" /> {m.nav_broadcast()}
 				</TabsTrigger>
 				<TabsTrigger value="intercom">
-					<Radio className="size-4" /> Intercom
+					<Radio className="size-4" /> {m.broadcast_tab_intercom()}
 				</TabsTrigger>
 			</TabsList>
 
@@ -177,12 +186,11 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 					<Card className="lg:col-span-3">
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2 text-base">
-								<Megaphone className="text-muted-foreground size-4" /> Broadcast
-								to the mesh
+								<Megaphone className="text-muted-foreground size-4" />{" "}
+								{m.broadcast_to_mesh()}
 							</CardTitle>
 							<p className="text-muted-foreground text-sm">
-								Send text or an audio clip. Targets play it back as the original
-								recording or re-spoken in each Domia's own voice.
+								{m.broadcast_to_mesh_desc()}
 							</p>
 						</CardHeader>
 						<CardContent>
@@ -196,12 +204,14 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 
 					<Card className="lg:col-span-2">
 						<CardHeader>
-							<CardTitle className="text-base">Recent broadcasts</CardTitle>
+							<CardTitle className="text-base">
+								{m.broadcast_recent_title()}
+							</CardTitle>
 						</CardHeader>
 						<CardContent>
 							{announcements.isError ? (
 								<p className="text-destructive py-10 text-center text-sm">
-									Couldn't load recent broadcasts.
+									{m.broadcast_recent_error()}
 								</p>
 							) : (
 								<RecentBroadcasts list={recent} />
@@ -215,23 +225,23 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 				<Card className="max-w-xl">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 text-base">
-							<Radio className="text-muted-foreground size-4" /> Intercom
+							<Radio className="text-muted-foreground size-4" />{" "}
+							{m.broadcast_tab_intercom()}
 						</CardTitle>
 						<p className="text-muted-foreground text-sm">
-							Open a live voice link between two rooms on the same node.
+							{m.broadcast_intercom_desc()}
 						</p>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						{intercomCandidates.length === 0 ? (
 							<p className="text-muted-foreground py-6 text-center text-sm">
-								Intercom needs a node hosting two or more intercom-capable
-								rooms.
+								{m.broadcast_intercom_needs()}
 							</p>
 						) : (
 							<>
 								<div className="space-y-1.5">
 									<p className="text-muted-foreground text-xs font-medium uppercase">
-										Node
+										{m.route_node()}
 									</p>
 									<Select
 										value={activeNode}

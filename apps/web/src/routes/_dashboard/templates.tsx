@@ -7,9 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { TemplateCard } from "@/components/templates/template-card"
 import { templatesQueryOptions } from "@/server/templates"
 import { domiaTargetsQueryOptions } from "@/server/fleet"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/templates")({
-	head: () => ({ meta: [{ title: "Templates | Domia Console" }] }),
+	head: () => ({
+		meta: [{ title: m.meta_title({ page: m.nav_templates() }) }],
+	}),
 	loader: ({ context }) =>
 		Promise.all([
 			context.queryClient.ensureQueryData(templatesQueryOptions()),
@@ -28,12 +31,12 @@ function TemplatesPage() {
 	return (
 		<div className="space-y-6">
 			<PageHeader
-				title="Templates"
-				description="Reusable full configurations. Build one, then apply it to any Domia in seconds."
+				title={m.nav_templates()}
+				description={m.route_templates_description()}
 				actions={
 					<Button nativeButton={false} render={<Link to="/templates/new" />}>
 						<Plus className="size-4" />
-						New template
+						{m.route_template_new()}
 					</Button>
 				}
 			/>
@@ -45,7 +48,7 @@ function TemplatesPage() {
 					))}
 				</div>
 			) : templatesQuery.isError ? (
-				<p className="text-destructive text-sm">Could not load templates.</p>
+				<p className="text-destructive text-sm">{m.templates_load_error()}</p>
 			) : templates.length ? (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 					{templates.map((template) => (
@@ -58,7 +61,7 @@ function TemplatesPage() {
 				</div>
 			) : (
 				<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-					No templates yet. Create one to get started.
+					{m.templates_empty()}
 				</div>
 			)}
 		</div>

@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router"
 import { Search } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DataTable } from "@/components/data-table/data-table"
@@ -54,7 +55,7 @@ export function FleetView() {
 					<div className="relative max-w-xs flex-1">
 						<Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
 						<Input
-							placeholder="Search Domias…"
+							placeholder={m.fleet_search_placeholder()}
 							value={searchInput}
 							onChange={(e) => setSearchInput(e.target.value)}
 							className="pl-9"
@@ -78,11 +79,7 @@ export function FleetView() {
 					onPageSizeChange={setPageSize}
 					onSortChange={setSort}
 					isLoading={isLoading}
-					emptyLabel={
-						loadFailed
-							? "Couldn't load the fleet — check the console connection."
-							: "No Domias discovered yet."
-					}
+					emptyLabel={loadFailed ? m.fleet_load_failed() : m.fleet_empty()}
 					onRowClick={(row) =>
 						navigate({ to: "/domias/$key", params: { key: row.domiaKey } })
 					}
@@ -103,9 +100,7 @@ export function FleetView() {
 						</div>
 					) : (
 						<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-							{loadFailed
-								? "Couldn't load the fleet — check the console connection."
-								: "No Domias discovered yet."}
+							{loadFailed ? m.fleet_load_failed() : m.fleet_empty()}
 						</div>
 					)}
 					{total > pageSize && (

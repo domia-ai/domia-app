@@ -6,6 +6,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import {
 	Table,
 	TableBody,
@@ -31,7 +32,7 @@ export function DataTable<TData, TValue>({
 	onPageSizeChange,
 	onSortChange,
 	isLoading,
-	emptyLabel = "No results.",
+	emptyLabel = m.table_no_results(),
 	onRowClick,
 	selectedRowId,
 	toolbar,
@@ -56,7 +57,7 @@ export function DataTable<TData, TValue>({
 					table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
 				}
 				onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-				aria-label="Select all"
+				aria-label={m.aria_select_all()}
 			/>
 		),
 		cell: ({ row }) => (
@@ -64,7 +65,7 @@ export function DataTable<TData, TValue>({
 				<Checkbox
 					checked={row.getIsSelected()}
 					onCheckedChange={(value) => row.toggleSelected(!!value)}
-					aria-label="Select row"
+					aria-label={m.aria_select_row()}
 				/>
 			</div>
 		),

@@ -114,6 +114,7 @@ CREATE TABLE `interaction_trace` (
 	`stt_ms` integer,
 	`stt_queue_ms` integer,
 	`llm_ms` integer,
+	`llm_queue_ms` integer,
 	`llm_prompt_tokens` integer,
 	`llm_completion_tokens` integer,
 	`llm_tokens_per_sec` real,
@@ -127,6 +128,9 @@ CREATE TABLE `interaction_trace` (
 	`tts_queue_ms` integer,
 	`ttfa_ms` integer,
 	`perceived_ttfa_ms` integer,
+	`llm_first_sentence_ms` integer,
+	`tts_first_chunk_ms` integer,
+	`rss_mb` integer,
 	`total_ms` integer,
 	`stt_executor_key` text,
 	`llm_executor_key` text,
@@ -156,6 +160,7 @@ CREATE TABLE `memory_fact` (
 	`relation` text,
 	`value` text,
 	`confidence` real,
+	`kind` text,
 	`source_interaction_id` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
@@ -177,5 +182,25 @@ CREATE UNIQUE INDEX `mind_template_name_idx` ON `mind_template` (`name`);--> sta
 CREATE TABLE `sync_cursor` (
 	`domia_key` text PRIMARY KEY NOT NULL,
 	`last_interaction_at` text,
+	`last_turn_at` text,
+	`last_turn_id` text,
 	`last_synced_at` integer
 );
+--> statement-breakpoint
+CREATE TABLE `turn_event` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`interaction_id` text NOT NULL,
+	`type` text NOT NULL,
+	`seq` integer NOT NULL,
+	`ts` integer NOT NULL,
+	`origin_domia_key` text,
+	`executor_domia_key` text,
+	`satellite_id` text,
+	`trace_id` text,
+	`payload` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `turn_event_interaction_seq_idx` ON `turn_event` (`interaction_id`,`seq`);--> statement-breakpoint
+CREATE INDEX `turn_event_source_created_idx` ON `turn_event` (`source_domia_key`,`created_at`);

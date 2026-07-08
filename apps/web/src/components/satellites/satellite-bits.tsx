@@ -11,6 +11,7 @@ import {
 	AlertTriangle,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -42,14 +43,14 @@ const TONE_TEXT: Record<string, string> = {
 
 const STATUS_META: Record<
 	string,
-	{ label: string; tone: string; pulse?: boolean }
+	{ label: () => string; tone: string; pulse?: boolean }
 > = {
-	connected: { label: "Connected", tone: "success" },
-	listening: { label: "Listening", tone: "success", pulse: true },
-	speaking: { label: "Speaking", tone: "success", pulse: true },
-	connecting: { label: "Connecting", tone: "warning", pulse: true },
-	offline: { label: "Offline", tone: "muted" },
-	error: { label: "Error", tone: "danger" },
+	connected: { label: m.sat_status_connected, tone: "success" },
+	listening: { label: m.sat_status_listening, tone: "success", pulse: true },
+	speaking: { label: m.sat_status_speaking, tone: "success", pulse: true },
+	connecting: { label: m.sat_status_connecting, tone: "warning", pulse: true },
+	offline: { label: m.sat_status_offline, tone: "muted" },
+	error: { label: m.sat_status_error, tone: "danger" },
 }
 
 const SPEAKING_WINDOW_MS = 3000
@@ -101,30 +102,30 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
 				/>
 			</span>
 			<span className={cn("text-xs font-medium", TONE_TEXT[meta.tone])}>
-				{meta.label}
+				{meta.label()}
 			</span>
 		</span>
 	)
 }
 
-const PROTOCOL_META: Record<string, { label: string; cls: string }> = {
+const PROTOCOL_META: Record<string, { label: () => string; cls: string }> = {
 	native: {
-		label: "Native",
+		label: m.sat_protocol_native,
 		cls: "border-[var(--chart-1)]/40 text-[var(--chart-1)]",
 	},
 	wyoming: {
-		label: "Wyoming",
+		label: () => "Wyoming",
 		cls: "border-[var(--chart-3)]/40 text-[var(--chart-3)]",
 	},
 	esphome: {
-		label: "ESPHome",
+		label: () => "ESPHome",
 		cls: "border-[var(--chart-4)]/40 text-[var(--chart-4)]",
 	},
 }
 
 export function ProtocolBadge({ protocol }: ProtocolBadgeProps) {
 	const meta = PROTOCOL_META[protocol] ?? {
-		label: protocol,
+		label: () => protocol,
 		cls: "border-border text-muted-foreground",
 	}
 	return (
@@ -132,7 +133,7 @@ export function ProtocolBadge({ protocol }: ProtocolBadgeProps) {
 			variant="outline"
 			className={cn("text-[10px] tracking-wide uppercase", meta.cls)}
 		>
-			{meta.label}
+			{meta.label()}
 		</Badge>
 	)
 }
@@ -153,13 +154,13 @@ const CAP_ICON: Record<string, LucideIcon> = {
 	intercom: PhoneCall,
 	followup: CornerDownRight,
 }
-const CAP_LABEL: Record<string, string> = {
-	mic: "Microphone",
-	speaker: "Speaker",
-	wake: "Wake word",
-	announce: "Announce",
-	intercom: "Intercom",
-	followup: "Follow-up",
+const CAP_LABEL: Record<string, () => string> = {
+	mic: m.sat_cap_mic,
+	speaker: m.sat_cap_speaker,
+	wake: m.sat_cap_wake,
+	announce: m.sat_cap_announce,
+	intercom: m.sat_cap_intercom,
+	followup: m.sat_cap_follow_up,
 }
 
 export function CapabilityChips({ caps, className }: CapabilityChipsProps) {
@@ -185,7 +186,8 @@ export function CapabilityChips({ caps, className }: CapabilityChipsProps) {
 							<Icon className="size-3.5" />
 						</TooltipTrigger>
 						<TooltipContent>
-							{CAP_LABEL[cap]}: {on ? "enabled" : "unavailable"}
+							{CAP_LABEL[cap]?.()}:{" "}
+							{on ? m.sat_cap_enabled() : m.sat_cap_unavailable()}
 						</TooltipContent>
 					</Tooltip>
 				)

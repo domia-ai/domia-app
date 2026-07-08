@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import {
 	PolarAngleAxis,
 	PolarGrid,
@@ -13,28 +14,29 @@ import {
 } from "@/components/ui/chart"
 import type { EmotionState, MoodRadarProps } from "@/types"
 
-const AXES: { key: keyof EmotionState; label: string }[] = [
-	{ key: "joy", label: "Joy" },
-	{ key: "trust", label: "Trust" },
-	{ key: "fear", label: "Fear" },
-	{ key: "surprise", label: "Surprise" },
-	{ key: "sadness", label: "Sadness" },
-	{ key: "disgust", label: "Disgust" },
-	{ key: "anger", label: "Anger" },
-	{ key: "anticipation", label: "Anticip." },
+const AXES: { key: keyof EmotionState; label: () => string }[] = [
+	{ key: "joy", label: m.enum_emotion_joy },
+	{ key: "trust", label: m.enum_emotion_trust },
+	{ key: "fear", label: m.enum_emotion_fear },
+	{ key: "surprise", label: m.enum_emotion_surprise },
+	{ key: "sadness", label: m.enum_emotion_sadness },
+	{ key: "disgust", label: m.enum_emotion_disgust },
+	{ key: "anger", label: m.enum_emotion_anger },
+	{ key: "anticipation", label: m.enum_emotion_anticipation },
 ]
 
-const config = { value: { label: "Mood" } } satisfies ChartConfig
+const config = () =>
+	({ value: { label: m.domia_mood_title() } }) satisfies ChartConfig
 
 export function MoodRadar({ emotion, accent }: MoodRadarProps) {
 	const data = AXES.map((a) => ({
-		axis: a.label,
+		axis: a.label(),
 		value: Math.max(0, Math.min(1, emotion[a.key] ?? 0)),
 	}))
 
 	return (
 		<ChartContainer
-			config={config}
+			config={config()}
 			className="mx-auto aspect-square h-56 w-full max-w-[260px]"
 		>
 			<RadarChart data={data} outerRadius="72%">

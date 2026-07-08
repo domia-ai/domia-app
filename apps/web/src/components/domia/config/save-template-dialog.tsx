@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { BookmarkPlus } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -27,7 +29,7 @@ export function SaveTemplateDialog({
 	config,
 	onSaved,
 	variant = "outline",
-	label = "Save as template",
+	label = m.config_save_as_template(),
 	template,
 	disabled = false,
 }: {
@@ -69,9 +71,9 @@ export function SaveTemplateDialog({
 		if (result.ok && result.data) {
 			toast.success(
 				template
-					? `Updated template “${result.data.name}”`
-					: `Saved template “${result.data.name}”`,
-				{ description: "Apply it to any Domia from Templates." },
+					? m.toast_template_updated({ name: result.data.name })
+					: m.toast_template_saved({ name: result.data.name }),
+				{ description: m.toast_template_saved_desc() },
 			)
 			queryClient.invalidateQueries({ queryKey: ["templates"] })
 			setName("")
@@ -79,8 +81,8 @@ export function SaveTemplateDialog({
 			setOpen(false)
 			onSaved?.()
 		} else {
-			toast.error("Could not save template", {
-				description: result.ok ? "Empty response" : result.error,
+			toast.error(m.toast_template_save_failed(), {
+				description: errText(result.ok ? undefined : result.error),
 			})
 		}
 	}
@@ -101,41 +103,41 @@ export function SaveTemplateDialog({
 			/>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Save as template</DialogTitle>
-					<DialogDescription>
-						Captures this Domia's full configuration — persona, voice, engines,
-						models, capabilities and tuning — minus device identity and network.
-						Apply it to any Domia later.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_save_template_title()}</DialogTitle>
+					<DialogDescription>{m.dlg_save_template_desc()}</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-3">
 					<Field>
-						<FieldLabel htmlFor="tpl-name">Name</FieldLabel>
+						<FieldLabel htmlFor="tpl-name">{m.dlg_field_name()}</FieldLabel>
 						<Input
 							id="tpl-name"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							placeholder="e.g. Living-room hub"
+							placeholder={m.dlg_template_name_placeholder()}
 						/>
 					</Field>
 					<Field>
-						<FieldLabel htmlFor="tpl-desc">Description</FieldLabel>
+						<FieldLabel htmlFor="tpl-desc">
+							{m.dlg_field_description()}
+						</FieldLabel>
 						<Textarea
 							id="tpl-desc"
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
 							rows={2}
-							placeholder="Optional"
+							placeholder={m.dlg_template_desc_placeholder()}
 						/>
 					</Field>
 				</div>
 				<DialogFooter>
-					<DialogClose render={<Button variant="ghost">Cancel</Button>} />
+					<DialogClose
+						render={<Button variant="ghost">{m.dlg_cancel()}</Button>}
+					/>
 					<Button
 						disabled={!name.trim() || mutation.isPending}
 						onClick={onSave}
 					>
-						{mutation.isPending ? "Saving…" : "Save template"}
+						{mutation.isPending ? m.dlg_saving() : m.config_save_template()}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

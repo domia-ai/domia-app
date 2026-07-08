@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ExternalLink } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { relativeTime } from "@/utils/format"
@@ -42,7 +43,7 @@ export function FactCard({ row }: { row: MemoryFactRow }) {
 							params={{ id: row.sourceInteractionId }}
 							className="text-primary inline-flex items-center gap-1 text-xs hover:underline"
 						>
-							trace <ExternalLink className="size-3" />
+							{m.mem_trace_link()} <ExternalLink className="size-3" />
 						</Link>
 					) : null}
 				</div>

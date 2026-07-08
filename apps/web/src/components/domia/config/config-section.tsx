@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { HealthPanel } from "../health-panel"
 import { ModelsManager } from "../models-manager"
@@ -29,9 +30,9 @@ export function ConfigSection({
 }) {
 	const header = (
 		<div className="space-y-1">
-			<h2 className="text-lg font-semibold">{section.label}</h2>
+			<h2 className="text-lg font-semibold">{section.label()}</h2>
 			{section.description && (
-				<p className="text-muted-foreground text-sm">{section.description}</p>
+				<p className="text-muted-foreground text-sm">{section.description()}</p>
 			)}
 		</div>
 	)
@@ -78,7 +79,7 @@ export function ConfigSection({
 
 	const query = search.trim().toLowerCase()
 	const fields = query
-		? section.fields.filter((f) => f.label.toLowerCase().includes(query))
+		? section.fields.filter((f) => f.label().toLowerCase().includes(query))
 		: section.fields
 
 	return (
@@ -93,7 +94,7 @@ export function ConfigSection({
 							type="button"
 							variant="outline"
 							size="sm"
-							title={preset.description}
+							title={preset.description()}
 							onClick={() =>
 								draft.setSectionValues(
 									section.id,
@@ -102,7 +103,7 @@ export function ConfigSection({
 							}
 						>
 							<Sparkles className="size-3.5" />
-							{preset.label}
+							{preset.label()}
 						</Button>
 					))}
 				</div>
@@ -126,7 +127,7 @@ export function ConfigSection({
 				))}
 				{fields.length === 0 && (
 					<p className="text-muted-foreground col-span-2 text-sm">
-						No settings match “{search}”.
+						{m.config_no_settings_match({ query: search })}
 					</p>
 				)}
 			</div>

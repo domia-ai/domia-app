@@ -24,30 +24,31 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { m } from "@/paraglide/messages"
 import type { NavItem } from "@/types"
 
 const NAV: NavItem[] = [
-	{ href: "/", label: "Overview", icon: LayoutDashboard },
+	{ href: "/", label: m.nav_overview, icon: LayoutDashboard },
 	{
 		href: "/domias",
-		label: "Fleet",
+		label: m.nav_fleet,
 		icon: Network,
 		activeFor: ["/domias", "/nodes"],
 	},
-	{ href: "/broadcast", label: "Broadcast", icon: Megaphone },
-	{ href: "/satellites", label: "Satellites", icon: RadioTower },
-	{ href: "/templates", label: "Templates", icon: LayoutTemplate },
-	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },
-	{ href: "/chat", label: "Chat", icon: MessageSquareText },
-	{ href: "/emotions", label: "Emotions", icon: HeartPulse },
-	{ href: "/memories", label: "Memories", icon: BrainCircuit },
-	{ href: "/analytics", label: "Analytics", icon: BarChart3 },
-	{ href: "/settings", label: "Settings", icon: Settings },
+	{ href: "/broadcast", label: m.nav_broadcast, icon: Megaphone },
+	{ href: "/satellites", label: m.nav_satellites, icon: RadioTower },
+	{ href: "/templates", label: m.nav_templates, icon: LayoutTemplate },
+	{ href: "/conversations", label: m.nav_conversations, icon: MessagesSquare },
+	{ href: "/chat", label: m.nav_chat, icon: MessageSquareText },
+	{ href: "/emotions", label: m.nav_emotions, icon: HeartPulse },
+	{ href: "/memories", label: m.nav_memories, icon: BrainCircuit },
+	{ href: "/analytics", label: m.nav_analytics, icon: BarChart3 },
+	{ href: "/settings", label: m.nav_settings, icon: Settings },
 ]
 
 const EXTERNAL_LINKS = [
-	{ href: "https://domia.ai", label: "Website", icon: Globe },
-	{ href: "https://github.com/domia-ai", label: "GitHub", icon: Code2 },
+	{ href: "https://domia.ai", label: m.nav_website, icon: Globe },
+	{ href: "https://github.com/domia-ai", label: m.nav_github, icon: Code2 },
 ]
 
 const matchesHref = (pathname: string, href: string) =>
@@ -92,10 +93,10 @@ export function AppSidebar({ propertyName }: { propertyName: string }) {
 									<SidebarMenuButton
 										render={<Link to={item.href} />}
 										isActive={isActive(pathname, item)}
-										tooltip={item.label}
+										tooltip={item.label()}
 									>
 										<Icon />
-										<span>{item.label}</span>
+										<span>{item.label()}</span>
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 							)
@@ -117,17 +118,17 @@ export function AppSidebar({ propertyName }: { propertyName: string }) {
 											rel="noreferrer noopener"
 										/>
 									}
-									tooltip={item.label}
+									tooltip={item.label()}
 								>
 									<Icon />
-									<span>{item.label}</span>
+									<span>{item.label()}</span>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 						)
 					})}
 				</SidebarMenu>
 				<p className="text-muted-foreground px-2 py-1 text-xs">
-					Mesh Console v1.0
+					{m.nav_footer_version()}
 				</p>
 			</SidebarFooter>
 		</Sidebar>

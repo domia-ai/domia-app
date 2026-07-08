@@ -1,4 +1,5 @@
 import { Bar, BarChart } from "recharts"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -17,20 +18,21 @@ const STAGE_LABEL: Record<string, string> = {
 	tts: "TTS",
 }
 
-const trendConfig = {
-	count: { label: "Interactions", color: "var(--chart-2)" },
-} satisfies ChartConfig
+const trendConfig = () =>
+	({
+		count: { label: m.ov_interactions(), color: "var(--chart-2)" },
+	}) satisfies ChartConfig
 
 export function PerformanceCard({ data }: { data: DomiaPerformance }) {
 	if (data.count === 0) {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Performance</CardTitle>
+					<CardTitle className="text-base">{m.ov_performance()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<p className="text-muted-foreground text-sm">
-						No interactions recorded yet.
+						{m.perf_no_interactions()}
 					</p>
 				</CardContent>
 			</Card>
@@ -43,45 +45,55 @@ export function PerformanceCard({ data }: { data: DomiaPerformance }) {
 		<>
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Performance</CardTitle>
+					<CardTitle className="text-base">{m.ov_performance()}</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 						<div className="rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">First audio p50</p>
+							<p className="text-muted-foreground text-xs">
+								{m.ov_first_audio_p50()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{formatMs(data.ttfa.p50)}
 							</p>
 							<p className="text-muted-foreground text-xs tabular-nums">
-								p95 {formatMs(data.ttfa.p95)}
+								{m.ov_hint_p95({ value: formatMs(data.ttfa.p95) })}
 							</p>
 						</div>
 						<div className="rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Total p50</p>
+							<p className="text-muted-foreground text-xs">
+								{m.perf_total_p50()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{formatMs(data.total.p50)}
 							</p>
 							<p className="text-muted-foreground text-xs tabular-nums">
-								p95 {formatMs(data.total.p95)}
+								{m.ov_hint_p95({ value: formatMs(data.total.p95) })}
 							</p>
 						</div>
 						<div className="rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Interactions</p>
+							<p className="text-muted-foreground text-xs">
+								{m.ov_interactions()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">{data.count}</p>
 						</div>
 						<div className="rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Execution</p>
+							<p className="text-muted-foreground text-xs">
+								{m.perf_execution()}
+							</p>
 							<p className="text-sm font-semibold tabular-nums">
-								{data.execution.localCount} local
+								{m.perf_local_count({ count: data.execution.localCount })}
 							</p>
 							<p className="text-muted-foreground text-xs tabular-nums">
-								{data.execution.delegatedCount} delegated
+								{m.perf_delegated_count({
+									count: data.execution.delegatedCount,
+								})}
 							</p>
 						</div>
 					</div>
 
 					{trend.length > 1 && (
-						<ChartContainer config={trendConfig} className="h-24 w-full">
+						<ChartContainer config={trendConfig()} className="h-24 w-full">
 							<BarChart data={trend} accessibilityLayer>
 								<ChartTooltip content={<ChartTooltipContent />} />
 								<Bar dataKey="count" fill="var(--color-count)" radius={3} />
@@ -116,7 +128,10 @@ export function PerformanceCard({ data }: { data: DomiaPerformance }) {
 			</Card>
 
 			{data.waterfall && (
-				<WaterfallPanel data={data.waterfall} title="Stage waterfall (avg)" />
+				<WaterfallPanel
+					data={data.waterfall}
+					title={m.perf_waterfall_title()}
+				/>
 			)}
 		</>
 	)

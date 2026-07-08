@@ -7,6 +7,7 @@ import {
 	index,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
+import type { ToolTraceEntry } from "./json-types"
 
 type JsonValue =
 	| string
@@ -65,7 +66,9 @@ export const interactionTrace = sqliteTable(
 		agentFinalizeMs: integer("agent_finalize_ms"),
 		skillProviderUsed: text("skill_provider_used"),
 		skillPrompt: text("skill_prompt"),
-		skillResponse: text("skill_response", { mode: "json" }).$type<JsonValue>(),
+		skillResponse: text("skill_response", { mode: "json" }).$type<
+			ToolTraceEntry[]
+		>(),
 		llmPrompt: text("llm_prompt"),
 		llmResponse: text("llm_response"),
 		heardReply: text("heard_reply"),
@@ -84,6 +87,7 @@ export const interactionTrace = sqliteTable(
 		sttMs: integer("stt_ms"),
 		sttQueueMs: integer("stt_queue_ms"),
 		llmMs: integer("llm_ms"),
+		llmQueueMs: integer("llm_queue_ms"),
 		llmPromptTokens: integer("llm_prompt_tokens"),
 		llmCompletionTokens: integer("llm_completion_tokens"),
 		llmTokensPerSec: real("llm_tokens_per_sec"),
@@ -97,6 +101,9 @@ export const interactionTrace = sqliteTable(
 		ttsQueueMs: integer("tts_queue_ms"),
 		ttfaMs: integer("ttfa_ms"),
 		perceivedTtfaMs: integer("perceived_ttfa_ms"),
+		llmFirstSentenceMs: integer("llm_first_sentence_ms"),
+		ttsFirstChunkMs: integer("tts_first_chunk_ms"),
+		rssMb: integer("rss_mb"),
 		totalMs: integer("total_ms"),
 		sttExecutorKey: text("stt_executor_key"),
 		llmExecutorKey: text("llm_executor_key"),
@@ -172,6 +179,7 @@ export const memoryFact = sqliteTable(
 		relation: text("relation"),
 		value: text("value"),
 		confidence: real("confidence"),
+		kind: text("kind"),
 		sourceInteractionId: text("source_interaction_id"),
 		createdAt: text("created_at").notNull(),
 		updatedAt: text("updated_at").notNull(),
@@ -190,6 +198,8 @@ export const memoryFact = sqliteTable(
 export const syncCursor = sqliteTable("sync_cursor", {
 	domiaKey: text("domia_key").primaryKey(),
 	lastInteractionAt: text("last_interaction_at"),
+	lastTurnAt: text("last_turn_at"),
+	lastTurnId: text("last_turn_id"),
 	lastSyncedAt: integer("last_synced_at"),
 })
 
@@ -343,6 +353,38 @@ export const announcementRelations = relations(announcement, ({ one }) => ({
 
 export type AnnouncementRow = typeof announcement.$inferSelect
 export type AnnouncementInsert = typeof announcement.$inferInsert
+
+export const turnEvent = sqliteTable(
+	"turn_event",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		interactionId: text("interaction_id").notNull(),
+		type: text("type").notNull(),
+		seq: integer("seq").notNull(),
+		ts: integer("ts").notNull(),
+		originDomiaKey: text("origin_domia_key"),
+		executorDomiaKey: text("executor_domia_key"),
+		satelliteId: text("satellite_id"),
+		traceId: text("trace_id"),
+		payload: text("payload", { mode: "json" }).$type<JsonValue>(),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		uniqueIndex("turn_event_interaction_seq_idx").on(t.interactionId, t.seq),
+		index("turn_event_source_created_idx").on(t.sourceDomiaKey, t.createdAt),
+	],
+)
+
+export const turnEventRelations = relations(turnEvent, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [turnEvent.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+}))
+
+export type TurnEventRow = typeof turnEvent.$inferSelect
+export type TurnEventInsert = typeof turnEvent.$inferInsert
 
 export type DomiaRegistryRow = typeof domiaRegistry.$inferSelect
 export type DomiaRegistryInsert = typeof domiaRegistry.$inferInsert

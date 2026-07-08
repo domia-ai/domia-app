@@ -1,4 +1,5 @@
 import { LayoutGrid, Map as MapIcon, Table2 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { ViewMode } from "@/types/table"
 
@@ -22,15 +23,15 @@ export function ViewToggle({
 					onChange(next)
 			}}
 		>
-			<ToggleGroupItem value="cards" aria-label="Card view">
+			<ToggleGroupItem value="cards" aria-label={m.aria_view_cards()}>
 				<LayoutGrid className="size-4" />
 			</ToggleGroupItem>
 			{withMap ? (
-				<ToggleGroupItem value="map" aria-label="Map view">
+				<ToggleGroupItem value="map" aria-label={m.aria_view_map()}>
 					<MapIcon className="size-4" />
 				</ToggleGroupItem>
 			) : null}
-			<ToggleGroupItem value="table" aria-label="Table view">
+			<ToggleGroupItem value="table" aria-label={m.aria_view_table()}>
 				<Table2 className="size-4" />
 			</ToggleGroupItem>
 		</ToggleGroup>

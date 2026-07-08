@@ -9,6 +9,7 @@ import {
 	YAxis,
 } from "recharts"
 import { AudioLines, Coins, Wrench } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -27,24 +28,27 @@ import type {
 	ToolStats,
 } from "@/types/analytics"
 
-const tpsConfig = {
+const tpsConfig = (): ChartConfig => ({
 	tokensPerSec: { label: "tok/s", color: "var(--chart-1)" },
-} satisfies ChartConfig
+})
 
-const tokConfig = {
-	promptTokens: { label: "Prompt", color: "var(--chart-2)" },
-	completionTokens: { label: "Completion", color: "var(--chart-3)" },
-} satisfies ChartConfig
+const tokConfig = (): ChartConfig => ({
+	promptTokens: { label: m.analytics_series_prompt(), color: "var(--chart-2)" },
+	completionTokens: {
+		label: m.analytics_series_completion(),
+		color: "var(--chart-3)",
+	},
+})
 
-const ttftConfig = {
-	count: { label: "Turns", color: "var(--chart-1)" },
-} satisfies ChartConfig
+const ttftConfig = (): ChartConfig => ({
+	count: { label: m.analytics_series_turns(), color: "var(--chart-1)" },
+})
 
-const SOURCE_LABEL: Record<string, string> = {
-	"local mic": "Local mic",
-	esphome: "ESPHome",
-	wyoming: "Wyoming",
-	native: "Native",
+const SOURCE_LABEL: Record<string, () => string> = {
+	"local mic": m.analytics_source_local_mic,
+	esphome: () => "ESPHome",
+	wyoming: () => "Wyoming",
+	native: () => "Native",
 }
 
 function Stat({
@@ -89,7 +93,7 @@ export function AnalyticsTokens({
 		"var(--chart-5)",
 	]
 	const pieData = sources.map((s, i) => ({
-		name: SOURCE_LABEL[s.source] ?? s.source,
+		name: SOURCE_LABEL[s.source]?.() ?? s.source,
 		value: s.count,
 		fill: SOURCE_COLORS[i % SOURCE_COLORS.length],
 	}))
@@ -100,15 +104,15 @@ export function AnalyticsTokens({
 		<div className="space-y-4">
 			<div className="flex items-center gap-2">
 				<Coins className="text-muted-foreground size-4" />
-				<h2 className="text-lg font-semibold">Tokens &amp; throughput</h2>
+				<h2 className="text-lg font-semibold">{m.analytics_tokens_title()}</h2>
 				<Badge variant="secondary" className="text-[11px] tabular-nums">
-					{tokens.turns} turns
+					{m.analytics_turns_count({ count: tokens.turns })}
 				</Badge>
 			</div>
 
 			<div className="grid gap-3 sm:grid-cols-4">
 				<Stat
-					label="Avg throughput"
+					label={m.analytics_avg_throughput()}
 					value={
 						tokens.avgTokensPerSec != null
 							? `${tokens.avgTokensPerSec} tok/s`
@@ -116,7 +120,7 @@ export function AnalyticsTokens({
 					}
 				/>
 				<Stat
-					label="Avg prompt"
+					label={m.analytics_avg_prompt()}
 					value={
 						tokens.avgPromptTokens != null
 							? `${tokens.avgPromptTokens} tok`
@@ -124,7 +128,7 @@ export function AnalyticsTokens({
 					}
 				/>
 				<Stat
-					label="Avg completion"
+					label={m.analytics_avg_completion()}
 					value={
 						tokens.avgCompletionTokens != null
 							? `${tokens.avgCompletionTokens} tok`
@@ -132,7 +136,7 @@ export function AnalyticsTokens({
 					}
 				/>
 				<Stat
-					label="Context used"
+					label={m.analytics_context_used()}
 					value={
 						tokens.avgContextPct != null ? `${tokens.avgContextPct}%` : "—"
 					}
@@ -142,11 +146,13 @@ export function AnalyticsTokens({
 			<div className="grid gap-4 lg:grid-cols-3">
 				<Card>
 					<CardHeader>
-						<CardTitle className="text-base">Throughput by model</CardTitle>
+						<CardTitle className="text-base">
+							{m.analytics_chart_throughput_by_model()}
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{tokens.byModel.length ? (
-							<ChartContainer config={tpsConfig} className="h-52 w-full">
+							<ChartContainer config={tpsConfig()} className="h-52 w-full">
 								<BarChart data={tokens.byModel} accessibilityLayer>
 									<CartesianGrid vertical={false} />
 									<XAxis
@@ -166,7 +172,7 @@ export function AnalyticsTokens({
 							</ChartContainer>
 						) : (
 							<p className="text-muted-foreground py-12 text-center text-sm">
-								No token data yet.
+								{m.analytics_no_token_data()}
 							</p>
 						)}
 					</CardContent>
@@ -174,11 +180,13 @@ export function AnalyticsTokens({
 
 				<Card>
 					<CardHeader>
-						<CardTitle className="text-base">Prompt vs completion</CardTitle>
+						<CardTitle className="text-base">
+							{m.analytics_chart_prompt_vs_completion()}
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{tokens.byModel.length ? (
-							<ChartContainer config={tokConfig} className="h-52 w-full">
+							<ChartContainer config={tokConfig()} className="h-52 w-full">
 								<BarChart data={tokens.byModel} accessibilityLayer>
 									<CartesianGrid vertical={false} />
 									<XAxis
@@ -209,7 +217,7 @@ export function AnalyticsTokens({
 							</ChartContainer>
 						) : (
 							<p className="text-muted-foreground py-12 text-center text-sm">
-								No token data yet.
+								{m.analytics_no_token_data()}
 							</p>
 						)}
 					</CardContent>
@@ -217,10 +225,12 @@ export function AnalyticsTokens({
 
 				<Card>
 					<CardHeader>
-						<CardTitle className="text-base">TTFT distribution</CardTitle>
+						<CardTitle className="text-base">
+							{m.analytics_chart_ttft_dist()}
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<ChartContainer config={ttftConfig} className="h-52 w-full">
+						<ChartContainer config={ttftConfig()} className="h-52 w-full">
 							<BarChart data={ttftHistogram} accessibilityLayer>
 								<CartesianGrid vertical={false} />
 								<XAxis
@@ -247,29 +257,32 @@ export function AnalyticsTokens({
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 text-base">
-							<Wrench className="text-muted-foreground size-4" /> Skills &amp;
-							tools
+							<Wrench className="text-muted-foreground size-4" />{" "}
+							{m.analytics_skills_tools()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{tools.totalCalls > 0 ? (
 							<div className="grid grid-cols-3 gap-3">
 								<Stat
-									label="Turns w/ tools"
+									label={m.analytics_turns_w_tools()}
 									value={
 										tools.withToolsPct != null ? `${tools.withToolsPct}%` : "—"
 									}
-									sub={`${tools.turnsWithTools} turns`}
+									sub={m.analytics_turns_count({ count: tools.turnsWithTools })}
 								/>
-								<Stat label="Tool calls" value={String(tools.totalCalls)} />
 								<Stat
-									label="Error rate"
+									label={m.conv_facet_tool_calls()}
+									value={String(tools.totalCalls)}
+								/>
+								<Stat
+									label={m.analytics_error_rate()}
 									value={tools.errorRate != null ? `${tools.errorRate}%` : "—"}
 								/>
 							</div>
 						) : (
 							<p className="text-muted-foreground py-10 text-center text-sm">
-								No skill/tool calls recorded yet.
+								{m.analytics_no_tool_calls()}
 							</p>
 						)}
 					</CardContent>
@@ -277,7 +290,9 @@ export function AnalyticsTokens({
 
 				<Card>
 					<CardHeader>
-						<CardTitle className="text-base">Turns by source</CardTitle>
+						<CardTitle className="text-base">
+							{m.analytics_chart_turns_by_source()}
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{pieData.length ? (
@@ -325,7 +340,7 @@ export function AnalyticsTokens({
 							</div>
 						) : (
 							<p className="text-muted-foreground py-10 text-center text-sm">
-								No turns yet.
+								{m.analytics_no_turns()}
 							</p>
 						)}
 					</CardContent>
@@ -334,13 +349,13 @@ export function AnalyticsTokens({
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 text-base">
-							<AudioLines className="text-muted-foreground size-4" /> Spoken
-							input
+							<AudioLines className="text-muted-foreground size-4" />{" "}
+							{m.analytics_spoken_input()}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<p className="text-muted-foreground text-xs">
-							Avg utterance length
+							{m.analytics_avg_utterance()}
 						</p>
 						<p className="text-2xl font-semibold tabular-nums">
 							{formatMs(avgInputAudioMs)}

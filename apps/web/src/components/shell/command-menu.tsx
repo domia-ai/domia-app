@@ -28,27 +28,28 @@ import {
 	CommandSeparator,
 } from "@/components/ui/command"
 import { commandPaletteQueryOptions } from "@/server/command-palette"
+import { m } from "@/paraglide/messages"
 import type { NavItem } from "@/types"
 
 const PAGES: NavItem[] = [
-	{ href: "/", label: "Overview", icon: LayoutDashboard },
-	{ href: "/domias", label: "Fleet", icon: Network },
-	{ href: "/nodes", label: "Nodes", icon: Server },
-	{ href: "/broadcast", label: "Broadcast", icon: Megaphone },
-	{ href: "/satellites", label: "Satellites", icon: RadioTower },
-	{ href: "/conversations", label: "Conversations", icon: MessagesSquare },
-	{ href: "/chat", label: "Chat", icon: MessageSquareText },
-	{ href: "/emotions", label: "Emotions", icon: HeartPulse },
-	{ href: "/memories", label: "Memories", icon: BrainCircuit },
-	{ href: "/analytics", label: "Analytics", icon: BarChart3 },
-	{ href: "/settings", label: "Settings", icon: Settings },
+	{ href: "/", label: m.nav_overview, icon: LayoutDashboard },
+	{ href: "/domias", label: m.nav_fleet, icon: Network },
+	{ href: "/nodes", label: m.nav_nodes, icon: Server },
+	{ href: "/broadcast", label: m.nav_broadcast, icon: Megaphone },
+	{ href: "/satellites", label: m.nav_satellites, icon: RadioTower },
+	{ href: "/conversations", label: m.nav_conversations, icon: MessagesSquare },
+	{ href: "/chat", label: m.nav_chat, icon: MessageSquareText },
+	{ href: "/emotions", label: m.nav_emotions, icon: HeartPulse },
+	{ href: "/memories", label: m.nav_memories, icon: BrainCircuit },
+	{ href: "/analytics", label: m.nav_analytics, icon: BarChart3 },
+	{ href: "/settings", label: m.nav_settings, icon: Settings },
 ]
 
 function ActionTag() {
 	return (
 		<span className="bg-muted/60 text-muted-foreground ml-auto inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium">
 			<Zap className="size-2.5" />
-			control plane
+			{m.cmd_control_plane()}
 		</span>
 	)
 }
@@ -88,25 +89,25 @@ export function CommandMenu() {
 				className="border-input bg-card text-muted-foreground hover:bg-accent flex h-9 w-full max-w-sm items-center gap-2 rounded-md border px-3 text-sm transition-colors"
 			>
 				<Search className="size-4" />
-				<span className="flex-1 text-left">Search the mesh…</span>
+				<span className="flex-1 text-left">{m.cmd_search_trigger()}</span>
 				<kbd className="bg-muted pointer-events-none hidden items-center gap-0.5 rounded border px-1.5 font-mono text-[10px] font-medium sm:inline-flex">
 					⌘K
 				</kbd>
 			</button>
 
 			<CommandDialog open={open} onOpenChange={setOpen}>
-				<CommandInput placeholder="Search Domias, conversations, actions…" />
+				<CommandInput placeholder={m.cmd_input_placeholder()} />
 				<CommandList>
 					<CommandEmpty>
 						{loading
-							? "Loading…"
+							? m.cmd_loading()
 							: failed
-								? "Couldn’t load the mesh — try reopening."
-								: "No results found."}
+								? m.cmd_load_failed()
+								: m.cmd_no_results()}
 					</CommandEmpty>
 
 					{domias.length > 0 && (
-						<CommandGroup heading="Actions">
+						<CommandGroup heading={m.cmd_group_actions()}>
 							{domias.map((domia) => (
 								<CommandItem
 									key={`talk-${domia.domiaKey}`}
@@ -120,7 +121,7 @@ export function CommandMenu() {
 									}}
 								>
 									<MessageSquareText className="size-4" />
-									Talk to {domia.name}
+									{m.cmd_talk_to({ name: domia.name })}
 									<ActionTag />
 								</CommandItem>
 							))}
@@ -137,7 +138,7 @@ export function CommandMenu() {
 									}}
 								>
 									<Pencil className="size-4" />
-									Edit persona of {domia.name}
+									{m.cmd_edit_persona({ name: domia.name })}
 									<ActionTag />
 								</CommandItem>
 							))}
@@ -154,7 +155,7 @@ export function CommandMenu() {
 									}}
 								>
 									<Sparkles className="size-4" />
-									Activate template on {domia.name}
+									{m.cmd_activate_template({ name: domia.name })}
 									<ActionTag />
 								</CommandItem>
 							))}
@@ -162,20 +163,20 @@ export function CommandMenu() {
 					)}
 
 					<CommandSeparator />
-					<CommandGroup heading="Pages">
+					<CommandGroup heading={m.cmd_group_pages()}>
 						{PAGES.map((page) => {
 							const Icon = page.icon
 							return (
 								<CommandItem
 									key={page.href}
-									value={`page ${page.label}`}
+									value={`page ${page.label()}`}
 									onSelect={() => {
 										close()
 										navigate({ to: page.href })
 									}}
 								>
 									<Icon className="size-4" />
-									{page.label}
+									{page.label()}
 								</CommandItem>
 							)
 						})}
@@ -184,7 +185,7 @@ export function CommandMenu() {
 					{domias.length > 0 && (
 						<>
 							<CommandSeparator />
-							<CommandGroup heading="Domias">
+							<CommandGroup heading={m.cmd_group_domias()}>
 								{domias.map((domia) => (
 									<CommandItem
 										key={domia.domiaKey}
@@ -211,7 +212,7 @@ export function CommandMenu() {
 					{conversations.length > 0 && (
 						<>
 							<CommandSeparator />
-							<CommandGroup heading="Conversations">
+							<CommandGroup heading={m.cmd_group_conversations()}>
 								{conversations.map((c) => (
 									<CommandItem
 										key={c.id}

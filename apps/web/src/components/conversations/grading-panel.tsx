@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { Plus, ThumbsDown, ThumbsUp, X } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { isDemoMode } from "@/lib/demo"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -43,14 +45,16 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 				},
 			})
 			if (result.ok) {
-				toast.success("Evaluation saved", {
-					description: "Stored for the dataset.",
+				toast.success(m.toast_evaluation_saved(), {
+					description: m.toast_evaluation_saved_desc(),
 				})
 				queryClient.invalidateQueries({ queryKey: ["conversations"] })
 				queryClient.invalidateQueries({ queryKey: ["conversation-stats"] })
 				void router.invalidate()
 			} else {
-				toast.error("Could not save", { description: result.error })
+				toast.error(m.toast_config_save_failed(), {
+					description: errText(result.error),
+				})
 			}
 		},
 	})
@@ -66,7 +70,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 				<form.Field name="rating">
 					{(field) => (
 						<Field>
-							<FieldLabel>Rating</FieldLabel>
+							<FieldLabel>{m.conv_col_rating()}</FieldLabel>
 							<div className="flex items-center gap-2">
 								<Button
 									type="button"
@@ -80,7 +84,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 											"bg-success hover:bg-success/90",
 									)}
 								>
-									<ThumbsUp className="size-4" /> Good
+									<ThumbsUp className="size-4" /> {m.conv_rating_good()}
 								</Button>
 								<Button
 									type="button"
@@ -96,7 +100,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 											"bg-destructive hover:bg-destructive/90",
 									)}
 								>
-									<ThumbsDown className="size-4" /> Needs work
+									<ThumbsDown className="size-4" /> {m.conv_rating_needs_work()}
 								</Button>
 							</div>
 						</Field>
@@ -115,7 +119,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 									value={field.state.value}
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
-									placeholder="Write the response the Domia should have given…"
+									placeholder={m.grade_correction_placeholder()}
 									rows={3}
 								/>
 							</FieldContent>
@@ -134,7 +138,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 						}
 						return (
 							<Field>
-								<FieldLabel>Tags</FieldLabel>
+								<FieldLabel>{m.conv_col_tags()}</FieldLabel>
 								<FieldContent>
 									{field.state.value.length > 0 && (
 										<div className="flex flex-wrap gap-1.5">
@@ -179,7 +183,7 @@ export function GradingPanel({ interactionId, initial }: GradingPanelProps) {
 												addTag(newTag)
 											}
 										}}
-										placeholder="Add custom tag"
+										placeholder={m.grade_add_custom_tag()}
 										className="h-8"
 									/>
 								</FieldContent>

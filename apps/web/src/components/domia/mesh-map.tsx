@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useMemo, useState } from "react"
 import type { MeshDomiaRow } from "@/types/fleet"
 import { accentFor } from "@/utils/accent"
@@ -79,7 +80,7 @@ export function MeshMap({
 				viewBox={`0 0 ${W} ${H}`}
 				className="w-full"
 				role="img"
-				aria-label="Local mesh topology"
+				aria-label={m.aria_mesh_topology()}
 			>
 				{edges.map((edge, i) => {
 					const a = pos(edge.source)
@@ -209,15 +210,16 @@ export function MeshMap({
 
 			<div className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs">
 				<span className="flex items-center gap-1.5">
-					<span className="bg-success size-2.5 rounded-full" /> Online
+					<span className="bg-success size-2.5 rounded-full" />{" "}
+					{m.mesh_online()}
 				</span>
 				<span className="flex items-center gap-1.5">
 					<span className="bg-muted-foreground/40 size-2.5 rounded-full" />{" "}
-					Offline
+					{m.mesh_offline()}
 				</span>
 				<span className="flex items-center gap-1.5">
 					<span className="border-muted-foreground inline-block h-0 w-5 border-t border-dashed" />{" "}
-					Capability delegation
+					{m.mesh_capability_delegation()}
 				</span>
 			</div>
 		</div>

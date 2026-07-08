@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { m } from "@/paraglide/messages"
 import { Link } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Bar, BarChart, XAxis } from "recharts"
@@ -37,9 +38,10 @@ import type { CapabilityKey } from "@/types"
 
 const FLOW_BY_KEY = Object.fromEntries(FLOWS.map((f) => [f.key, f]))
 
-const activityConfig = {
-	count: { label: "Interactions", color: "var(--chart-1)" },
-} satisfies ChartConfig
+const activityConfig = () =>
+	({
+		count: { label: m.ov_interactions(), color: "var(--chart-1)" },
+	}) satisfies ChartConfig
 
 export function OverviewView() {
 	const { liveRefreshMs } = useConsolePrefs()
@@ -62,16 +64,16 @@ export function OverviewView() {
 	return (
 		<div className="space-y-6">
 			<section className="space-y-3">
-				<h2 className="text-sm font-medium">Performance</h2>
+				<h2 className="text-sm font-medium">{m.ov_performance()}</h2>
 				<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
 					<StatCard
-						label="S2S first audio"
+						label={m.ov_s2s_first_audio()}
 						value={formatMs(performance.s2sTtfaP50)}
 						icon={Zap}
-						hint={`p95 ${formatMs(performance.s2sTtfaP95)}`}
+						hint={m.ov_hint_p95({ value: formatMs(performance.s2sTtfaP95) })}
 					/>
 					<StatCard
-						label="Local execution"
+						label={m.ov_local_execution()}
 						value={
 							performance.localExecPct == null
 								? "—"
@@ -79,52 +81,52 @@ export function OverviewView() {
 						}
 						icon={Cpu}
 						accent="success"
-						hint="run on-device vs delegated"
+						hint={m.ov_hint_local_exec()}
 					/>
 					<StatCard
-						label="Interactions"
+						label={m.ov_interactions()}
 						value={performance.volume24h}
 						icon={MessagesSquare}
-						hint="last 24h"
+						hint={m.fleet_hint_last_24h()}
 					/>
 					<StatCard
-						label="Error rate"
+						label={m.ov_error_rate()}
 						value={`${performance.errorRate}%`}
 						icon={AlertTriangle}
 						accent={performance.errorRate > 0 ? "warning" : "muted"}
-						hint="empty or failed replies"
+						hint={m.ov_hint_error_rate()}
 					/>
 				</div>
 			</section>
 
 			<section className="space-y-3">
-				<h2 className="text-sm font-medium">Fleet</h2>
+				<h2 className="text-sm font-medium">{m.ov_fleet()}</h2>
 				<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
 					<StatCard
-						label="Discovered"
+						label={m.ov_discovered()}
 						value={stats.discovered}
 						icon={Network}
 					/>
 					<StatCard
-						label="Online now"
+						label={m.fleet_stat_online_now()}
 						value={stats.online}
 						icon={Radio}
 						accent="success"
-						hint={`${stats.offline} offline`}
+						hint={m.ov_hint_offline_count({ count: stats.offline })}
 					/>
 					<StatCard
-						label="Active sessions"
+						label={m.fleet_stat_active_sessions()}
 						value={stats.activeSessions}
 						icon={Activity}
 						accent="warning"
-						hint="last 30 min"
+						hint={m.fleet_hint_last_30m()}
 					/>
 					<StatCard
-						label="Conversations"
+						label={m.ov_conversations()}
 						value={stats.conversationsAllTime}
 						icon={MessagesSquare}
 						accent="muted"
-						hint="all time"
+						hint={m.ov_hint_all_time()}
 					/>
 				</div>
 			</section>
@@ -132,12 +134,12 @@ export function OverviewView() {
 			<div className="grid gap-6 lg:grid-cols-5">
 				<Card className="lg:col-span-3">
 					<CardHeader className="flex flex-row items-center justify-between">
-						<CardTitle>Local mesh</CardTitle>
+						<CardTitle>{m.ov_local_mesh()}</CardTitle>
 						<Link
 							to="/domias"
 							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors"
 						>
-							All Domias <ArrowRight className="size-4" />
+							{m.ov_all_domias()} <ArrowRight className="size-4" />
 						</Link>
 					</CardHeader>
 					<CardContent>
@@ -183,14 +185,16 @@ export function OverviewView() {
 							<div className="grid grid-cols-2 gap-3">
 								<div className="rounded-lg border p-3">
 									<p className="text-muted-foreground text-xs">
-										First audio p50
+										{m.ov_first_audio_p50()}
 									</p>
 									<p className="text-lg font-semibold tabular-nums">
 										{formatMs(selectedTelemetry?.ttfaP50 ?? null)}
 									</p>
 								</div>
 								<div className="rounded-lg border p-3">
-									<p className="text-muted-foreground text-xs">Interactions</p>
+									<p className="text-muted-foreground text-xs">
+										{m.ov_interactions()}
+									</p>
 									<p className="text-lg font-semibold tabular-nums">
 										{selectedTelemetry?.count ?? 0}
 									</p>
@@ -199,7 +203,7 @@ export function OverviewView() {
 
 							<div>
 								<p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-									Capabilities
+									{m.ov_capabilities()}
 								</p>
 								<CapabilityChips
 									capabilities={config.runtimeCapabilities}
@@ -217,23 +221,31 @@ export function OverviewView() {
 
 							<div className="grid grid-cols-2 gap-3 text-sm">
 								<div>
-									<p className="text-muted-foreground text-xs">Voice</p>
+									<p className="text-muted-foreground text-xs">
+										{m.ov_voice()}
+									</p>
 									<p className="font-medium">
 										{config.ttsConfig?.voiceName ?? "—"}
 									</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Model</p>
+									<p className="text-muted-foreground text-xs">
+										{m.ov_model()}
+									</p>
 									<p className="truncate font-medium">
 										{config.llmModelConfig?.modelName ?? "—"}
 									</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Local IP</p>
+									<p className="text-muted-foreground text-xs">
+										{m.ov_local_ip()}
+									</p>
 									<p className="font-mono text-xs">{selected.localIp ?? "—"}</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Last seen</p>
+									<p className="text-muted-foreground text-xs">
+										{m.ov_last_seen()}
+									</p>
 									<p className="font-medium">
 										{relativeTimeMs(selected.lastSeenAt)}
 									</p>
@@ -245,7 +257,7 @@ export function OverviewView() {
 								params={{ key: selected.domiaKey }}
 								className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors"
 							>
-								Open Domia <ArrowRight className="size-4" />
+								{m.chat_open_domia()} <ArrowRight className="size-4" />
 							</Link>
 						</CardContent>
 					</Card>
@@ -256,11 +268,11 @@ export function OverviewView() {
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-base">
-							Activity · {activity.label}
+							{m.ov_activity({ label: activity.label })}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<ChartContainer config={activityConfig} className="h-32 w-full">
+						<ChartContainer config={activityConfig()} className="h-32 w-full">
 							<BarChart data={activity.buckets} accessibilityLayer>
 								<XAxis
 									dataKey="label"
@@ -280,12 +292,12 @@ export function OverviewView() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
-					<CardTitle>Recent conversations</CardTitle>
+					<CardTitle>{m.ov_recent_conversations()}</CardTitle>
 					<Link
 						to="/conversations"
 						className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors"
 					>
-						View all <ArrowRight className="size-4" />
+						{m.ov_view_all()} <ArrowRight className="size-4" />
 					</Link>
 				</CardHeader>
 				<CardContent className="divide-border divide-y">
@@ -344,7 +356,7 @@ export function OverviewView() {
 						})
 					) : (
 						<p className="text-muted-foreground py-6 text-center text-sm">
-							No conversations recorded yet.
+							{m.conv_empty()}
 						</p>
 					)}
 				</CardContent>

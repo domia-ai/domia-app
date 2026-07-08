@@ -10,6 +10,8 @@ import {
 	ThumbsUp,
 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -36,18 +38,20 @@ export function RowActions({ row }: RowActionsProps) {
 				},
 			})
 			if (result.ok) {
-				toast.success(rating === "up" ? "Graded good" : "Graded needs work")
+				toast.success(
+					rating === "up" ? m.toast_graded_good() : m.toast_graded_needs_work(),
+				)
 				queryClient.invalidateQueries({ queryKey: ["conversations"] })
 				queryClient.invalidateQueries({ queryKey: ["conversation-stats"] })
 			} else {
-				toast.error(result.error)
+				toast.error(errText(result.error))
 			}
 		})
 
 	const copy = (text: string | null, label: string) => {
 		if (!text) return
 		void navigator.clipboard.writeText(text)
-		toast.success(`${label} copied`)
+		toast.success(m.toast_copied({ label }))
 	}
 
 	return (
@@ -55,7 +59,7 @@ export function RowActions({ row }: RowActionsProps) {
 			<DropdownMenuTrigger
 				onClick={(e) => e.stopPropagation()}
 				className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-7 items-center justify-center rounded-md outline-none"
-				aria-label="Row actions"
+				aria-label={m.conv_row_actions()}
 			>
 				<MoreHorizontal className="size-4" />
 			</DropdownMenuTrigger>
@@ -66,7 +70,7 @@ export function RowActions({ row }: RowActionsProps) {
 					}
 				>
 					<ExternalLink className="size-3.5" />
-					Open
+					{m.conv_open()}
 				</DropdownMenuItem>
 				{row.interactionSessionTraceId && (
 					<DropdownMenuItem
@@ -78,28 +82,30 @@ export function RowActions({ row }: RowActionsProps) {
 						}
 					>
 						<Layers className="size-3.5" />
-						Open session
+						{m.conv_open_session()}
 					</DropdownMenuItem>
 				)}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem disabled={pending} onClick={() => quickGrade("up")}>
 					<ThumbsUp className="size-3.5" />
-					Grade good
+					{m.conv_grade_good()}
 				</DropdownMenuItem>
 				<DropdownMenuItem disabled={pending} onClick={() => quickGrade("down")}>
 					<ThumbsDown className="size-3.5" />
-					Grade needs work
+					{m.conv_grade_needs_work()}
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={() => copy(row.id, "ID")}>
 					<Copy className="size-3.5" />
-					Copy ID
+					{m.conv_copy_id()}
 				</DropdownMenuItem>
 				<DropdownMenuItem
-					onClick={() => copy(row.sttResult ?? row.inputRaw, "Transcript")}
+					onClick={() =>
+						copy(row.sttResult ?? row.inputRaw, m.conv_label_transcript())
+					}
 				>
 					<Copy className="size-3.5" />
-					Copy transcript
+					{m.conv_copy_transcript()}
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

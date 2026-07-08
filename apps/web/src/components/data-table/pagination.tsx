@@ -4,6 +4,7 @@ import {
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import {
 	Select,
@@ -36,11 +37,13 @@ export function DataTablePagination({
 	return (
 		<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
 			<p className="text-muted-foreground text-sm">
-				{from}–{to} of {total}
+				{m.table_range({ from, to, total })}
 			</p>
 			<div className="flex items-center gap-4 sm:gap-6">
 				<div className="flex items-center gap-2">
-					<span className="text-muted-foreground text-sm">Rows</span>
+					<span className="text-muted-foreground text-sm">
+						{m.table_rows()}
+					</span>
 					<Select
 						value={String(pageSize)}
 						onValueChange={(v) => onPageSizeChange(Number(v))}
@@ -58,7 +61,7 @@ export function DataTablePagination({
 					</Select>
 				</div>
 				<span className="text-muted-foreground text-sm">
-					Page {page + 1} of {pageCount}
+					{m.table_page_of({ page: page + 1, pages: pageCount })}
 				</span>
 				<div className="flex items-center gap-1">
 					<Button

@@ -109,13 +109,17 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 	inFlight.add(domiaKey)
 	try {
 		let cursor = dbAdapter.readCursor(domiaKey)
+		let turnCursor = dbAdapter.readTurnCursor(domiaKey)
 		await retryMissingAudio(snapshot)
 		const marker = snapshot.lastInteractionAt
-		if (!marker || marker <= cursor) return
+		const turnMarker = snapshot.lastTurnAt
+		const interactionsCaughtUp = !marker || marker <= cursor
+		const turnsCaughtUp = !turnMarker || turnMarker <= turnCursor.since
+		if (interactionsCaughtUp && turnsCaughtUp) return
 		let total = 0
 
 		for (let page = 0; page < MAX_PAGES; page++) {
-			const data = await fetchSync(snapshot, cursor, SYNC_LIMIT)
+			const data = await fetchSync(snapshot, cursor, turnCursor, SYNC_LIMIT)
 			if (!data) break
 
 			const hasData =
@@ -123,7 +127,8 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				data.emotionEvents.length > 0 ||
 				data.facts.length > 0 ||
 				data.sessions.length > 0 ||
-				data.announcements.length > 0
+				data.announcements.length > 0 ||
+				data.turnEvents.length > 0
 			if (hasData) {
 				dbAdapter.mirrorSync(domiaKey, data)
 				await archiveAudios(snapshot, data.interactions)
@@ -136,12 +141,26 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				data.sessions.length >= SYNC_LIMIT ||
 				data.emotionEvents.length >= SYNC_LIMIT ||
 				data.facts.length >= SYNC_LIMIT ||
-				data.announcements.length >= SYNC_LIMIT
+				data.announcements.length >= SYNC_LIMIT ||
+				data.turnEvents.length >= SYNC_LIMIT
 
-			if (data.nextCursor && data.nextCursor !== cursor) {
+			const interactionAdvanced =
+				!!data.nextCursor && data.nextCursor !== cursor
+			const turnAdvanced =
+				!!data.nextTurnCursor &&
+				(data.nextTurnCursor.since !== turnCursor.since ||
+					data.nextTurnCursor.id !== turnCursor.id)
+
+			if (interactionAdvanced) {
 				cursor = data.nextCursor
 				dbAdapter.writeCursor(domiaKey, cursor)
-			} else if (pageFull) {
+			}
+			if (turnAdvanced && data.nextTurnCursor) {
+				turnCursor = data.nextTurnCursor
+				dbAdapter.writeTurnCursor(domiaKey, turnCursor)
+			}
+
+			if (!interactionAdvanced && !turnAdvanced && pageFull) {
 				ingestionLogger.warn(
 					`sync cursor stalled for ${domiaKey} at "${cursor}" with a full page — aborting this run`,
 				)

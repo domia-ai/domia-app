@@ -63,7 +63,7 @@ export type MeshEdge = {
 
 export type NavItem = {
 	href: LinkProps["to"]
-	label: string
+	label: () => string
 	icon: LucideIcon
 	soon?: boolean
 	activeFor?: string[]

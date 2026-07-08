@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -55,7 +56,7 @@ function ReadOnlyHint() {
 			variant="outline"
 			className="text-muted-foreground text-[10px] font-normal"
 		>
-			Read-only · via DB
+			{m.domia_readonly_db()}
 		</Badge>
 	)
 }
@@ -78,32 +79,44 @@ export function PersonaCard({ profile }: { profile: CharacterProfile }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Persona</CardTitle>
+				<CardTitle className="text-base">{m.domia_persona_title()}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<FieldList
 					items={[
-						{ label: "Character", value: profile.name },
-						{ label: "Personality", value: profile.personality },
-						{ label: "Profession", value: profile.profession },
-						{ label: "Style", value: profile.communicationStyle },
-						{ label: "Perceived age", value: profile.perceivedAge },
-						{ label: "Knowledge", value: profile.knowledgeDepth },
-						{ label: "Relationship", value: profile.relationshipType },
-						{ label: "Role mode", value: profile.roleMode },
-						{ label: "Language", value: profile.language },
+						{ label: m.domia_field_character(), value: profile.name },
+						{ label: m.mind_field_personality(), value: profile.personality },
+						{ label: m.mind_field_profession(), value: profile.profession },
+						{ label: m.domia_field_style(), value: profile.communicationStyle },
+						{
+							label: m.mind_field_perceived_age(),
+							value: profile.perceivedAge,
+						},
+						{ label: m.domia_field_knowledge(), value: profile.knowledgeDepth },
+						{
+							label: m.mind_field_relationship(),
+							value: profile.relationshipType,
+						},
+						{ label: m.mind_field_role_mode(), value: profile.roleMode },
+						{ label: m.config_field_language(), value: profile.language },
 					]}
 				/>
 				<div className="space-y-2">
-					<p className="text-muted-foreground text-xs">Interests</p>
+					<p className="text-muted-foreground text-xs">
+						{m.mind_field_interests()}
+					</p>
 					<Chips items={profile.interests ?? []} />
 				</div>
 				<div className="space-y-2">
-					<p className="text-muted-foreground text-xs">Hobbies</p>
+					<p className="text-muted-foreground text-xs">
+						{m.mind_field_hobbies()}
+					</p>
 					<Chips items={profile.hobbies ?? []} />
 				</div>
 				<div className="space-y-2">
-					<p className="text-muted-foreground text-xs">Skills</p>
+					<p className="text-muted-foreground text-xs">
+						{m.mind_field_skills()}
+					</p>
 					<Chips items={profile.skills ?? []} />
 				</div>
 			</CardContent>
@@ -121,7 +134,7 @@ export function MoodCard({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Mood</CardTitle>
+				<CardTitle className="text-base">{m.domia_mood_title()}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<MoodRadar emotion={emotion} accent={accent} />
@@ -140,7 +153,9 @@ export function CapabilitiesCard({
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
-				<CardTitle className="text-base">Capabilities</CardTitle>
+				<CardTitle className="text-base">
+					{m.domia_capabilities_title()}
+				</CardTitle>
 				<ReadOnlyHint />
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -148,13 +163,15 @@ export function CapabilitiesCard({
 					{CAPABILITY_ORDER.map((key) => (
 						<Pill
 							key={key}
-							label={CAPABILITY_META[key].label}
+							label={CAPABILITY_META[key].label()}
 							on={Boolean(capabilities[key])}
 						/>
 					))}
 				</div>
 				<div className="space-y-1.5">
-					<p className="text-muted-foreground text-xs">Delegations</p>
+					<p className="text-muted-foreground text-xs">
+						{m.domia_delegations()}
+					</p>
 					{delegations.length ? (
 						<div className="flex flex-wrap gap-1.5">
 							{delegations.map((d) => (
@@ -169,7 +186,7 @@ export function CapabilitiesCard({
 						</div>
 					) : (
 						<p className="text-muted-foreground text-sm">
-							None — runs everything locally.
+							{m.domia_delegations_none()}
 						</p>
 					)}
 				</div>
@@ -192,7 +209,7 @@ export function EnginesCard({
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
-				<CardTitle className="text-base">Engines</CardTitle>
+				<CardTitle className="text-base">{m.domia_engines_title()}</CardTitle>
 				<ReadOnlyHint />
 			</CardHeader>
 			<CardContent className="space-y-5">
@@ -201,12 +218,18 @@ export function EnginesCard({
 						<p className="text-muted-foreground text-xs font-medium">LLM</p>
 						<FieldList
 							items={[
-								{ label: "Engine", value: llm.engine },
-								{ label: "Model", value: llm.modelName },
-								{ label: "Temperature", value: llm.temperature },
-								{ label: "Context window", value: llm.contextWindow },
-								{ label: "Max tokens", value: llm.numPredict },
-								{ label: "Concurrency", value: llm.llmConcurrency },
+								{ label: m.config_field_engine(), value: llm.engine },
+								{ label: m.config_field_model(), value: llm.modelName },
+								{ label: m.domia_field_temperature(), value: llm.temperature },
+								{
+									label: m.config_field_context_window(),
+									value: llm.contextWindow,
+								},
+								{ label: m.domia_field_max_tokens(), value: llm.numPredict },
+								{
+									label: m.config_field_concurrency(),
+									value: llm.llmConcurrency,
+								},
 							]}
 						/>
 					</div>
@@ -216,10 +239,10 @@ export function EnginesCard({
 						<p className="text-muted-foreground text-xs font-medium">TTS</p>
 						<FieldList
 							items={[
-								{ label: "Engine", value: tts.engine },
-								{ label: "Voice", value: tts.voiceName },
-								{ label: "Language", value: tts.language },
-								{ label: "Speed", value: tts.speed },
+								{ label: m.config_field_engine(), value: tts.engine },
+								{ label: m.config_field_voice(), value: tts.voiceName },
+								{ label: m.config_field_language(), value: tts.language },
+								{ label: m.config_field_speed(), value: tts.speed },
 							]}
 						/>
 					</div>
@@ -229,9 +252,9 @@ export function EnginesCard({
 						<p className="text-muted-foreground text-xs font-medium">STT</p>
 						<FieldList
 							items={[
-								{ label: "Engine", value: stt.engine },
-								{ label: "Model", value: stt.modelName },
-								{ label: "Language", value: stt.language },
+								{ label: m.config_field_engine(), value: stt.engine },
+								{ label: m.config_field_model(), value: stt.modelName },
+								{ label: m.config_field_language(), value: stt.language },
 							]}
 						/>
 					</div>
@@ -239,13 +262,13 @@ export function EnginesCard({
 				{wakeword && (
 					<div className="space-y-2">
 						<p className="text-muted-foreground text-xs font-medium">
-							Wake word
+							{m.enum_capability_wakeword()}
 						</p>
 						<FieldList
 							items={[
-								{ label: "Engine", value: wakeword.engine },
-								{ label: "Keyword", value: wakeword.wakeWord },
-								{ label: "Framework", value: wakeword.framework },
+								{ label: m.config_field_engine(), value: wakeword.engine },
+								{ label: m.config_field_keyword(), value: wakeword.wakeWord },
+								{ label: m.domia_field_framework(), value: wakeword.framework },
 							]}
 						/>
 					</div>
@@ -255,31 +278,31 @@ export function EnginesCard({
 	)
 }
 
-const MODULE_FLAGS: { key: keyof ModuleSettings; label: string }[] = [
-	{ key: "emotionEngine", label: "Emotion engine" },
-	{ key: "emotionCapture", label: "Emotion capture" },
-	{ key: "memoryEngine", label: "Memory engine" },
-	{ key: "factCapture", label: "Fact capture" },
-	{ key: "factRecall", label: "Fact recall" },
-	{ key: "collectiveMind", label: "Collective mind" },
-	{ key: "narrativeEngine", label: "Narrative engine" },
-	{ key: "identityEngine", label: "Identity engine" },
-	{ key: "remoteAccessEngine", label: "Remote access" },
-	{ key: "reflectionOnlyWhenIdle", label: "Reflect when idle" },
+const MODULE_FLAGS: { key: keyof ModuleSettings; label: () => string }[] = [
+	{ key: "emotionEngine", label: m.mind_module_emotion_engine },
+	{ key: "emotionCapture", label: m.config_field_emotion_capture },
+	{ key: "memoryEngine", label: m.mind_module_memory_engine },
+	{ key: "factCapture", label: m.config_field_fact_capture },
+	{ key: "factRecall", label: m.config_field_fact_recall },
+	{ key: "collectiveMind", label: m.mind_module_collective_mind },
+	{ key: "narrativeEngine", label: m.mind_module_narrative_engine },
+	{ key: "identityEngine", label: m.mind_module_identity_engine },
+	{ key: "remoteAccessEngine", label: m.mind_module_remote_access },
+	{ key: "reflectionOnlyWhenIdle", label: m.config_field_reflect_only_idle },
 ]
 
 export function ModulesCard({ modules }: { modules: ModuleSettings }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Modules</CardTitle>
+				<CardTitle className="text-base">{m.domia_modules_title()}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="grid grid-cols-2 gap-x-6 gap-y-2">
 					{MODULE_FLAGS.map((flag) => (
 						<Pill
 							key={flag.key}
-							label={flag.label}
+							label={flag.label()}
 							on={Boolean(modules[flag.key])}
 						/>
 					))}
@@ -287,7 +310,7 @@ export function ModulesCard({ modules }: { modules: ModuleSettings }) {
 				<FieldList
 					items={[
 						{
-							label: "Reflection concurrency",
+							label: m.config_field_reflection_concurrency(),
 							value: modules.reflectionConcurrency,
 						},
 					]}
@@ -301,7 +324,7 @@ export function SkillsCard({ servers }: { servers: SkillProviderConfig[] }) {
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
-				<CardTitle className="text-base">Skills</CardTitle>
+				<CardTitle className="text-base">{m.mind_field_skills()}</CardTitle>
 				<ReadOnlyHint />
 			</CardHeader>
 			<CardContent>
@@ -318,7 +341,7 @@ export function SkillsCard({ servers }: { servers: SkillProviderConfig[] }) {
 					</div>
 				) : (
 					<p className="text-muted-foreground text-sm">
-						No skill providers configured.
+						{m.domia_skills_none()}
 					</p>
 				)}
 			</CardContent>

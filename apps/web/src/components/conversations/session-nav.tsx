@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { ChevronLeft, ChevronRight, Layers } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 import type { SessionNavProps } from "@/types/conversations"
 
@@ -15,7 +16,7 @@ export function SessionNav({ adjacent, sessionId }: SessionNavProps) {
 					to="/conversations/$id"
 					params={{ id: adjacent.prevId }}
 					className={linkClass}
-					aria-label="Previous turn"
+					aria-label={m.conv_prev_turn()}
 				>
 					<ChevronLeft className="size-4" />
 				</Link>
@@ -25,14 +26,14 @@ export function SessionNav({ adjacent, sessionId }: SessionNavProps) {
 				</span>
 			)}
 			<span className="text-muted-foreground">
-				Turn {adjacent.index + 1} of {adjacent.total}
+				{m.conv_turn_of({ index: adjacent.index + 1, total: adjacent.total })}
 			</span>
 			{adjacent.nextId ? (
 				<Link
 					to="/conversations/$id"
 					params={{ id: adjacent.nextId }}
 					className={linkClass}
-					aria-label="Next turn"
+					aria-label={m.conv_next_turn()}
 				>
 					<ChevronRight className="size-4" />
 				</Link>
@@ -47,7 +48,7 @@ export function SessionNav({ adjacent, sessionId }: SessionNavProps) {
 				className="text-muted-foreground hover:text-foreground ml-1 inline-flex items-center gap-1.5 text-xs transition-colors"
 			>
 				<Layers className="size-3.5" />
-				Full session
+				{m.conv_full_session()}
 			</Link>
 		</div>
 	)

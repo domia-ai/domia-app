@@ -1,5 +1,6 @@
 import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
+import { m } from "@/paraglide/messages"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -60,7 +61,7 @@ export function MemoriesView() {
 					<div className="relative max-w-xs flex-1">
 						<Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
 						<Input
-							placeholder="Search facts…"
+							placeholder={m.mem_search_placeholder()}
 							value={searchInput}
 							onChange={(e) => setSearchInput(e.target.value)}
 							className="pl-9"
@@ -70,13 +71,16 @@ export function MemoriesView() {
 						<Select
 							value={filters.domia ?? "all"}
 							onValueChange={(v) => setFilter("domia", v === "all" ? null : v)}
-							items={[{ value: "all", label: "All Domias" }, ...domiaOptions]}
+							items={[
+								{ value: "all", label: m.mem_all_domias() },
+								...domiaOptions,
+							]}
 						>
 							<SelectTrigger className="h-9 w-44">
-								<SelectValue placeholder="All Domias" />
+								<SelectValue placeholder={m.mem_all_domias()} />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="all">All Domias</SelectItem>
+								<SelectItem value="all">{m.mem_all_domias()}</SelectItem>
 								{domiaOptions.map((o) => (
 									<SelectItem key={o.value} value={o.value}>
 										{o.label}
@@ -101,11 +105,7 @@ export function MemoriesView() {
 					onPageSizeChange={setPageSize}
 					onSortChange={setSort}
 					isLoading={isLoading}
-					emptyLabel={
-						loadFailed
-							? "Couldn't load memories — check the console connection."
-							: "No facts learned yet."
-					}
+					emptyLabel={loadFailed ? m.mem_load_failed() : m.mem_empty()}
 				/>
 			) : (
 				<div className="space-y-4">
@@ -123,9 +123,7 @@ export function MemoriesView() {
 						</div>
 					) : (
 						<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-							{loadFailed
-								? "Couldn't load memories — check the console connection."
-								: "No facts learned yet. They appear as Domias remember things about you."}
+							{loadFailed ? m.mem_load_failed() : m.mem_empty_hint()}
 						</div>
 					)}
 					{total > pageSize && (

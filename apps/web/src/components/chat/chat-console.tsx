@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { errText } from "@/utils/service-errors"
 import { ArrowRight, MessagesSquare, Square } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cancelTurn } from "@/server/rooms"
@@ -105,8 +107,12 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 				autoplay: input.speak && !!res.data.audioUrl,
 			})
 		} else if (!res.ok) {
-			patch(key, domiaTurnId, { pending: false, error: true, text: res.error })
-			toast.error(res.error)
+			patch(key, domiaTurnId, {
+				pending: false,
+				error: true,
+				text: errText(res.error),
+			})
+			toast.error(errText(res.error))
 		}
 	}
 
@@ -212,10 +218,8 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 				{turns.length === 0 ? (
 					<div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center text-sm">
 						<MessagesSquare className="size-8 opacity-40" />
-						<p>Start a conversation with {selected.name}.</p>
-						<p className="text-xs">
-							Type, toggle “Speak replies”, or upload a WAV to test any flow.
-						</p>
+						<p>{m.chat_start_conversation({ name: selected.name })}</p>
+						<p className="text-xs">{m.chat_empty_hint()}</p>
 					</div>
 				) : (
 					<MessageScrollerProvider
@@ -257,7 +261,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 							onClick={onCancel}
 						>
 							<Square className="size-3.5" />
-							Stop
+							{m.chat_stop()}
 						</Button>
 					)}
 					<Composer
@@ -322,11 +326,10 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 						params={{ key: selected.domiaKey }}
 						className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors"
 					>
-						Open Domia <ArrowRight className="size-4" />
+						{m.chat_open_domia()} <ArrowRight className="size-4" />
 					</Link>
 					<p className="text-muted-foreground border-t pt-3 text-xs">
-						This is a live channel — every exchange is a real interaction,
-						logged and visible in Conversations.
+						{m.chat_live_channel_note()}
 					</p>
 				</CardContent>
 			</Card>

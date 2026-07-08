@@ -11,6 +11,7 @@ import {
 	ArrowRight,
 	RotateCw,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
@@ -53,7 +54,7 @@ function VolumeControl({
 		<div className="border-border flex flex-col gap-2 rounded-md border px-3 py-2">
 			<div className="flex items-center justify-between">
 				<span className="flex items-center gap-1.5 text-sm font-medium">
-					<Volume2 className="size-4" /> Speaker volume
+					<Volume2 className="size-4" /> {m.sat_speaker_volume()}
 				</span>
 				<span className="text-muted-foreground text-sm tabular-nums">
 					{Math.round(volume * 100)}%
@@ -86,13 +87,13 @@ function InfoRow({ icon: Icon, label, value }: InfoRowProps) {
 	)
 }
 
-const CAP_ROWS: { key: string; label: string }[] = [
-	{ key: "mic", label: "Microphone" },
-	{ key: "speaker", label: "Speaker" },
-	{ key: "wake", label: "Wake word" },
-	{ key: "announce", label: "Announce" },
-	{ key: "intercom", label: "Intercom" },
-	{ key: "followup", label: "Follow-up" },
+const CAP_ROWS: { key: string; label: () => string }[] = [
+	{ key: "mic", label: m.sat_cap_mic },
+	{ key: "speaker", label: m.sat_cap_speaker },
+	{ key: "wake", label: m.sat_cap_wake },
+	{ key: "announce", label: m.sat_cap_announce },
+	{ key: "intercom", label: m.sat_cap_intercom },
+	{ key: "followup", label: m.sat_cap_follow_up },
 ]
 
 export function SatelliteDetail({
@@ -138,7 +139,7 @@ export function SatelliteDetail({
 				/>
 				<div className="min-w-0 flex-1">
 					<p className="text-muted-foreground text-[11px] tracking-wide uppercase">
-						Assigned Domia
+						{m.sat_assigned_domia()}
 					</p>
 					<p className="truncate text-sm font-medium">{s.domiaName}</p>
 				</div>
@@ -147,45 +148,53 @@ export function SatelliteDetail({
 					size="sm"
 					render={<Link to="/domias/$key" params={{ key: s.domiaKey }} />}
 				>
-					Configure <ArrowRight className="size-3.5" />
+					{m.sat_configure()} <ArrowRight className="size-3.5" />
 				</Button>
 			</div>
 
 			<div>
-				<SectionLabel>Connection</SectionLabel>
+				<SectionLabel>{m.sat_section_connection()}</SectionLabel>
 				<div className="border-border rounded-lg border px-3">
-					<InfoRow icon={Wifi} label="Address" value={`${s.host}:${s.port}`} />
+					<InfoRow
+						icon={Wifi}
+						label={m.sat_info_address()}
+						value={`${s.host}:${s.port}`}
+					/>
 					<Separator />
-					<InfoRow icon={Radio} label="Protocol" value={s.protocol} />
+					<InfoRow
+						icon={Radio}
+						label={m.sat_info_protocol()}
+						value={s.protocol}
+					/>
 					<Separator />
 					<InfoRow
 						icon={Cpu}
-						label="Firmware"
+						label={m.sat_info_firmware()}
 						value={s.firmwareVersion ?? "—"}
 					/>
 					<Separator />
 					<InfoRow
 						icon={RotateCw}
-						label="Reconnects"
+						label={m.sat_info_reconnects()}
 						value={String(s.reconnectCount)}
 					/>
 					<Separator />
 					<InfoRow
 						icon={Server}
-						label="Sample rate"
+						label={m.sat_info_sample_rate()}
 						value={s.sampleRate ? `${s.sampleRate} Hz` : "—"}
 					/>
 					<Separator />
 					<InfoRow
 						icon={Clock}
-						label="Last seen"
+						label={m.sat_info_last_seen()}
 						value={lastSeen ? relativeTimeMs(lastSeen) : "—"}
 					/>
 				</div>
 			</div>
 
 			<div>
-				<SectionLabel>Capabilities</SectionLabel>
+				<SectionLabel>{m.sat_section_capabilities()}</SectionLabel>
 				<div className="grid grid-cols-2 gap-1.5">
 					{CAP_ROWS.map((c) => {
 						const on = caps[c.key]
@@ -199,7 +208,7 @@ export function SatelliteDetail({
 										: "border-border text-muted-foreground/60 border-dashed",
 								)}
 							>
-								{c.label}
+								{c.label()}
 								<span
 									className={cn(
 										"size-1.5 rounded-full",
@@ -213,7 +222,7 @@ export function SatelliteDetail({
 			</div>
 
 			<div className="flex flex-col gap-2">
-				<SectionLabel>Quick actions</SectionLabel>
+				<SectionLabel>{m.sat_section_quick_actions()}</SectionLabel>
 				<div className="grid grid-cols-2 gap-2">
 					<Button
 						variant="outline"
@@ -221,7 +230,7 @@ export function SatelliteDetail({
 						disabled={!caps.speaker || !s.online}
 						onClick={() => onTestSpeaker(s)}
 					>
-						<Volume2 className="size-4" /> Test speaker
+						<Volume2 className="size-4" /> {m.sat_test_speaker()}
 					</Button>
 					<Button
 						variant="outline"
@@ -229,11 +238,11 @@ export function SatelliteDetail({
 						disabled={!caps.announce || !s.online}
 						onClick={() => onAnnounce(s)}
 					>
-						<Megaphone className="size-4" /> Announce
+						<Megaphone className="size-4" /> {m.sat_cap_announce()}
 					</Button>
 				</div>
 				<div className="border-border flex items-center justify-between rounded-md border px-3 py-2">
-					<span className="text-sm font-medium">Follow-up mode</span>
+					<span className="text-sm font-medium">{m.sat_follow_up_mode()}</span>
 					<Switch
 						checked={s.followUpEnabled}
 						disabled={!caps.followup || !s.online}
@@ -251,7 +260,7 @@ export function SatelliteDetail({
 
 			{s.recentEvents.length > 0 ? (
 				<div>
-					<SectionLabel>Recent events</SectionLabel>
+					<SectionLabel>{m.sat_section_recent_events()}</SectionLabel>
 					<ul className="flex flex-col gap-2.5">
 						{s.recentEvents.map((ev) => {
 							const Icon = EVENT_ICON[ev.kind] ?? Radio

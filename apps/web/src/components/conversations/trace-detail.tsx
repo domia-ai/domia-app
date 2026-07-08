@@ -10,12 +10,13 @@ import {
 	Wrench,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { formatMaybeJson, formatMs } from "@/utils/format"
+import { formatMs } from "@/utils/format"
 import { buildLatency } from "@/utils/latency"
 import { humanizeDomiaKey } from "@/utils/journey"
 import { AudioPlayer } from "./audio-player"
 import { CollapsiblePrompt } from "./collapsible-prompt"
 import { PipelineClient } from "./pipeline-client"
+import { ToolTrace, skillTraceTotalMs } from "./tool-trace"
 import type {
 	DomiaSnapshot,
 	InteractionDetail,
@@ -52,13 +53,7 @@ const LLM_CHIP_BUILDERS: Array<
 export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 	const { trace, inputAudio, ttsAudio } = detail
 	const isVoice = trace.inputType === "VOICE"
-	const skillResponse = formatMaybeJson(trace.skillResponse)
-	const skillTotalMs = Array.isArray(trace.skillResponse)
-		? (trace.skillResponse as { ms?: number }[]).reduce(
-				(sum, t) => sum + (typeof t?.ms === "number" ? t.ms : 0),
-				0,
-			) || undefined
-		: undefined
+	const skillTotalMs = skillTraceTotalMs(trace.skillResponse)
 	const lat = buildLatency(trace)
 	const originKey = trace.sourceDomiaKey
 	const snapshot = trace.domiaSnapshot as DomiaSnapshot | null
@@ -182,26 +177,7 @@ export function TraceDetail({ detail }: { detail: InteractionDetail }) {
 							{trace.skillPrompt}
 						</pre>
 					)}
-					{skillResponse && (
-						<pre className="bg-background/60 overflow-x-auto rounded-md px-3 py-2 font-mono text-xs">
-							{skillResponse}
-						</pre>
-					)}
-					{(trace.agentDecisionMs != null ||
-						trace.agentToolMs != null ||
-						trace.agentFinalizeMs != null) && (
-						<div className="text-muted-foreground flex flex-wrap gap-x-3 font-mono text-[11px]">
-							{trace.agentDecisionMs != null && (
-								<span>decision {formatMs(trace.agentDecisionMs)}</span>
-							)}
-							{trace.agentToolMs != null && (
-								<span>tools {formatMs(trace.agentToolMs)}</span>
-							)}
-							{trace.agentFinalizeMs != null && (
-								<span>finalize {formatMs(trace.agentFinalizeMs)}</span>
-							)}
-						</div>
-					)}
+					<ToolTrace skillResponse={trace.skillResponse} />
 				</div>
 			),
 		})

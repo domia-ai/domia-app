@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import {
 	forwardRef,
 	useEffect,
@@ -136,7 +137,7 @@ export const Waveform = forwardRef<WaveformHandle, WaveformProps>(
 							cycleSpeed()
 						}}
 						className="text-muted-foreground hover:text-foreground shrink-0 font-mono text-xs tabular-nums"
-						aria-label="Playback speed"
+						aria-label={m.aria_playback_speed()}
 					>
 						{PLAYBACK_SPEEDS[speedIndex]}x
 					</button>

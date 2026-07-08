@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/shell/page-header"
 import { StatusPill } from "@/components/domia/status"
 import { nodesQueryOptions } from "@/server/nodes"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/nodes/")({
-	head: () => ({ meta: [{ title: "Nodes | Domia Console" }] }),
+	head: () => ({ meta: [{ title: m.meta_title({ page: m.nav_nodes() }) }] }),
 	component: NodesPage,
 })
 
@@ -17,17 +18,17 @@ function NodesPage() {
 	return (
 		<div className="space-y-6">
 			<PageHeader
-				title="Nodes"
-				description="Each physical Domia node and the identities it hosts."
+				title={m.nav_nodes()}
+				description={m.route_nodes_description()}
 			/>
-			{isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
+			{isLoading && (
+				<p className="text-muted-foreground text-sm">{m.cmd_loading()}</p>
+			)}
 			{isError && (
-				<p className="text-destructive text-sm">Could not load nodes.</p>
+				<p className="text-destructive text-sm">{m.nodes_load_error()}</p>
 			)}
 			{nodes && nodes.length === 0 && (
-				<p className="text-muted-foreground text-sm">
-					No nodes discovered yet.
-				</p>
+				<p className="text-muted-foreground text-sm">{m.nodes_empty()}</p>
 			)}
 			{nodes && nodes.length > 0 && (
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +44,7 @@ function NodesPage() {
 									<div className="min-w-0 space-y-1">
 										<div className="flex items-center gap-2">
 											<span className="truncate font-medium">
-												{node.principalName ?? "Node"}
+												{node.principalName ?? m.route_node()}
 											</span>
 											<StatusPill online={node.online} />
 										</div>
@@ -53,9 +54,13 @@ function NodesPage() {
 									</div>
 								</CardHeader>
 								<CardContent className="flex flex-wrap gap-1.5">
-									<Badge variant="secondary">{node.hostedCount} hosted</Badge>
+									<Badge variant="secondary">
+										{m.nodes_hosted_count({ count: node.hostedCount })}
+									</Badge>
 									{node.peerCount > 0 && (
-										<Badge variant="outline">{node.peerCount} peers</Badge>
+										<Badge variant="outline">
+											{m.nodes_peers_count({ count: node.peerCount })}
+										</Badge>
 									)}
 									{node.identities
 										.filter((i) => i.isHosted)

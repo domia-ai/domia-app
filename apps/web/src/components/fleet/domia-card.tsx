@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router"
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
@@ -63,13 +64,16 @@ export function DomiaCard({ row }: { row: FleetRow }) {
 						</div>
 					)}
 					<div className="grid grid-cols-3 gap-2 border-t pt-3">
-						<Stat label="Volume" value={String(row.telemetry?.count ?? 0)} />
 						<Stat
-							label="TTFA p50"
+							label={m.fleet_col_volume()}
+							value={String(row.telemetry?.count ?? 0)}
+						/>
+						<Stat
+							label={m.fleet_col_ttfa()}
 							value={formatMs(row.telemetry?.ttfaP50 ?? null)}
 						/>
 						<Stat
-							label="Last interaction"
+							label={m.fleet_col_last_interaction()}
 							value={relativeTime(row.lastInteractionAt)}
 						/>
 					</div>

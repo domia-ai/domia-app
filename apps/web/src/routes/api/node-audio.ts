@@ -1,6 +1,29 @@
+import { readFile } from "node:fs/promises"
 import { createFileRoute } from "@tanstack/react-router"
 import { getNodeEndpoint } from "@/services/fleet"
+import { getAudioAsset } from "@/services/audio"
 import { env } from "@/config"
+import { meshHeaders } from "@/lib/node-client"
+
+const archivedResponse = async (
+	id: string,
+	kind: "input" | "tts",
+): Promise<Response | null> => {
+	const asset = await getAudioAsset(id, kind)
+	if (!asset) return null
+	try {
+		const data = await readFile(asset.localPath)
+		return new Response(new Uint8Array(data), {
+			headers: {
+				"Content-Type": "audio/wav",
+				"Content-Length": String(data.length),
+				"Cache-Control": "no-store",
+			},
+		})
+	} catch {
+		return null
+	}
+}
 
 export const Route = createFileRoute("/api/node-audio")({
 	server: {
@@ -21,31 +44,33 @@ export const Route = createFileRoute("/api/node-audio")({
 				}
 
 				const endpoint = await getNodeEndpoint(domia)
-				if (!endpoint) {
-					return Response.json({ error: "Domia unreachable" }, { status: 404 })
+				if (endpoint) {
+					try {
+						const upstream = await fetch(
+							`http://${endpoint.localIp}:${endpoint.httpPort}/audio/${encodeURIComponent(id)}?kind=${kind}`,
+							{
+								headers: meshHeaders(),
+								signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
+							},
+						)
+						if (upstream.ok && upstream.body) {
+							const headers = new Headers({ "Cache-Control": "no-store" })
+							headers.set(
+								"Content-Type",
+								upstream.headers.get("Content-Type") ?? "audio/wav",
+							)
+							const contentLength = upstream.headers.get("Content-Length")
+							if (contentLength) headers.set("Content-Length", contentLength)
+							return new Response(upstream.body, { headers })
+						}
+					} catch {
+						/* node unreachable — fall through to the archived copy */
+					}
 				}
 
-				let upstream: Response
-				try {
-					upstream = await fetch(
-						`http://${endpoint.localIp}:${endpoint.httpPort}/audio/${encodeURIComponent(id)}?kind=${kind}`,
-						{ signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS) },
-					)
-				} catch {
-					return Response.json({ error: "Domia unreachable" }, { status: 504 })
-				}
-				if (!upstream.ok || !upstream.body) {
-					return Response.json({ error: "Audio not found" }, { status: 404 })
-				}
-
-				const headers = new Headers({ "Cache-Control": "no-store" })
-				headers.set(
-					"Content-Type",
-					upstream.headers.get("Content-Type") ?? "audio/wav",
-				)
-				const contentLength = upstream.headers.get("Content-Length")
-				if (contentLength) headers.set("Content-Length", contentLength)
-				return new Response(upstream.body, { headers })
+				const archived = await archivedResponse(id, kind)
+				if (archived) return archived
+				return Response.json({ error: "Audio not found" }, { status: 404 })
 			},
 		},
 	},

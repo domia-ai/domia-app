@@ -62,7 +62,7 @@ export type StagePerfRow = {
 }
 
 export type LatencyDistRow = {
-	key: "stt" | "llm" | "ttft" | "tts" | "ttfa" | "total"
+	key: "stt" | "llmQueue" | "llm" | "ttft" | "tts" | "ttfa" | "total"
 	label: string
 	p50: number | null
 	p95: number | null
@@ -137,6 +137,7 @@ export type AnalyticsData = {
 	tools: ToolStats
 	sources: SourceRow[]
 	avgInputAudioMs: number | null
+	peakRssMb: number | null
 }
 
 export type AnalyticsChartsProps = {

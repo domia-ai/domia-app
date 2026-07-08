@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { m } from "@/paraglide/messages"
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -56,11 +57,13 @@ export function EmotionsView() {
 
 	if (overviewQuery.isLoading) return <Skeleton className="h-[420px] w-full" />
 	if (overviewQuery.isError)
-		return <p className="text-destructive text-sm">Couldn't load emotions.</p>
+		return (
+			<p className="text-destructive text-sm">{m.emotions_load_failed()}</p>
+		)
 	if (!active)
 		return (
 			<div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center text-sm">
-				No Domias discovered yet.
+				{m.fleet_empty()}
 			</div>
 		)
 
@@ -97,7 +100,7 @@ export function EmotionsView() {
 										className="text-[10px] font-medium tracking-wide uppercase"
 										style={{ color: EMOTION_META[dom].color }}
 									>
-										{EMOTION_META[dom].label}
+										{EMOTION_META[dom].label()}
 									</span>
 								) : (
 									<span className="text-muted-foreground text-[10px] tracking-wide uppercase">
@@ -137,7 +140,7 @@ export function EmotionsView() {
 													: "var(--muted-foreground)",
 											}}
 										/>
-										{EMOTION_META[k].label}
+										{EMOTION_META[k].label()}
 									</button>
 								)
 							})}
@@ -150,7 +153,7 @@ export function EmotionsView() {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>Current mood</CardTitle>
+						<CardTitle>{m.emotions_current_mood()}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{active.emotion ? (
@@ -160,7 +163,7 @@ export function EmotionsView() {
 							/>
 						) : (
 							<p className="text-muted-foreground py-8 text-center text-sm">
-								No mood snapshot.
+								{m.emotions_no_snapshot()}
 							</p>
 						)}
 					</CardContent>

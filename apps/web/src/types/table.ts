@@ -31,14 +31,14 @@ export type FilterFacetOption = {
 
 export type FilterFacet = {
 	key: string
-	label: string
+	label: () => string
 	type: "select" | "chips" | "multiselect" | "toggle"
 	options?: FilterFacetOption[]
 }
 
 export type TablePreset = {
 	key: string
-	label: string
+	label: () => string
 	params: Record<string, string | null>
 }
 
@@ -75,7 +75,7 @@ export type DataTableToolbarProps = {
 	exportHref?: string
 }
 
-export type ColumnToggle = { id: string; label: string }
+export type ColumnToggle = { id: string; label: () => string }
 
 export type ColumnVisibilityProps = {
 	columns: ColumnToggle[]

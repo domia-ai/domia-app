@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
@@ -13,6 +14,16 @@ import { TagEditor } from "../tag-editor"
 import { ModelPicker } from "./model-picker"
 import { cn } from "@/lib/utils"
 import type { ConfigField, FieldValue } from "@/types/config"
+
+const UNIT_LABELS: Record<string, () => string> = {
+	chars: m.config_unit_chars,
+	words: m.config_unit_words,
+	sentences: m.config_unit_sentences,
+	tokens: m.config_unit_tokens,
+	turns: m.config_unit_turns,
+}
+
+const unitLabel = (unit: string): string => UNIT_LABELS[unit]?.() ?? unit
 
 function ChangedDot({ changed }: { changed: boolean }) {
 	if (!changed) return null
@@ -49,11 +60,11 @@ export function ConfigFieldRow({
 			>
 				<div className="space-y-0.5">
 					<div className="flex items-center gap-1.5">
-						<p className="text-sm font-medium">{field.label}</p>
+						<p className="text-sm font-medium">{field.label()}</p>
 						<ChangedDot changed={changed} />
 					</div>
 					{field.hint && (
-						<p className="text-muted-foreground text-xs">{field.hint}</p>
+						<p className="text-muted-foreground text-xs">{field.hint()}</p>
 					)}
 				</div>
 				<Switch checked={Boolean(value)} onCheckedChange={(c) => onChange(c)} />
@@ -63,11 +74,11 @@ export function ConfigFieldRow({
 
 	const label = (
 		<FieldLabel className="flex items-center gap-1.5">
-			{field.label}
+			{field.label()}
 			<ChangedDot changed={changed} />
 			{field.unit && (
 				<span className="text-muted-foreground text-xs font-normal">
-					({field.unit})
+					({unitLabel(field.unit)})
 				</span>
 			)}
 		</FieldLabel>
@@ -92,7 +103,7 @@ export function ConfigFieldRow({
 					onValueChange={(v) => onChange(Array.isArray(v) ? v[0] : v)}
 				/>
 				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint}</p>
+					<p className="text-muted-foreground text-xs">{field.hint()}</p>
 				)}
 				<FieldError error={error} />
 			</Field>
@@ -106,7 +117,7 @@ export function ConfigFieldRow({
 				<TagEditor
 					values={Array.isArray(value) ? value : []}
 					onChange={(next) => onChange(next)}
-					placeholder={`Add ${field.label.toLowerCase()}…`}
+					placeholder={m.config_add_tag({ label: field.label().toLowerCase() })}
 				/>
 			</Field>
 		)
@@ -123,7 +134,7 @@ export function ConfigFieldRow({
 					onChange={(v) => onChange(v)}
 				/>
 				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint}</p>
+					<p className="text-muted-foreground text-xs">{field.hint()}</p>
 				)}
 			</Field>
 		)
@@ -146,7 +157,7 @@ export function ConfigFieldRow({
 					</SelectContent>
 				</Select>
 				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint}</p>
+					<p className="text-muted-foreground text-xs">{field.hint()}</p>
 				)}
 			</Field>
 		)
@@ -173,7 +184,7 @@ export function ConfigFieldRow({
 				/>
 			</FieldContent>
 			{field.hint && (
-				<p className="text-muted-foreground text-xs">{field.hint}</p>
+				<p className="text-muted-foreground text-xs">{field.hint()}</p>
 			)}
 			<FieldError error={error} />
 		</Field>

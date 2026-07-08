@@ -5,6 +5,7 @@ import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { SessionThread } from "@/components/conversations/session-thread"
 import { getSessionTurnsFn } from "@/server/conversations"
 import { formatTs } from "@/utils/format"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/conversations/session/$id")({
 	loader: async ({ params }) => {
@@ -12,7 +13,9 @@ export const Route = createFileRoute("/_dashboard/conversations/session/$id")({
 		if (!detail) throw notFound()
 		return detail
 	},
-	head: () => ({ meta: [{ title: "Session | Domia Console" }] }),
+	head: () => ({
+		meta: [{ title: m.meta_title({ page: m.route_session() }) }],
+	}),
 	component: SessionPage,
 })
 
@@ -28,7 +31,7 @@ function SessionPage() {
 				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
 			>
 				<ArrowLeft className="size-4" />
-				Conversations
+				{m.nav_conversations()}
 			</Link>
 
 			<div className="flex flex-wrap items-center gap-3">

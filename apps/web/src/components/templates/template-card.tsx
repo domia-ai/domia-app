@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter } from "@tanstack/react-router"
 import { Pencil, Sparkles, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -43,14 +45,17 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 		const name = target?.name ?? targetKey
 		const result = await applyMutation.mutateAsync()
 		if (result.ok && result.data) {
-			toast.success(`Applied "${template.name}" to ${name}`, {
-				description: `${name} is restarting to apply it.`,
-			})
+			toast.success(
+				m.toast_template_applied({ template: template.name, name }),
+				{
+					description: m.toast_template_applied_desc({ name }),
+				},
+			)
 			queryClient.invalidateQueries({ queryKey: ["fleet"] })
 			void router.invalidate()
 		} else {
-			toast.error("Could not apply", {
-				description: result.ok ? "Empty response" : result.error,
+			toast.error(m.toast_template_apply_failed(), {
+				description: errText(result.ok ? undefined : result.error),
 			})
 		}
 	}
@@ -58,10 +63,12 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 	const onDelete = async () => {
 		const result = await deleteMutation.mutateAsync()
 		if (result.ok) {
-			toast.success(`Deleted "${template.name}"`)
+			toast.success(m.toast_template_deleted({ name: template.name }))
 			queryClient.invalidateQueries({ queryKey: ["templates"] })
 		} else {
-			toast.error("Could not delete", { description: result.error })
+			toast.error(m.toast_template_delete_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
@@ -79,12 +86,12 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						<CardTitle className="text-base">{template.name}</CardTitle>
 						{template.isSystem && (
 							<Badge variant="secondary" className="text-[10px]">
-								System
+								{m.templates_system_badge()}
 							</Badge>
 						)}
 					</div>
 					<p className="text-muted-foreground text-xs">
-						{template.description || "No description"}
+						{template.description || m.templates_no_description()}
 					</p>
 				</div>
 				{!template.isSystem && (
@@ -92,7 +99,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						<Button
 							variant="ghost"
 							size="icon-sm"
-							aria-label="Edit"
+							aria-label={m.aria_edit()}
 							nativeButton={false}
 							render={
 								<Link to="/templates/$id/edit" params={{ id: template.id }} />
@@ -103,7 +110,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						<Button
 							variant="ghost"
 							size="icon-sm"
-							aria-label="Delete"
+							aria-label={m.aria_delete()}
 							disabled={deleteMutation.isPending || isDemoMode()}
 							onClick={onDelete}
 						>
@@ -129,7 +136,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						items={targets.map((t) => ({ value: t.domiaKey, label: t.name }))}
 					>
 						<SelectTrigger className="h-9 flex-1">
-							<SelectValue placeholder="Choose a Domia" />
+							<SelectValue placeholder={m.templates_choose_domia()} />
 						</SelectTrigger>
 						<SelectContent>
 							{targets.map((t) => (
@@ -153,7 +160,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						onClick={onApply}
 					>
 						<Sparkles className="size-4" />
-						Apply
+						{m.templates_apply()}
 					</Button>
 				</div>
 			</CardContent>

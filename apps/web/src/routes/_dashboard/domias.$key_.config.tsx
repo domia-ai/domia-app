@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ConfigWorkspace } from "@/components/domia/config/config-workspace"
+import { KnowledgeManager } from "@/components/domia/knowledge-manager"
 import { RestartButton } from "@/components/domia/restart-button"
 import { configQueryOptions } from "@/server/config"
 import { getDomiaFn } from "@/server/domia"
 import { accentFor } from "@/utils/accent"
 import { isOnline } from "@/utils/presence"
+import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/_dashboard/domias/$key_/config")({
@@ -19,7 +21,11 @@ export const Route = createFileRoute("/_dashboard/domias/$key_/config")({
 	head: ({ loaderData }) => ({
 		meta: [
 			{
-				title: `Configure ${loaderData?.domia.name ?? "Domia"} | Domia Console`,
+				title: m.meta_title({
+					page: m.route_configure_domia({
+						name: loaderData?.domia.name ?? "Domia",
+					}),
+				}),
 			},
 		],
 	}),
@@ -54,7 +60,7 @@ function ConfigPage() {
 			<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 				<div className="space-y-1">
 					<h1 className="text-2xl font-semibold tracking-tight">
-						Configuration
+						{m.config_page_title()}
 					</h1>
 					<div className="text-muted-foreground flex items-center gap-2 text-sm">
 						<span
@@ -104,6 +110,9 @@ function ConfigPage() {
 						accent={accent}
 						readOnly={result.source === "snapshot"}
 					/>
+					<div className="border-border border-t pt-6">
+						<KnowledgeManager domiaKey={domia.domiaKey} online={online} />
+					</div>
 				</>
 			) : null}
 		</div>

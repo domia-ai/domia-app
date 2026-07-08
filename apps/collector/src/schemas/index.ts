@@ -12,12 +12,22 @@ export const domiaSnapshotSchema = z.looseObject({
 	isHosted: z.boolean().optional(),
 	isPrincipal: z.boolean().optional(),
 	lastInteractionAt: z.string().nullish(),
+	lastTurnAt: z.string().nullish(),
 })
 
 const traceRowSchema = z.looseObject({
 	id: z.string().min(1),
 	createdAt: z.string(),
 	updatedAt: z.string(),
+})
+
+const turnEventRowSchema = z.looseObject({
+	id: z.string().min(1),
+	interactionId: z.string().min(1),
+	type: z.string().min(1),
+	seq: z.number(),
+	ts: z.number(),
+	createdAt: z.string(),
 })
 
 export const identitiesResponseSchema = z.object({
@@ -30,5 +40,11 @@ export const syncResponseSchema = z.object({
 	emotionEvents: z.array(traceRowSchema),
 	facts: z.array(traceRowSchema),
 	announcements: z.array(traceRowSchema).optional().default([]),
+	turnEvents: z.array(turnEventRowSchema).optional().default([]),
 	nextCursor: z.string(),
+	nextTurnCursor: z
+		.object({ since: z.string(), id: z.string() })
+		.nullable()
+		.optional()
+		.default(null),
 })

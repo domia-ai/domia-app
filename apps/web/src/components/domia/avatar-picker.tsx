@@ -3,6 +3,8 @@ import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { Pencil, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import {
 	Dialog,
 	DialogContent,
@@ -48,24 +50,26 @@ export function AvatarPicker({
 		mutationFn: (input: SetAvatarInput) => setAvatarFn({ data: input }),
 		onSuccess: (res) => {
 			if (!res.ok) {
-				toast.error("Couldn't update avatar", { description: res.error })
+				toast.error(m.toast_avatar_update_failed(), {
+					description: errText(res.error),
+				})
 				return
 			}
 			void router.invalidate()
-			toast.success("Avatar updated")
+			toast.success(m.toast_avatar_updated())
 			setOpen(false)
 		},
-		onError: () => toast.error("Couldn't update avatar"),
+		onError: () => toast.error(m.toast_avatar_update_failed()),
 	})
 
 	const onFile = async (file: File | undefined) => {
 		if (!file) return
 		if (!file.type.startsWith("image/")) {
-			toast.error("Please choose an image file")
+			toast.error(m.toast_choose_image_file())
 			return
 		}
 		if (file.size > MAX_BYTES) {
-			toast.error("Image too large (max 2MB)")
+			toast.error(m.err_image_too_large())
 			return
 		}
 		const dataBase64 = await fileToBase64(file)
@@ -79,7 +83,7 @@ export function AvatarPicker({
 					<button
 						type="button"
 						className="group relative rounded-full"
-						aria-label="Change avatar"
+						aria-label={m.dlg_avatar_change()}
 					/>
 				}
 			>
@@ -95,11 +99,8 @@ export function AvatarPicker({
 			</DialogTrigger>
 			<DialogContent className="max-w-md">
 				<DialogHeader>
-					<DialogTitle>Avatar for {name}</DialogTitle>
-					<DialogDescription>
-						Pick a character or upload your own image. Saved instantly — no
-						restart.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_avatar_title({ name })}</DialogTitle>
+					<DialogDescription>{m.dlg_avatar_desc()}</DialogDescription>
 				</DialogHeader>
 
 				<div className="grid grid-cols-4 gap-3">
@@ -147,7 +148,7 @@ export function AvatarPicker({
 						onClick={() => fileRef.current?.click()}
 					>
 						<Upload className="size-4" />
-						Upload image
+						{m.dlg_avatar_upload()}
 					</Button>
 					<Button
 						variant="ghost"
@@ -155,7 +156,7 @@ export function AvatarPicker({
 						onClick={() => mutation.mutate({ domiaKey, kind: "clear" })}
 					>
 						<Trash2 className="size-4" />
-						Remove
+						{m.dlg_avatar_remove()}
 					</Button>
 				</div>
 			</DialogContent>

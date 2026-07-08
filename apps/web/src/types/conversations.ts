@@ -9,6 +9,13 @@ import type {
 	MemoryFactRow,
 } from "@domia-app/db"
 
+export type {
+	ToolTraceEntry,
+	ToolRunStatus,
+	ToolResultErrorCode,
+	TurnEventRow,
+} from "@domia-app/db"
+
 export type AdjacentTurns = {
 	prevId: string | null
 	nextId: string | null
@@ -41,7 +48,7 @@ export type FlowDef = {
 
 export type ConversationPreset = {
 	key: string
-	label: string
+	label: () => string
 	params: Record<string, string | null>
 }
 

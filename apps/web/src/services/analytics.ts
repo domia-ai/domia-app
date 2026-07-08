@@ -54,6 +54,8 @@ type Row = {
 	toolErrors: number | null
 	inputAudioMs: number | null
 	satelliteProtocol: string | null
+	llmQueueMs: number | null
+	rssMb: number | null
 }
 
 const num = (v: number | null | undefined): number | null =>
@@ -114,6 +116,8 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 				toolErrors: interactionTrace.toolErrorCount,
 				inputAudioMs: interactionTrace.inputAudioMs,
 				satelliteProtocol: interactionTrace.satelliteProtocol,
+				llmQueueMs: interactionTrace.llmQueueMs,
+				rssMb: interactionTrace.rssMb,
 			})
 			.from(interactionTrace)
 			.orderBy(desc(interactionTrace.createdAt)),
@@ -157,6 +161,8 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		toolErrors: r.toolErrors,
 		inputAudioMs: r.inputAudioMs,
 		satelliteProtocol: r.satelliteProtocol,
+		llmQueueMs: r.llmQueueMs,
+		rssMb: r.rssMb,
 	}))
 
 	const flowOf = (r: Row) => deriveFlow(r.inputType, r.responseType)
@@ -272,6 +278,7 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 
 	const latency: LatencyDistRow[] = [
 		["stt", "Speech-to-text", data.map((r) => r.sttMs ?? 0)],
+		["llmQueue", "Reply admission queue", data.map((r) => r.llmQueueMs ?? 0)],
 		["llm", "LLM", data.map((r) => r.llmMs ?? 0)],
 		["ttft", "Time to first token", data.map((r) => r.ttftMs ?? 0)],
 		["tts", "Text-to-speech", data.map((r) => r.ttsMs ?? 0)],
@@ -382,6 +389,8 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		.map(([source, count]) => ({ source, count }))
 		.sort((a, b) => b.count - a.count)
 	const avgInputAudioMs = avgOf(data.map((r) => r.inputAudioMs ?? 0)) || null
+	const peakRssMb =
+		Math.max(0, ...data.map((r) => r.rssMb ?? 0).filter((n) => n > 0)) || null
 
 	const s2s = byFlow.find((f) => f.flow === "s2s")
 
@@ -436,5 +445,6 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		tools,
 		sources,
 		avgInputAudioMs,
+		peakRssMb,
 	}
 }

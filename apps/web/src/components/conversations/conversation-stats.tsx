@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { m } from "@/paraglide/messages"
 import { useTableParams } from "@/hooks/use-table-params"
 import { tableParamsToQuery } from "@/utils/table-params"
 import { getConversationStatsFn } from "@/server/conversations"
@@ -38,30 +39,33 @@ export function ConversationStatsHeader() {
 	if (isError || !data) {
 		return (
 			<div className="text-muted-foreground flex items-center gap-3 rounded-lg border border-dashed p-3 text-sm">
-				<span>Couldn’t load conversation stats.</span>
+				<span>{m.conv_stats_load_failed()}</span>
 				<button
 					type="button"
 					onClick={() => refetch()}
 					className="text-foreground font-medium hover:underline"
 				>
-					Retry
+					{m.conv_stats_retry()}
 				</button>
 			</div>
 		)
 	}
 
 	const cards = [
-		{ label: "Total", value: String(data.total) },
-		{ label: "Avg latency", value: formatMs(data.avgMs) },
+		{ label: m.conv_stats_total(), value: String(data.total) },
+		{ label: m.conv_stats_avg_latency(), value: formatMs(data.avgMs) },
 		{
-			label: "Felt TTFA p50 · p95",
+			label: m.conv_stats_felt_ttfa(),
 			value:
 				data.perceived.p50 === null
 					? "—"
 					: `${formatMs(data.perceived.p50)} · ${formatMs(data.perceived.p95)}`,
 		},
-		{ label: "Error rate", value: `${Math.round(data.errorRate * 100)}%` },
-		{ label: "Ungraded", value: String(data.ungraded) },
+		{
+			label: m.conv_stats_error_rate(),
+			value: `${Math.round(data.errorRate * 100)}%`,
+		},
+		{ label: m.conv_rating_ungraded(), value: String(data.ungraded) },
 	]
 
 	return (

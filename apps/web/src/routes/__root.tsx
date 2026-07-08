@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react"
+import { getLocale } from "@/paraglide/runtime"
 import {
 	HeadContent,
 	Outlet,
@@ -56,7 +57,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
 	return (
-		<html lang="en" className="h-full" suppressHydrationWarning>
+		<html lang={getLocale()} className="h-full" suppressHydrationWarning>
 			<head>
 				<HeadContent />
 			</head>

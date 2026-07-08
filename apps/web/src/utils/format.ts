@@ -1,4 +1,9 @@
 import { format, formatDistanceToNowStrict } from "date-fns"
+import { es } from "date-fns/locale"
+import { m } from "@/paraglide/messages"
+import { getLocale } from "@/paraglide/runtime"
+
+const distanceLocale = () => (getLocale() === "es" ? es : undefined)
 
 export const fromSqliteTs = (ts: string | null): Date | null => {
 	if (!ts) return null
@@ -13,13 +18,19 @@ export const toSqliteTs = (ms: number): string =>
 export const relativeTime = (ts: string | null): string => {
 	const d = fromSqliteTs(ts)
 	if (!d) return "—"
-	if (Date.now() - d.getTime() < 30_000) return "just now"
-	return formatDistanceToNowStrict(d, { addSuffix: true })
+	if (Date.now() - d.getTime() < 30_000) return m.time_just_now()
+	return formatDistanceToNowStrict(d, {
+		addSuffix: true,
+		locale: distanceLocale(),
+	})
 }
 
 export const relativeTimeMs = (ms: number): string => {
-	if (Date.now() - ms < 30_000) return "just now"
-	return formatDistanceToNowStrict(new Date(ms), { addSuffix: true })
+	if (Date.now() - ms < 30_000) return m.time_just_now()
+	return formatDistanceToNowStrict(new Date(ms), {
+		addSuffix: true,
+		locale: distanceLocale(),
+	})
 }
 
 export const formatTs = (

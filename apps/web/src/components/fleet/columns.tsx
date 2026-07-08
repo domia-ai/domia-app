@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table"
+import { m } from "@/paraglide/messages"
 import { Badge } from "@/components/ui/badge"
 import { formatMs, relativeTime } from "@/utils/format"
 import { isOnline } from "@/utils/presence"
@@ -7,10 +8,10 @@ import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { StatusPill } from "@/components/domia/status"
 import type { DomiaRole, FleetRow } from "@/types/fleet"
 
-const ROLE_META: Record<DomiaRole, { label: string; dot: string }> = {
-	hub: { label: "Hub", dot: "bg-chart-1" },
-	thin: { label: "Thin client", dot: "bg-chart-3" },
-	standalone: { label: "Standalone", dot: "bg-muted-foreground/40" },
+const ROLE_META: Record<DomiaRole, { label: () => string; dot: string }> = {
+	hub: { label: m.fleet_role_hub, dot: "bg-chart-1" },
+	thin: { label: m.fleet_role_thin, dot: "bg-chart-3" },
+	standalone: { label: m.fleet_role_standalone, dot: "bg-muted-foreground/40" },
 }
 
 export function RoleBadge({ role }: { role: DomiaRole | undefined }) {
@@ -19,7 +20,7 @@ export function RoleBadge({ role }: { role: DomiaRole | undefined }) {
 	return (
 		<span className="inline-flex items-center gap-1.5 text-sm">
 			<span className={cn("size-2 rounded-full", meta.dot)} />
-			{meta.label}
+			{meta.label()}
 		</span>
 	)
 }
@@ -27,7 +28,7 @@ export function RoleBadge({ role }: { role: DomiaRole | undefined }) {
 export const fleetColumns: ColumnDef<FleetRow>[] = [
 	{
 		accessorKey: "name",
-		header: "Name",
+		header: () => m.fleet_col_name(),
 		cell: ({ row }) => (
 			<div className="flex items-center gap-3">
 				<PersonaAvatar
@@ -42,20 +43,20 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 	},
 	{
 		id: "role",
-		header: "Role",
+		header: () => m.fleet_col_role(),
 		enableSorting: false,
 		cell: ({ row }) => <RoleBadge role={row.original.telemetry?.role} />,
 	},
 	{
 		accessorKey: "lastSeenAt",
-		header: "Status",
+		header: () => m.fleet_col_status(),
 		cell: ({ row }) => (
 			<StatusPill online={isOnline(row.original.lastSeenAt)} />
 		),
 	},
 	{
 		id: "volume",
-		header: "Volume",
+		header: () => m.fleet_col_volume(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<span className="tabular-nums">{row.original.telemetry?.count ?? 0}</span>
@@ -63,7 +64,7 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 	},
 	{
 		id: "ttfa",
-		header: "TTFA p50",
+		header: () => m.fleet_col_ttfa(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<span className="font-mono text-sm tabular-nums">
@@ -73,7 +74,7 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 	},
 	{
 		accessorKey: "lastInteractionAt",
-		header: "Last interaction",
+		header: () => m.fleet_col_last_interaction(),
 		cell: ({ row }) => (
 			<span className="text-muted-foreground text-sm">
 				{relativeTime(row.original.lastInteractionAt)}
@@ -82,7 +83,7 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 	},
 	{
 		id: "address",
-		header: "Address",
+		header: () => m.fleet_col_address(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<span className="text-muted-foreground font-mono text-xs">
@@ -94,7 +95,7 @@ export const fleetColumns: ColumnDef<FleetRow>[] = [
 	},
 	{
 		accessorKey: "domiaKey",
-		header: "Key",
+		header: () => m.fleet_col_key(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<Badge variant="secondary" className="font-mono text-xs">

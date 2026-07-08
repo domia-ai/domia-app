@@ -26,6 +26,7 @@ import { accentFor } from "@/utils/accent"
 import { isOnline } from "@/utils/presence"
 import { relativeTime, formatMs } from "@/utils/format"
 import { FLOWS } from "@/constants/conversations"
+import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 
 const FLOW_BY_KEY = Object.fromEntries(FLOWS.map((f) => [f.key, f]))
@@ -42,7 +43,9 @@ export const Route = createFileRoute("/_dashboard/domias/$key")({
 		return { domia, recent, performance, role }
 	},
 	head: ({ loaderData }) => ({
-		meta: [{ title: `${loaderData?.domia.name ?? "Domia"} | Domia Console` }],
+		meta: [
+			{ title: m.meta_title({ page: loaderData?.domia.name ?? "Domia" }) },
+		],
 	}),
 	component: DomiaDetailPage,
 })
@@ -61,7 +64,7 @@ function DomiaDetailPage() {
 				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
 			>
 				<ArrowLeft className="size-4" />
-				Domias
+				{m.domias_breadcrumb()}
 			</Link>
 
 			<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -111,7 +114,7 @@ function DomiaDetailPage() {
 						}
 					>
 						<SlidersHorizontal className="size-4" />
-						Configure
+						{m.sat_configure()}
 					</Button>
 					<RestartButton
 						domiaKey={domia.domiaKey}
@@ -123,7 +126,7 @@ function DomiaDetailPage() {
 						render={<Link to="/chat" search={{ domia: domia.domiaKey }} />}
 					>
 						<MessageSquareText className="size-4" />
-						Talk to this Domia
+						{m.domia_talk_to_this()}
 					</Button>
 				</div>
 			</div>
@@ -161,7 +164,9 @@ function DomiaDetailPage() {
 
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-base">Recent interactions</CardTitle>
+							<CardTitle className="text-base">
+								{m.domia_recent_interactions()}
+							</CardTitle>
 						</CardHeader>
 						<CardContent>
 							{recent.length ? (

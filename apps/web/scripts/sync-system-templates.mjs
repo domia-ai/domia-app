@@ -10,6 +10,11 @@ const files = [
 	"full-hub.json",
 	"thin-client.json",
 	"defaults.json",
+	"jetson.json",
+	"snappy.json",
+	"balanced.json",
+	"rich.json",
+	"espanol.json",
 ]
 const check = process.argv.includes("--check")
 

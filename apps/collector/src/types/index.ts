@@ -5,6 +5,7 @@ import type {
 	EmotionEventRow,
 	MemoryFactRow,
 	AnnouncementRow,
+	TurnEventRow,
 } from "@domia-app/db"
 import type { domiaSnapshotSchema } from "@/schemas"
 
@@ -15,6 +16,7 @@ export type NodeSession = Omit<InteractionSessionTraceRow, "sourceDomiaKey">
 export type NodeEmotionEvent = Omit<EmotionEventRow, "sourceDomiaKey">
 export type NodeFact = Omit<MemoryFactRow, "sourceDomiaKey">
 export type NodeAnnouncement = Omit<AnnouncementRow, "sourceDomiaKey">
+export type NodeTurnEvent = Omit<TurnEventRow, "sourceDomiaKey">
 
 export type SyncResponse = {
 	interactions: NodeInteraction[]
@@ -22,7 +24,9 @@ export type SyncResponse = {
 	emotionEvents: NodeEmotionEvent[]
 	facts: NodeFact[]
 	announcements: NodeAnnouncement[]
+	turnEvents: NodeTurnEvent[]
 	nextCursor: string
+	nextTurnCursor: { since: string; id: string } | null
 }
 
 export type AudioKind = "input" | "tts" | "announce"

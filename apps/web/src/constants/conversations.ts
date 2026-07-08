@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import type { ConversationPreset, FlowDef } from "@/types/conversations"
 import type { ColumnToggle, FilterFacet } from "@/types/table"
 
@@ -33,20 +34,24 @@ export const FLOWS: FlowDef[] = [
 ]
 
 export const RATING_OPTIONS = [
-	{ value: "up", label: "Good" },
-	{ value: "down", label: "Needs work" },
-	{ value: "ungraded", label: "Ungraded" },
+	{ value: "up", label: m.conv_rating_good },
+	{ value: "down", label: m.conv_rating_needs_work },
+	{ value: "ungraded", label: m.conv_rating_ungraded },
 ]
 
 export const PRESETS: ConversationPreset[] = [
 	{
 		key: "slowest",
-		label: "Slowest",
+		label: m.conv_preset_slowest,
 		params: { sort: "latency", dir: "desc" },
 	},
-	{ key: "errors", label: "Errors", params: { error: "1" } },
-	{ key: "ungraded", label: "Ungraded", params: { rating: "ungraded" } },
-	{ key: "tools", label: "Tool calls", params: { tool: "1" } },
+	{ key: "errors", label: m.conv_preset_errors, params: { error: "1" } },
+	{
+		key: "ungraded",
+		label: m.conv_rating_ungraded,
+		params: { rating: "ungraded" },
+	},
+	{ key: "tools", label: m.conv_facet_tool_calls, params: { tool: "1" } },
 ]
 
 export const CONVERSATION_FILTER_KEYS = [
@@ -78,10 +83,10 @@ export const DEFAULT_VISIBLE_COLUMNS: Record<string, boolean> = {
 	session: false,
 }
 
-export const CONVERSATION_FACETS: FilterFacet[] = [
+export const conversationFacets = (): FilterFacet[] => [
 	{
 		key: "flow",
-		label: "Flow",
+		label: m.conv_col_flow,
 		type: "chips",
 		options: FLOWS.map((f) => ({
 			label: f.key.toUpperCase(),
@@ -91,26 +96,26 @@ export const CONVERSATION_FACETS: FilterFacet[] = [
 	},
 	{
 		key: "rating",
-		label: "Rating",
+		label: m.conv_col_rating,
 		type: "select",
-		options: RATING_OPTIONS.map((r) => ({ label: r.label, value: r.value })),
+		options: RATING_OPTIONS.map((r) => ({ label: r.label(), value: r.value })),
 	},
-	{ key: "tool", label: "Tool calls", type: "toggle" },
-	{ key: "domia", label: "Domia", type: "multiselect" },
-	{ key: "llmModel", label: "LLM model", type: "multiselect" },
-	{ key: "sttModel", label: "STT model", type: "multiselect" },
-	{ key: "ttsEngine", label: "TTS engine", type: "multiselect" },
-	{ key: "ttsVoice", label: "TTS voice", type: "multiselect" },
-	{ key: "live", label: "Live", type: "toggle" },
+	{ key: "tool", label: m.conv_facet_tool_calls, type: "toggle" },
+	{ key: "domia", label: m.conv_col_domia, type: "multiselect" },
+	{ key: "llmModel", label: m.conv_facet_llm_model, type: "multiselect" },
+	{ key: "sttModel", label: m.conv_facet_stt_model, type: "multiselect" },
+	{ key: "ttsEngine", label: m.conv_col_tts_engine, type: "multiselect" },
+	{ key: "ttsVoice", label: m.conv_facet_tts_voice, type: "multiselect" },
+	{ key: "live", label: m.conv_facet_live, type: "toggle" },
 ]
 
 export const TOGGLEABLE_COLUMNS: ColumnToggle[] = [
-	{ id: "flow", label: "Flow" },
-	{ id: "latency", label: "Latency" },
-	{ id: "rating", label: "Rating" },
-	{ id: "executor", label: "Executor" },
-	{ id: "tags", label: "Tags" },
-	{ id: "ttsEngine", label: "TTS engine" },
-	{ id: "tool", label: "Tool" },
-	{ id: "session", label: "Session" },
+	{ id: "flow", label: m.conv_col_flow },
+	{ id: "latency", label: m.conv_col_latency },
+	{ id: "rating", label: m.conv_col_rating },
+	{ id: "executor", label: m.conv_col_executor },
+	{ id: "tags", label: m.conv_col_tags },
+	{ id: "ttsEngine", label: m.conv_col_tts_engine },
+	{ id: "tool", label: m.conv_col_tool },
+	{ id: "session", label: m.conv_col_session },
 ]

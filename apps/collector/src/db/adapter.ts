@@ -8,6 +8,7 @@ import {
 	syncCursor,
 	audioAsset,
 	announcement,
+	turnEvent,
 	type DomiaRegistryInsert,
 	type AudioAssetInsert,
 } from "@domia-app/db"
@@ -77,6 +78,14 @@ const dbAdapter = {
 			.get()
 		return row?.at ?? ""
 	},
+	readTurnCursor: (domiaKey: string): { since: string; id: string } => {
+		const row = db
+			.select({ at: syncCursor.lastTurnAt, id: syncCursor.lastTurnId })
+			.from(syncCursor)
+			.where(eq(syncCursor.domiaKey, domiaKey))
+			.get()
+		return { since: row?.at ?? "", id: row?.id ?? "" }
+	},
 	writeCursor: (domiaKey: string, lastInteractionAt: string) => {
 		const lastSyncedAt = Date.now()
 		db.insert(syncCursor)
@@ -89,6 +98,27 @@ const dbAdapter = {
 		db.update(domiaRegistry)
 			.set({ lastInteractionAt })
 			.where(eq(domiaRegistry.domiaKey, domiaKey))
+			.run()
+	},
+	writeTurnCursor: (
+		domiaKey: string,
+		cursor: { since: string; id: string },
+	) => {
+		db.insert(syncCursor)
+			.values({
+				domiaKey,
+				lastTurnAt: cursor.since,
+				lastTurnId: cursor.id,
+				lastSyncedAt: Date.now(),
+			})
+			.onConflictDoUpdate({
+				target: syncCursor.domiaKey,
+				set: {
+					lastTurnAt: cursor.since,
+					lastTurnId: cursor.id,
+					lastSyncedAt: Date.now(),
+				},
+			})
 			.run()
 	},
 	listMissingAudio: (
@@ -200,6 +230,7 @@ const dbAdapter = {
 					sttMs: r.sttMs ?? null,
 					sttQueueMs: r.sttQueueMs ?? null,
 					llmMs: r.llmMs ?? null,
+					llmQueueMs: r.llmQueueMs ?? null,
 					llmPromptTokens: r.llmPromptTokens ?? null,
 					llmCompletionTokens: r.llmCompletionTokens ?? null,
 					llmTokensPerSec: r.llmTokensPerSec ?? null,
@@ -212,6 +243,10 @@ const dbAdapter = {
 					ttsMs: r.ttsMs ?? null,
 					ttsQueueMs: r.ttsQueueMs ?? null,
 					ttfaMs: r.ttfaMs ?? null,
+					perceivedTtfaMs: r.perceivedTtfaMs ?? null,
+					llmFirstSentenceMs: r.llmFirstSentenceMs ?? null,
+					ttsFirstChunkMs: r.ttsFirstChunkMs ?? null,
+					rssMb: r.rssMb ?? null,
 					totalMs: r.totalMs ?? null,
 					sttExecutorKey: r.sttExecutorKey ?? null,
 					llmExecutorKey: r.llmExecutorKey ?? null,
@@ -256,6 +291,7 @@ const dbAdapter = {
 					relation: r.relation ?? null,
 					value: r.value ?? null,
 					confidence: r.confidence ?? null,
+					kind: r.kind ?? null,
 					sourceInteractionId: r.sourceInteractionId ?? null,
 					createdAt: r.createdAt,
 					updatedAt: r.updatedAt,
@@ -292,6 +328,29 @@ const dbAdapter = {
 				tx.insert(announcement)
 					.values(values)
 					.onConflictDoUpdate({ target: announcement.id, set: values })
+					.run()
+			}
+			for (const r of data.turnEvents) {
+				const values = {
+					id: r.id,
+					sourceDomiaKey: domiaKey,
+					interactionId: r.interactionId,
+					type: r.type,
+					seq: r.seq,
+					ts: r.ts,
+					originDomiaKey: r.originDomiaKey ?? null,
+					executorDomiaKey: r.executorDomiaKey ?? null,
+					satelliteId: r.satelliteId ?? null,
+					traceId: r.traceId ?? null,
+					payload: r.payload ?? null,
+					createdAt: r.createdAt,
+				}
+				tx.insert(turnEvent)
+					.values(values)
+					.onConflictDoUpdate({
+						target: [turnEvent.interactionId, turnEvent.seq],
+						set: values,
+					})
 					.run()
 			}
 		})

@@ -94,7 +94,7 @@ export function MoodRadarEditor({
 								dominantBaseline="middle"
 								className="fill-muted-foreground text-[9px]"
 							>
-								{f.label}
+								{f.label()}
 							</text>
 						</g>
 					)
@@ -131,7 +131,7 @@ export function MoodRadarEditor({
 				{fields.map((f, i) => (
 					<div key={f.key} className="flex items-center gap-3">
 						<span className="text-muted-foreground w-24 shrink-0 text-xs">
-							{f.label}
+							{f.label()}
 						</span>
 						<Slider
 							min={-1}

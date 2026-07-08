@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import type { EmotionState } from "@/types"
 
 export type EmotionKey = keyof EmotionState
@@ -15,16 +16,16 @@ export const EMOTION_KEYS: EmotionKey[] = [
 
 export const EMOTION_META: Record<
 	EmotionKey,
-	{ label: string; color: string }
+	{ label: () => string; color: string }
 > = {
-	joy: { label: "Joy", color: "var(--chart-1)" },
-	trust: { label: "Trust", color: "var(--chart-2)" },
-	anticipation: { label: "Anticipation", color: "var(--chart-3)" },
-	surprise: { label: "Surprise", color: "var(--chart-4)" },
-	fear: { label: "Fear", color: "var(--chart-5)" },
-	sadness: { label: "Sadness", color: "var(--primary)" },
-	anger: { label: "Anger", color: "var(--destructive)" },
-	disgust: { label: "Disgust", color: "var(--muted-foreground)" },
+	joy: { label: m.enum_emotion_joy, color: "var(--chart-1)" },
+	trust: { label: m.enum_emotion_trust, color: "var(--chart-2)" },
+	anticipation: { label: m.enum_emotion_anticipation, color: "var(--chart-3)" },
+	surprise: { label: m.enum_emotion_surprise, color: "var(--chart-4)" },
+	fear: { label: m.enum_emotion_fear, color: "var(--chart-5)" },
+	sadness: { label: m.enum_emotion_sadness, color: "var(--primary)" },
+	anger: { label: m.enum_emotion_anger, color: "var(--destructive)" },
+	disgust: { label: m.enum_emotion_disgust, color: "var(--muted-foreground)" },
 }
 
 export const dominantEmotion = (

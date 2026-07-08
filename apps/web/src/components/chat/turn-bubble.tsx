@@ -29,12 +29,20 @@ export function TurnBubble({
 	domiaAvatarId,
 }: TurnBubbleProps) {
 	if (turn.role === "user") {
+		const inputSrc =
+			turn.kind === "voice" && turn.audioUrl
+				? turn.audioUrl.startsWith("data:")
+					? turn.audioUrl
+					: turn.interactionId
+						? `/api/node-audio?domia=${domiaKey}&id=${turn.interactionId}&kind=input`
+						: null
+				: null
 		return (
 			<Message align="end">
 				<MessageContent>
-					{turn.kind === "voice" && turn.audioUrl ? (
+					{inputSrc ? (
 						<Waveform
-							src={turn.audioUrl}
+							src={inputSrc}
 							accent="input"
 							height={28}
 							className="w-72 max-w-full self-end"

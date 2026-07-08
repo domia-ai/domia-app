@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useEffect, useRef, useState } from "react"
 import { Pause, Play } from "lucide-react"
 import type { InlineAudioProps } from "@/types/conversations"
@@ -42,7 +43,7 @@ export function InlineAudio({ interactionId, kind }: InlineAudioProps) {
 			<button
 				type="button"
 				onClick={toggle}
-				aria-label={playing ? "Pause" : "Play"}
+				aria-label={playing ? m.conv_pause() : m.conv_play()}
 				className="bg-primary/10 text-primary hover:bg-primary/20 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors"
 			>
 				{playing ? (

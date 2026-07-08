@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
 import { blobToWav16kBase64 } from "@/lib/wav-encode"
 import type { AudioRecorderControls } from "@/types/chat"
 
@@ -92,7 +93,7 @@ export function useAudioRecorder(
 				try {
 					onClipRef.current(await blobToWav16kBase64(blob))
 				} catch {
-					toast.error("Could not process the recording")
+					toast.error(m.toast_recording_process_failed())
 				} finally {
 					setConverting(false)
 				}
@@ -104,7 +105,7 @@ export function useAudioRecorder(
 			timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000)
 			attachMeter(stream)
 		} catch {
-			toast.error("Microphone access was denied")
+			toast.error(m.toast_mic_denied())
 		}
 	}, [recording, attachMeter, teardownMeters])
 

@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useEffect, useRef } from "react"
 import { AudioLines, Download, Mic } from "lucide-react"
 import { Waveform } from "@/components/audio/waveform"
@@ -40,7 +41,7 @@ export function AudioPlayer({ src, kind, bytes, engine }: AudioPlayerProps) {
 						href={src}
 						download
 						className="hover:text-foreground transition-colors"
-						aria-label="Download audio"
+						aria-label={m.conv_download_audio()}
 						onClick={(e) => e.stopPropagation()}
 					>
 						<Download className="size-3.5" />

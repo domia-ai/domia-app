@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { useEffect, useRef, useState } from "react"
 import { Pause, Play, Zap } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -248,17 +249,17 @@ export function ReplayCard({ trace, inputSrc, ttsSrc }: ReplayCardProps) {
 		running && phaseLabel ? `${phaseLabel} · ${counterBase}` : counterBase
 
 	const buttonLabel = running
-		? "Pause"
+		? m.conv_pause()
 		: phase === "input" || phase === "processing" || phase === "response"
-			? "Resume"
-			: "Replay"
+			? m.conv_resume()
+			: m.conv_replay()
 
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
 				<CardTitle className="flex items-center gap-2 text-base">
 					<Zap className="size-4" />
-					Replay
+					{m.conv_replay()}
 				</CardTitle>
 				<Badge variant="secondary" className="font-mono tabular-nums">
 					{formatMs(data.totalMs)}
@@ -345,7 +346,7 @@ export function ReplayCard({ trace, inputSrc, ttsSrc }: ReplayCardProps) {
 					<div className="flex items-center justify-between border-t pt-3 text-sm">
 						<span className="flex items-center gap-2">
 							<span className="bg-foreground/70 h-3 w-px" />
-							Time to first audio
+							{m.conv_ttfa_label()}
 						</span>
 						<span className="text-muted-foreground font-mono tabular-nums">
 							{formatMs(data.ttfaMs)}

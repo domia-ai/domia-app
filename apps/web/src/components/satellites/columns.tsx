@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { AlertTriangle } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { relativeTimeMs } from "@/utils/format"
 import {
@@ -15,7 +16,7 @@ import type { SatelliteWithContext } from "@/types/satellites"
 export const satelliteColumns: ColumnDef<SatelliteWithContext>[] = [
 	{
 		id: "status",
-		header: "Status",
+		header: () => m.sat_col_status(),
 		enableSorting: false,
 		cell: ({ row }) => {
 			const s = row.original
@@ -35,7 +36,7 @@ export const satelliteColumns: ColumnDef<SatelliteWithContext>[] = [
 	},
 	{
 		id: "satellite",
-		header: "Satellite",
+		header: () => m.sat_col_satellite(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<div className="flex min-w-0 items-center gap-2">
@@ -48,7 +49,7 @@ export const satelliteColumns: ColumnDef<SatelliteWithContext>[] = [
 	},
 	{
 		id: "domia",
-		header: "Assigned Domia",
+		header: () => m.sat_col_assigned(),
 		enableSorting: false,
 		cell: ({ row }) => (
 			<div className="flex min-w-0 items-center gap-2">
@@ -66,13 +67,13 @@ export const satelliteColumns: ColumnDef<SatelliteWithContext>[] = [
 	},
 	{
 		id: "capabilities",
-		header: "Capabilities",
+		header: () => m.sat_col_capabilities(),
 		enableSorting: false,
 		cell: ({ row }) => <CapabilityChips caps={satelliteCaps(row.original)} />,
 	},
 	{
 		id: "lastSeen",
-		header: "Last seen",
+		header: () => m.sat_col_last_seen(),
 		enableSorting: false,
 		cell: ({ row }) => {
 			const lastSeen = satelliteLastSeen(row.original)

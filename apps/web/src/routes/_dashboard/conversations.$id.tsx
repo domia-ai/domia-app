@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { TraceDetail } from "@/components/conversations/trace-detail"
+import { TurnTimeline } from "@/components/conversations/turn-timeline"
 import { MeshJourney } from "@/components/conversations/mesh-journey"
 import { ReplayCard } from "@/components/conversations/replay-card"
 import { ReplayProvider } from "@/components/conversations/replay-provider"
@@ -13,27 +14,33 @@ import { PersonaStateCard } from "@/components/conversations/persona-state-card"
 import { FactsCard } from "@/components/conversations/facts-card"
 import { SessionNav } from "@/components/conversations/session-nav"
 import { RawTrace } from "@/components/conversations/raw-trace"
-import { getInteractionFn } from "@/server/conversations"
+import { getInteractionFn, getTurnEventsFn } from "@/server/conversations"
 import { listRunTargetsFn } from "@/server/fleet"
 import { formatTs } from "@/utils/format"
 import { getIncompleteReason } from "@/utils/conversation-status"
+import { m } from "@/paraglide/messages"
 import type { UserMoodSnapshot } from "@/types/conversations"
 
 export const Route = createFileRoute("/_dashboard/conversations/$id")({
 	loader: async ({ params }) => {
-		const detail = await getInteractionFn({ data: params.id })
+		const [detail, turnEvents] = await Promise.all([
+			getInteractionFn({ data: params.id }),
+			getTurnEventsFn({ data: params.id }),
+		])
 		if (!detail) throw notFound()
 		const runTargets = await listRunTargetsFn({
 			data: detail.trace.sourceDomiaKey,
 		})
-		return { detail, runTargets }
+		return { detail, runTargets, turnEvents }
 	},
-	head: () => ({ meta: [{ title: "Conversation | Domia Console" }] }),
+	head: () => ({
+		meta: [{ title: m.meta_title({ page: m.route_conversation() }) }],
+	}),
 	component: ConversationPage,
 })
 
 function ConversationPage() {
-	const { detail, runTargets } = Route.useLoaderData()
+	const { detail, runTargets, turnEvents } = Route.useLoaderData()
 	const { trace, domiaName, domiaAvatarId, label, inputAudio, ttsAudio } =
 		detail
 	const name = domiaName ?? trace.sourceDomiaKey
@@ -49,7 +56,7 @@ function ConversationPage() {
 				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
 			>
 				<ArrowLeft className="size-4" />
-				Conversations
+				{m.nav_conversations()}
 			</Link>
 
 			<div className="flex flex-wrap items-center gap-3">
@@ -101,7 +108,7 @@ function ConversationPage() {
 					<div className="min-w-0 space-y-6 lg:col-span-2">
 						<Card>
 							<CardHeader className="gap-3">
-								<CardTitle className="text-base">Pipeline</CardTitle>
+								<CardTitle className="text-base">{m.conv_pipeline()}</CardTitle>
 								<MeshJourney trace={trace} originKey={trace.sourceDomiaKey} />
 							</CardHeader>
 							<CardContent>
@@ -121,6 +128,19 @@ function ConversationPage() {
 								<TraceDetail detail={detail} />
 							</CardContent>
 						</Card>
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-base">
+									{m.conv_timeline_title()}
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<TurnTimeline
+									events={turnEvents}
+									originKey={trace.sourceDomiaKey}
+								/>
+							</CardContent>
+						</Card>
 						<RawTrace trace={trace} />
 					</div>
 
@@ -133,7 +153,9 @@ function ConversationPage() {
 						{runTargets.length > 0 && (
 							<Card>
 								<CardHeader>
-									<CardTitle className="text-base">Run again</CardTitle>
+									<CardTitle className="text-base">
+										{m.conv_run_again()}
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<RunAgainPanel
@@ -148,7 +170,9 @@ function ConversationPage() {
 						)}
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-base">Evaluation</CardTitle>
+								<CardTitle className="text-base">
+									{m.conv_evaluation()}
+								</CardTitle>
 							</CardHeader>
 							<CardContent>
 								<GradingPanel interactionId={trace.id} initial={label} />
@@ -159,7 +183,9 @@ function ConversationPage() {
 						{userMood?.primary && (
 							<Card>
 								<CardHeader>
-									<CardTitle className="text-base">User signal</CardTitle>
+									<CardTitle className="text-base">
+										{m.conv_user_signal()}
+									</CardTitle>
 								</CardHeader>
 								<CardContent className="space-y-1">
 									<p className="text-sm font-medium">{userMood.primary}</p>

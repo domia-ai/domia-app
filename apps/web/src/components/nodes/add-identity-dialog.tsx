@@ -3,6 +3,8 @@ import { useForm } from "@tanstack/react-form"
 import { useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -17,7 +19,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog"
 import { createIdentityFn } from "@/server/nodes"
-import { addIdentityFormSchema } from "@/schemas/satellites"
+import { buildAddIdentityFormSchema } from "@/schemas/satellites"
 import { isDemoMode } from "@/lib/demo"
 
 export function AddIdentityDialog({
@@ -33,15 +35,15 @@ export function AddIdentityDialog({
 
 	const form = useForm({
 		defaultValues: { name: "" },
-		validators: { onChange: addIdentityFormSchema },
+		validators: { onChange: buildAddIdentityFormSchema() },
 		onSubmit: async ({ value }) => {
 			const trimmed = value.name.trim()
 			const result = await createIdentityFn({
 				data: { anchorDomiaKey, name: trimmed },
 			})
 			if (result.ok) {
-				toast.success("Identity created", {
-					description: `${trimmed} is now hosted live — no restart needed.`,
+				toast.success(m.toast_identity_created(), {
+					description: m.toast_identity_created_desc({ name: trimmed }),
 				})
 				form.reset()
 				setOpen(false)
@@ -52,7 +54,9 @@ export function AddIdentityDialog({
 					queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 				])
 			} else {
-				toast.error("Could not create identity", { description: result.error })
+				toast.error(m.err_create_identity(), {
+					description: errText(result.error),
+				})
 			}
 		},
 	})
@@ -63,17 +67,14 @@ export function AddIdentityDialog({
 				render={
 					<Button disabled={demo}>
 						<Plus className="size-4" />
-						Add identity
+						{m.dlg_add_identity_trigger()}
 					</Button>
 				}
 			/>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Add a hosted identity</DialogTitle>
-					<DialogDescription>
-						Creates a new neutral identity hosted on this node. It comes online
-						live — other identities stay up — then you can configure it.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_add_identity_title()}</DialogTitle>
+					<DialogDescription>{m.dlg_add_identity_desc()}</DialogDescription>
 				</DialogHeader>
 				<form
 					onSubmit={(e) => {
@@ -85,12 +86,14 @@ export function AddIdentityDialog({
 					<form.Field name="name">
 						{(field) => (
 							<Field>
-								<FieldLabel htmlFor="identity-name">Name</FieldLabel>
+								<FieldLabel htmlFor="identity-name">
+									{m.dlg_field_name()}
+								</FieldLabel>
 								<Input
 									id="identity-name"
 									value={field.state.value}
 									onChange={(e) => field.handleChange(e.target.value)}
-									placeholder="Kitchen"
+									placeholder={m.dlg_identity_name_placeholder()}
 									autoFocus
 								/>
 							</Field>
@@ -100,7 +103,7 @@ export function AddIdentityDialog({
 						<DialogClose
 							render={
 								<Button type="button" variant="outline">
-									Cancel
+									{m.dlg_cancel()}
 								</Button>
 							}
 						/>
@@ -112,7 +115,7 @@ export function AddIdentityDialog({
 						>
 							{({ canSubmit, isSubmitting }) => (
 								<Button type="submit" disabled={!canSubmit || isSubmitting}>
-									{isSubmitting ? "Creating…" : "Create"}
+									{isSubmitting ? m.dlg_creating() : m.dlg_create()}
 								</Button>
 							)}
 						</form.Subscribe>

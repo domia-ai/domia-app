@@ -9,6 +9,7 @@ import {
 	Volume2,
 	X,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -73,7 +74,7 @@ export function Composer({
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center gap-2">
 				<span className="text-muted-foreground text-xs font-medium">
-					Reply as
+					{m.chat_reply_as()}
 				</span>
 				<ToggleGroup
 					variant="outline"
@@ -85,10 +86,10 @@ export function Composer({
 					}}
 				>
 					<ToggleGroupItem value="text">
-						<Type className="size-3.5" /> Text
+						<Type className="size-3.5" /> {m.chat_reply_text()}
 					</ToggleGroupItem>
 					<ToggleGroupItem value="voice">
-						<Volume2 className="size-3.5" /> Voice
+						<Volume2 className="size-3.5" /> {m.chat_reply_voice()}
 					</ToggleGroupItem>
 				</ToggleGroup>
 
@@ -108,7 +109,7 @@ export function Composer({
 					onClick={() => fileRef.current?.click()}
 				>
 					<Paperclip className="size-3.5" />
-					Upload WAV
+					{m.chat_upload_wav()}
 				</Button>
 			</div>
 
@@ -116,7 +117,7 @@ export function Composer({
 				<div className="border-border bg-muted/20 flex flex-col gap-2 rounded-lg border p-3">
 					<div className="flex items-center gap-2 text-sm">
 						<Volume2 className="text-primary size-4" />
-						<span className="font-medium">Review voice message</span>
+						<span className="font-medium">{m.chat_review_voice()}</span>
 						<div className="ml-auto flex items-center gap-1">
 							<Button
 								type="button"
@@ -128,7 +129,7 @@ export function Composer({
 									void recorder.start()
 								}}
 							>
-								<Mic className="size-3.5" /> Re-record
+								<Mic className="size-3.5" /> {m.chat_rerecord()}
 							</Button>
 							<Button
 								type="button"
@@ -137,7 +138,7 @@ export function Composer({
 								disabled={disabled}
 								onClick={() => setClip(null)}
 							>
-								<X className="size-3.5" /> Discard
+								<X className="size-3.5" /> {m.chat_discard()}
 							</Button>
 						</div>
 					</div>
@@ -148,7 +149,7 @@ export function Composer({
 					/>
 					<div className="flex items-center justify-between">
 						<span className="text-muted-foreground text-xs">
-							Reply as {speak ? "voice" : "text"}
+							{speak ? m.chat_reply_as_voice() : m.chat_reply_as_text()}
 						</span>
 						<Button
 							type="button"
@@ -156,7 +157,7 @@ export function Composer({
 							disabled={disabled}
 							onClick={submitVoice}
 						>
-							<Send className="size-4" /> Send
+							<Send className="size-4" /> {m.chat_send()}
 						</Button>
 					</div>
 				</div>
@@ -172,9 +173,7 @@ export function Composer({
 							}
 						}}
 						placeholder={
-							demoMode
-								? "Chat needs a live mesh — disabled in this read-only demo"
-								: "Type a message… (Enter to send, Shift+Enter for newline)"
+							demoMode ? m.chat_placeholder_demo() : m.chat_placeholder()
 						}
 						disabled={disabled || recorder.recording}
 						rows={1}

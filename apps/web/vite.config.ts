@@ -1,3 +1,4 @@
+import { paraglideVitePlugin } from "@inlang/paraglide-js"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import { defineConfig } from "vite"
 import { nitro } from "nitro/vite"
@@ -18,5 +19,17 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ["better-sqlite3"],
 	},
-	plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+	plugins: [
+		paraglideVitePlugin({
+			project: "./project.inlang",
+			outdir: "./src/paraglide",
+			outputStructure: "message-modules",
+			cookieName: "DOMIA_LOCALE",
+			strategy: ["cookie", "preferredLanguage", "baseLocale"],
+		}),
+		nitro(),
+		tailwindcss(),
+		tanstackStart(),
+		viteReact(),
+	],
 })

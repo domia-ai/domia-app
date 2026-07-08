@@ -51,7 +51,7 @@
 	"tts": {
 		"name": "Default",
 		"engine": "KOKORO",
-		"voiceName": "af_heart",
+		"voiceName": "am_michael",
 		"language": "en",
 		"modelPath": "data/models/kokoro-multi-lang-v1_0",
 		"quantization": null,
@@ -124,9 +124,16 @@
 				"GetLiveContext"
 			],
 			"config": {
-				"toolParamAllow": {
-					"*": ["name"],
-					"HassLightSet": ["name", "brightness", "color"]
+				"dataPlane": "ws"
+			},
+			"descriptor": {
+				"version": 1,
+				"kind": "home-assistant",
+				"execution": {
+					"paramAllow": {
+						"*": ["name"],
+						"HassLightSet": ["name", "brightness", "color"]
+					}
 				}
 			}
 		}

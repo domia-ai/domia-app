@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MoodRadar } from "@/components/domia/mood-radar"
@@ -32,7 +33,7 @@ export function PersonaStateCard({ trace }: PersonaStateCardProps) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Domia state</CardTitle>
+				<CardTitle className="text-base">{m.conv_domia_state()}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-3">
 				{emotion && (

@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Link } from "@tanstack/react-router"
 import { Mic, Type } from "lucide-react"
 import { relativeTime } from "@/utils/format"
@@ -7,9 +8,7 @@ export function SessionThread({ detail }: { detail: SessionDetail }) {
 	const { turns } = detail
 
 	if (!turns.length) {
-		return (
-			<p className="text-muted-foreground text-sm">No turns in this session.</p>
-		)
+		return <p className="text-muted-foreground text-sm">{m.conv_no_turns()}</p>
 	}
 
 	return (

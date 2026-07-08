@@ -10,8 +10,9 @@ import {
 	listInteractionsFn,
 	getConversationFacetsFn,
 } from "@/server/conversations"
+import { m } from "@/paraglide/messages"
 import {
-	CONVERSATION_FACETS,
+	conversationFacets,
 	CONVERSATION_FILTER_KEYS,
 	DEFAULT_VISIBLE_COLUMNS,
 	PRESETS,
@@ -89,11 +90,7 @@ export function ConversationsTable() {
 			onPageSizeChange={tp.setPageSize}
 			onSortChange={tp.setSort}
 			isLoading={isLoading}
-			emptyLabel={
-				loadFailed
-					? "Couldn't load conversations — check the console connection."
-					: "No conversations recorded yet."
-			}
+			emptyLabel={loadFailed ? m.conv_load_error() : m.conv_empty()}
 			onRowClick={(row) =>
 				navigate({ to: "/conversations/$id", params: { id: row.id } })
 			}
@@ -108,7 +105,7 @@ export function ConversationsTable() {
 				<div className="space-y-3">
 					{facetsError && (
 						<p className="text-muted-foreground text-xs">
-							Some filter options couldn't load.
+							{m.conv_facets_error()}
 						</p>
 					)}
 					{selectedRows.length > 0 && (
@@ -121,8 +118,8 @@ export function ConversationsTable() {
 					<DataTableToolbar
 						searchInput={tp.searchInput}
 						setSearchInput={tp.setSearchInput}
-						searchPlaceholder="Search transcripts, responses…"
-						facets={CONVERSATION_FACETS}
+						searchPlaceholder={m.conv_search_placeholder()}
+						facets={conversationFacets()}
 						facetOptions={{
 							domia: domiaFacetOptions,
 							llmModel: facets.llmModel,

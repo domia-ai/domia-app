@@ -1,6 +1,6 @@
 import dbAdapter from "@/db/adapter"
 import { identitiesResponseSchema } from "@/schemas"
-import { registryLogger } from "@/utils"
+import { meshHeaders, registryLogger } from "@/utils"
 
 type NodeGroup = { localIp: string; httpPort: number; keys: string[] }
 
@@ -22,7 +22,7 @@ export const reconcileRosters = async (): Promise<void> => {
 		try {
 			const res = await fetch(
 				`http://${node.localIp}:${node.httpPort}/identities`,
-				{ signal: AbortSignal.timeout(8_000) },
+				{ headers: meshHeaders(), signal: AbortSignal.timeout(8_000) },
 			)
 			if (!res.ok) continue
 			const parsed = identitiesResponseSchema.safeParse(await res.json())

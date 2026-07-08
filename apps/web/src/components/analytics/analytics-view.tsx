@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { Cpu, Download, Network, Rabbit, Turtle } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,7 +31,7 @@ function ExecutionCard({ row }: { row: ExecutionLatencyRow }) {
 					<Network className="text-muted-foreground size-4" />
 				)}
 				<span className="font-medium">
-					{local ? "On-device" : "Delegated (gRPC)"}
+					{local ? m.analytics_on_device() : m.analytics_delegated_grpc()}
 				</span>
 				<Badge variant="secondary" className="ml-auto text-[11px] tabular-nums">
 					{row.count}
@@ -38,7 +39,9 @@ function ExecutionCard({ row }: { row: ExecutionLatencyRow }) {
 			</div>
 			<div className="mt-3 grid grid-cols-2 gap-3">
 				<div>
-					<p className="text-muted-foreground text-xs">TTFA p50</p>
+					<p className="text-muted-foreground text-xs">
+						{m.analytics_ttfa_p50()}
+					</p>
 					<p className="text-xl font-semibold tabular-nums">
 						{formatMs(row.ttfa.p50)}
 					</p>
@@ -47,7 +50,9 @@ function ExecutionCard({ row }: { row: ExecutionLatencyRow }) {
 					</p>
 				</div>
 				<div>
-					<p className="text-muted-foreground text-xs">Total p50</p>
+					<p className="text-muted-foreground text-xs">
+						{m.analytics_total_p50()}
+					</p>
 					<p className="text-xl font-semibold tabular-nums">
 						{formatMs(row.total.p50)}
 					</p>
@@ -80,7 +85,9 @@ function ExemplarCard({
 				) : (
 					<Turtle className="text-muted-foreground size-4" />
 				)}
-				<span className="font-medium">{fast ? "Fastest" : "Slowest"}</span>
+				<span className="font-medium">
+					{fast ? m.analytics_fastest() : m.analytics_slowest()}
+				</span>
 				<Badge variant="outline" className="text-[11px] uppercase">
 					{row.flow}
 				</Badge>
@@ -92,7 +99,10 @@ function ExemplarCard({
 				&ldquo;{row.input}&rdquo;
 			</p>
 			<p className="text-muted-foreground mt-1 text-xs">
-				{row.domia} · total {formatMs(row.totalMs)}
+				{m.analytics_exemplar_total({
+					domia: row.domia,
+					total: formatMs(row.totalMs),
+				})}
 			</p>
 		</Link>
 	)
@@ -103,7 +113,7 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 		return (
 			<Card>
 				<CardContent className="text-muted-foreground py-12 text-center text-sm">
-					No interactions recorded yet.
+					{m.analytics_no_interactions()}
 				</CardContent>
 			</Card>
 		)
@@ -114,40 +124,49 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 			<section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
 					<p className="text-muted-foreground text-xs">
-						S2S time to first audio
+						{m.analytics_s2s_ttfa()}
 					</p>
 					<p className="text-primary mt-1 text-3xl font-bold tabular-nums">
 						{formatMs(data.hero.s2sTtfaP50)}
 					</p>
 					<p className="text-muted-foreground mt-0.5 text-xs">
-						median, speech in → speech out
+						{m.analytics_s2s_ttfa_sub()}
 					</p>
 				</div>
 				<div className="bg-card rounded-lg border p-4">
-					<p className="text-muted-foreground text-xs">Interactions</p>
+					<p className="text-muted-foreground text-xs">
+						{m.analytics_interactions()}
+					</p>
 					<p className="mt-1 text-3xl font-bold tabular-nums">
 						{data.hero.total}
 					</p>
 					<p className="text-muted-foreground mt-0.5 text-xs">
-						across {data.hero.flows} flow types
+						{m.analytics_across_flows({ count: data.hero.flows })}
 					</p>
 				</div>
 				<div className="bg-card rounded-lg border p-4">
-					<p className="text-muted-foreground text-xs">On-device</p>
+					<p className="text-muted-foreground text-xs">
+						{m.analytics_on_device()}
+					</p>
 					<p className="mt-1 text-3xl font-bold tabular-nums">
 						{data.hero.onDevicePct == null ? "—" : `${data.hero.onDevicePct}%`}
 					</p>
 					<p className="text-muted-foreground mt-0.5 text-xs">
-						run on the origin device vs delegated
+						{m.analytics_on_device_sub()}
 					</p>
 				</div>
 				<div className="bg-card rounded-lg border p-4">
-					<p className="text-muted-foreground text-xs">Eval corpus</p>
+					<p className="text-muted-foreground text-xs">
+						{m.analytics_eval_corpus()}
+					</p>
 					<p className="mt-1 text-3xl font-bold tabular-nums">
 						{data.corpus.graded}
 					</p>
 					<p className="text-muted-foreground mt-0.5 text-xs">
-						{data.corpus.up} good · {data.corpus.down} needs work
+						{m.analytics_corpus_sub({
+							up: data.corpus.up,
+							down: data.corpus.down,
+						})}
 					</p>
 				</div>
 			</section>
@@ -169,7 +188,9 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 
 			{data.execution.length > 0 && (
 				<section className="space-y-3">
-					<h2 className="text-sm font-medium">On-device vs delegated</h2>
+					<h2 className="text-sm font-medium">
+						{m.analytics_on_device_vs_delegated()}
+					</h2>
 					<div className="grid gap-3 sm:grid-cols-2">
 						{data.execution.map((e) => (
 							<ExecutionCard key={e.kind} row={e} />
@@ -200,30 +221,40 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Eval corpus</CardTitle>
+					<CardTitle className="text-base">
+						{m.analytics_eval_corpus()}
+					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 						<div className="bg-card rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Graded</p>
+							<p className="text-muted-foreground text-xs">
+								{m.analytics_graded()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{data.corpus.graded}
 							</p>
 						</div>
 						<div className="bg-card rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Good</p>
+							<p className="text-muted-foreground text-xs">
+								{m.analytics_good()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{data.corpus.up}
 							</p>
 						</div>
 						<div className="bg-card rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Needs work</p>
+							<p className="text-muted-foreground text-xs">
+								{m.analytics_needs_work()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{data.corpus.down}
 							</p>
 						</div>
 						<div className="bg-card rounded-lg border p-3">
-							<p className="text-muted-foreground text-xs">Tagged</p>
+							<p className="text-muted-foreground text-xs">
+								{m.analytics_tagged()}
+							</p>
 							<p className="text-xl font-semibold tabular-nums">
 								{data.corpus.tagged}
 							</p>
@@ -237,7 +268,7 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 							render={<a href="/api/conversations/export?rating=up" download />}
 						>
 							<Download className="size-3.5" />
-							Export Good (JSONL)
+							{m.analytics_export_good()}
 						</Button>
 						<Button
 							variant="outline"
@@ -248,7 +279,7 @@ export function AnalyticsView({ data }: { data: AnalyticsData }) {
 							}
 						>
 							<Download className="size-3.5" />
-							Export Needs work (JSONL)
+							{m.analytics_export_needs_work()}
 						</Button>
 					</div>
 				</CardContent>

@@ -1,3 +1,4 @@
+import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { formatMs } from "@/utils/format"
@@ -11,7 +12,7 @@ const STAGE_BG: Record<string, string> = {
 
 export function WaterfallPanel({
 	data,
-	title = "TTFA waterfall (avg, voice replies)",
+	title = m.analytics_waterfall_title(),
 }: {
 	data: WaterfallData
 	title?: string
@@ -38,7 +39,7 @@ export function WaterfallPanel({
 					<div
 						className="bg-foreground absolute top-0 bottom-0 w-0.5"
 						style={{ left: `${ttfaPct}%` }}
-						title={`First audio · ${formatMs(data.ttfaMs)}`}
+						title={`${m.analytics_first_audio()} · ${formatMs(data.ttfaMs)}`}
 					/>
 				</div>
 				<div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
@@ -53,16 +54,15 @@ export function WaterfallPanel({
 					))}
 				</div>
 				<p className="text-muted-foreground text-xs">
-					First audio at{" "}
+					{m.analytics_waterfall_note_a()}{" "}
 					<span className="text-foreground font-medium">
 						{formatMs(data.ttfaMs)}
 					</span>{" "}
-					— the user hears Domia speak{" "}
+					{m.analytics_waterfall_note_b()}{" "}
 					<span className="text-foreground font-medium">
 						{formatMs(data.pipelineGapMs)}
 					</span>{" "}
-					before the full {formatMs(data.sumMs)} pipeline finishes, thanks to
-					per-sentence LLM→TTS pipelining.
+					{m.analytics_waterfall_note_c({ sum: formatMs(data.sumMs) })}
 				</p>
 			</CardContent>
 		</Card>

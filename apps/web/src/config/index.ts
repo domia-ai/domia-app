@@ -6,6 +6,7 @@ const envSchema = z.object({
 	DOMIA_APP_AVATAR_DIR: z.string().default("../../data/avatars"),
 	DOMIA_APP_PROPERTY_NAME: z.string().default("Domia House"),
 	DOMIA_NODE_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
+	DOMIA_MESH_SECRET: z.string().min(8),
 })
 
 export const env = envSchema.parse(process.env)

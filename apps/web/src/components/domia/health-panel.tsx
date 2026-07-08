@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { CheckCircle2, HelpCircle, Loader2, XCircle } from "lucide-react"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Badge } from "@/components/ui/badge"
 import { configHealthQueryOptions } from "@/server/config"
 import type { ConfigHealthEntry } from "@/types/config"
@@ -62,27 +64,27 @@ export function HealthPanel({
 	if (!online)
 		return (
 			<p className="text-muted-foreground py-8 text-center text-sm">
-				Offline — diagnostics unavailable.
+				{m.health_offline()}
 			</p>
 		)
 	if (query.isLoading)
 		return (
 			<div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
 				<Loader2 className="size-4 animate-spin" />
-				Checking installed models…
+				{m.health_checking()}
 			</div>
 		)
 	if (query.isError)
 		return (
 			<p className="text-destructive py-8 text-center text-sm">
-				Could not load diagnostics.
+				{m.health_load_failed()}
 			</p>
 		)
 	const result = query.data
 	if (!result?.ok || !result.data)
 		return (
 			<p className="text-destructive py-8 text-center text-sm">
-				{result && !result.ok ? result.error : "No diagnostics"}
+				{result && !result.ok ? errText(result.error) : m.health_none()}
 			</p>
 		)
 
@@ -93,12 +95,12 @@ export function HealthPanel({
 				{health.ok ? (
 					<Badge className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-600">
 						<CheckCircle2 className="size-3.5" />
-						All configured models installed
+						{m.health_all_ok()}
 					</Badge>
 				) : (
 					<Badge variant="destructive" className="gap-1.5">
 						<XCircle className="size-3.5" />
-						Missing models
+						{m.health_missing()}
 					</Badge>
 				)}
 			</div>

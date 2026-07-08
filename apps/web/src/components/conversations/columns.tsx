@@ -8,6 +8,7 @@ import {
 	Volume2,
 	Wrench,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -28,7 +29,7 @@ const STEP_BG: Record<LatencyStepKey, string> = {
 export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	{
 		id: "domia",
-		header: "Domia",
+		header: m.conv_col_domia,
 		enableHiding: false,
 		enableSorting: false,
 		cell: ({ row }) => {
@@ -48,7 +49,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "flow",
-		header: "Flow",
+		header: m.conv_col_flow,
 		enableSorting: false,
 		cell: ({ row }) => {
 			const key = deriveFlow(row.original.inputType, row.original.responseType)
@@ -63,7 +64,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "input",
-		header: "Input",
+		header: m.conv_col_input,
 		enableSorting: false,
 		cell: ({ row }) => {
 			const Icon = row.original.inputType === "VOICE" ? Mic : Type
@@ -83,7 +84,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "response",
-		header: "Response",
+		header: m.conv_col_response,
 		enableSorting: false,
 		cell: ({ row }) => (
 			<div className="text-muted-foreground flex items-center gap-2">
@@ -103,7 +104,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	{
 		id: "latency",
 		accessorKey: "totalMs",
-		header: "Latency",
+		header: m.conv_col_latency,
 		cell: ({ row }) => {
 			const lat = buildLatency(row.original)
 			if (!lat) return <span className="text-muted-foreground">—</span>
@@ -129,7 +130,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "rating",
-		header: "Rating",
+		header: m.conv_col_rating,
 		enableSorting: false,
 		cell: ({ row }) =>
 			row.original.rating === "up" ? (
@@ -142,7 +143,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "executor",
-		header: "Executor",
+		header: m.conv_col_executor,
 		enableSorting: false,
 		cell: ({ row }) => {
 			const remote = buildJourney(
@@ -150,7 +151,11 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 				row.original.sourceDomiaKey,
 			).filter((s) => !s.local)
 			if (remote.length === 0)
-				return <span className="text-muted-foreground text-xs">local</span>
+				return (
+					<span className="text-muted-foreground text-xs">
+						{m.conv_local()}
+					</span>
+				)
 			const names = [...new Set(remote.map((s) => s.executorName))]
 			return (
 				<div className="flex flex-wrap gap-1">
@@ -166,7 +171,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "tags",
-		header: "Tags",
+		header: m.conv_col_tags,
 		enableSorting: false,
 		cell: ({ row }) =>
 			row.original.tags?.length ? (
@@ -183,7 +188,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "ttsEngine",
-		header: "TTS engine",
+		header: m.conv_col_tts_engine,
 		enableSorting: false,
 		cell: ({ row }) => (
 			<span className="text-muted-foreground font-mono text-xs">
@@ -193,7 +198,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	},
 	{
 		id: "tool",
-		header: "Tool",
+		header: m.conv_col_tool,
 		enableSorting: false,
 		cell: ({ row }) =>
 			row.original.skillProviderUsed ? (
@@ -206,8 +211,30 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 			),
 	},
 	{
+		id: "toolStatus",
+		header: m.conv_col_tool_status,
+		enableSorting: false,
+		cell: ({ row }) => {
+			const errs = row.original.toolErrorCount ?? 0
+			const calls = row.original.toolCallCount ?? 0
+			if (errs > 0)
+				return (
+					<Badge variant="destructive" className="text-[10px]">
+						{m.conv_tool_err_count({ n: errs })}
+					</Badge>
+				)
+			if (calls > 0)
+				return (
+					<Badge variant="secondary" className="text-success text-[10px]">
+						{m.conv_tool_ok_count({ n: calls })}
+					</Badge>
+				)
+			return <span className="text-muted-foreground">—</span>
+		},
+	},
+	{
 		id: "session",
-		header: "Session",
+		header: m.conv_col_session,
 		enableSorting: false,
 		cell: ({ row }) =>
 			row.original.interactionSessionTraceId ? (
@@ -221,7 +248,7 @@ export const conversationColumns: ColumnDef<ConversationRow>[] = [
 	{
 		accessorKey: "createdAt",
 		id: "createdAt",
-		header: "When",
+		header: m.conv_col_when,
 		cell: ({ row }) => (
 			<span className="text-muted-foreground whitespace-nowrap">
 				{relativeTime(row.original.createdAt)}

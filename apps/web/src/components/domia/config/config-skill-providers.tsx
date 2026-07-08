@@ -1,4 +1,13 @@
-import { Plus, Trash2, Server, ChevronDown } from "lucide-react"
+import { Plus, Trash2, Server, ChevronDown, FilePlus2 } from "lucide-react"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { SKILL_PRESETS } from "@/constants/skill-presets"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,17 +25,18 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { ConfigSkillDescriptor } from "./config-skill-descriptor"
 import type { ConfigDraftApi } from "@/hooks/use-config-draft"
 import type { SkillProviderDraft } from "@/types/config"
 
 const SKILL_PROTOCOLS: {
 	value: SkillProviderDraft["protocol"]
-	label: string
+	label: () => string
 	available: boolean
 }[] = [
-	{ value: "mcp", label: "MCP", available: true },
-	{ value: "http", label: "HTTP (soon)", available: false },
-	{ value: "mqtt", label: "MQTT (soon)", available: false },
+	{ value: "mcp", label: () => "MCP", available: true },
+	{ value: "http", label: m.config_skill_proto_http, available: false },
+	{ value: "mqtt", label: m.config_skill_proto_mqtt, available: false },
 ]
 
 const EMPTY_SERVER: SkillProviderDraft = {
@@ -68,7 +78,8 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 			servers.map((s, i) => (i === index ? { ...s, ...patch } : s)),
 		)
 
-	const add = () => draft.setSkillProviders([...servers, { ...EMPTY_SERVER }])
+	const add = (preset?: Partial<SkillProviderDraft>) =>
+		draft.setSkillProviders([...servers, { ...EMPTY_SERVER, ...preset }])
 	const remove = (index: number) =>
 		draft.setSkillProviders(servers.filter((_, i) => i !== index))
 
@@ -77,8 +88,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 			{servers.length === 0 && (
 				<div className="text-muted-foreground rounded-lg border border-dashed px-4 py-8 text-center text-sm">
 					<Server className="mx-auto mb-2 size-5 opacity-60" />
-					No skill providers yet. Add one to give this Domia tools — Home
-					Assistant, a calendar, a filesystem, or any MCP server.
+					{m.config_skill_none()}
 				</div>
 			)}
 
@@ -86,7 +96,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 				<Card key={index} className="space-y-3 p-4">
 					<div className="flex items-center justify-between gap-2">
 						<span className="truncate text-sm font-medium">
-							{server.name.trim() || "New provider"}
+							{server.name.trim() || m.config_skill_new_provider()}
 						</span>
 						<Button
 							type="button"
@@ -100,14 +110,14 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 					</div>
 
 					<div className="grid gap-3 sm:grid-cols-[1fr_8rem_9rem]">
-						<Field label="Name">
+						<Field label={m.config_skill_name()}>
 							<Input
 								value={server.name}
 								onChange={(e) => update(index, { name: e.target.value })}
 								placeholder="home-assistant"
 							/>
 						</Field>
-						<Field label="Protocol">
+						<Field label={m.config_skill_protocol()}>
 							<Select
 								value={server.protocol}
 								onValueChange={(v) =>
@@ -126,14 +136,14 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 											value={p.value}
 											disabled={!p.available}
 										>
-											{p.label}
+											{p.label()}
 										</SelectItem>
 									))}
 								</SelectContent>
 							</Select>
 						</Field>
 						{server.protocol === "mcp" && (
-							<Field label="Transport">
+							<Field label={m.config_skill_transport()}>
 								<Select
 									value={server.type}
 									onValueChange={(v) =>
@@ -152,7 +162,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 						)}
 					</div>
 
-					<Field label="Endpoint URL">
+					<Field label={m.config_skill_endpoint_url()}>
 						<Input
 							value={server.url}
 							onChange={(e) => update(index, { url: e.target.value })}
@@ -161,7 +171,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 					</Field>
 
 					<div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
-						<Field label="Auth">
+						<Field label={m.config_skill_auth()}>
 							<Select
 								value={server.authKind}
 								onValueChange={(v) =>
@@ -174,16 +184,22 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="none">None</SelectItem>
-									<SelectItem value="bearer">Bearer token</SelectItem>
-									<SelectItem value="headers">Custom headers</SelectItem>
+									<SelectItem value="none">
+										{m.config_skill_auth_none()}
+									</SelectItem>
+									<SelectItem value="bearer">
+										{m.config_skill_auth_bearer()}
+									</SelectItem>
+									<SelectItem value="headers">
+										{m.config_skill_auth_headers()}
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</Field>
 						{server.authKind === "bearer" && (
 							<Field
-								label="Token"
-								hint="Write-only — leave blank to keep the current one."
+								label={m.config_skill_token()}
+								hint={m.config_skill_token_hint()}
 							>
 								<Input
 									type="password"
@@ -196,8 +212,8 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 						)}
 						{server.authKind === "headers" && (
 							<Field
-								label="Headers (JSON)"
-								hint="Write-only — leave blank to keep current."
+								label={m.config_skill_headers()}
+								hint={m.config_skill_headers_hint()}
 							>
 								<Textarea
 									value={server.headers}
@@ -213,8 +229,8 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 					</div>
 
 					<Field
-						label="Tool allow-list"
-						hint="Comma-separated. Empty = expose every tool."
+						label={m.config_skill_allowlist()}
+						hint={m.config_skill_allowlist_hint()}
 					>
 						<Input
 							value={server.whitelist.join(", ")}
@@ -233,7 +249,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 					<Collapsible>
 						<CollapsibleTrigger className="text-muted-foreground hover:text-foreground group flex items-center gap-1.5 text-xs outline-none">
 							<ChevronDown className="size-3.5 transition-transform group-data-[panel-open]:rotate-180" />
-							Advanced config (JSON)
+							{m.config_skill_advanced()}
 						</CollapsibleTrigger>
 						<CollapsibleContent className="pt-2">
 							<Textarea
@@ -245,19 +261,64 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 								spellCheck={false}
 							/>
 							<p className="text-muted-foreground mt-1.5 text-[11px]">
-								Adapter-specific options. For MCP, <code>toolParamAllow</code>{" "}
-								limits which params each tool shows the model (e.g. only{" "}
-								<code>name</code>) — improves tool-call reliability.
+								{m.config_skill_advanced_hint_a()} <code>toolParamAllow</code>{" "}
+								{m.config_skill_advanced_hint_b()} <code>name</code>
+								{m.config_skill_advanced_hint_c()}
 							</p>
+							<div className="mt-4 border-t pt-4">
+								{server.descriptor?.kind === "home-assistant" && (
+									<p className="text-muted-foreground mb-3 text-[11px]">
+										{m.config_skill_preset_hint()}
+									</p>
+								)}
+								<ConfigSkillDescriptor
+									value={server.descriptor}
+									onChange={(descriptor) => update(index, { descriptor })}
+								/>
+							</div>
 						</CollapsibleContent>
 					</Collapsible>
 				</Card>
 			))}
 
-			<Button type="button" variant="outline" onClick={add}>
-				<Plus className="size-4" />
-				Add skill provider
-			</Button>
+			<DropdownMenu>
+				<DropdownMenuTrigger
+					render={
+						<Button type="button" variant="outline">
+							<Plus className="size-4" />
+							{m.config_skill_add_from_template()}
+							<ChevronDown className="size-3.5 opacity-60" />
+						</Button>
+					}
+				/>
+				<DropdownMenuContent align="start" className="w-72">
+					{SKILL_PRESETS.map((preset) => {
+						const Icon = preset.icon
+						return (
+							<DropdownMenuItem
+								key={preset.id}
+								className="items-start gap-2.5"
+								onClick={() => add(preset.draft)}
+							>
+								{Icon && <Icon className="mt-0.5 size-4 shrink-0 opacity-70" />}
+								<span className="flex flex-col gap-0.5">
+									<span className="text-sm font-medium">
+										{preset.labelKey()}
+									</span>
+									<span className="text-muted-foreground text-xs">
+										{preset.descriptionKey()}
+									</span>
+								</span>
+							</DropdownMenuItem>
+						)
+					})}
+					<DropdownMenuSeparator />
+					<DropdownMenuItem className="gap-2.5" onClick={() => add()}>
+						<FilePlus2 className="size-4 shrink-0 opacity-70" />
+						<span className="text-sm">{m.config_skill_preset_blank()}</span>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</div>
 	)
 }

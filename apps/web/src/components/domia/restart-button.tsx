@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { Power } from "lucide-react"
 import { toast } from "sonner"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -33,12 +35,14 @@ export function RestartButton({
 	const onConfirm = async () => {
 		const result = await mutation.mutateAsync()
 		if (result.ok) {
-			toast.success("Restart requested", {
-				description: `${domiaName} is restarting.`,
+			toast.success(m.toast_restart_requested(), {
+				description: m.toast_restart_requested_desc({ name: domiaName }),
 			})
 			setOpen(false)
 		} else {
-			toast.error("Could not restart", { description: result.error })
+			toast.error(m.toast_restart_failed(), {
+				description: errText(result.error),
+			})
 		}
 	}
 
@@ -48,27 +52,26 @@ export function RestartButton({
 				render={
 					<Button variant="outline" disabled={!online}>
 						<Power className="size-4" />
-						Restart
+						{m.dlg_restart_trigger()}
 					</Button>
 				}
 			/>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Restart {domiaName}?</DialogTitle>
-					<DialogDescription>
-						The Domia process restarts and reloads its configuration from the
-						database. It is briefly unavailable while it comes back.
-					</DialogDescription>
+					<DialogTitle>{m.dlg_restart_title({ name: domiaName })}</DialogTitle>
+					<DialogDescription>{m.dlg_restart_desc()}</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
-					<DialogClose render={<Button variant="ghost">Cancel</Button>} />
+					<DialogClose
+						render={<Button variant="ghost">{m.dlg_cancel()}</Button>}
+					/>
 					<Button
 						variant="destructive"
 						disabled={mutation.isPending}
 						onClick={onConfirm}
 					>
 						<Power className="size-4" />
-						{mutation.isPending ? "Restarting…" : "Restart now"}
+						{mutation.isPending ? m.dlg_restarting() : m.dlg_restart_now()}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

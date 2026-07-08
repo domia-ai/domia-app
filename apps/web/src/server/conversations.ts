@@ -6,6 +6,7 @@ import {
 	listInteractions,
 } from "@/services/conversations"
 import { getConversationStats } from "@/services/conversation-stats"
+import { getTurnEvents } from "@/services/turn-events"
 import { idSchema, tableParamsSchema } from "@/schemas/server"
 
 export const listInteractionsFn = createServerFn({ method: "GET" })
@@ -27,3 +28,7 @@ export const getInteractionFn = createServerFn({ method: "GET" })
 export const getSessionTurnsFn = createServerFn({ method: "GET" })
 	.validator(idSchema)
 	.handler(({ data }) => getSessionTurns(data))
+
+export const getTurnEventsFn = createServerFn({ method: "GET" })
+	.validator(idSchema)
+	.handler(({ data }) => getTurnEvents(data))

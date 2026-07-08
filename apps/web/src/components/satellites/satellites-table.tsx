@@ -1,4 +1,5 @@
 import { Volume2, Megaphone } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { satelliteColumns } from "./columns"
@@ -22,7 +23,7 @@ export function SatellitesTable({
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					aria-label="Test speaker"
+					aria-label={m.sat_test_speaker()}
 					disabled={!caps.speaker || !s.online}
 					onClick={() => onTestSpeaker(s)}
 				>
@@ -31,7 +32,7 @@ export function SatellitesTable({
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					aria-label="Announce"
+					aria-label={m.sat_cap_announce()}
 					disabled={!caps.announce || !s.online}
 					onClick={() => onAnnounce(s)}
 				>
@@ -56,7 +57,7 @@ export function SatellitesTable({
 			selectedRowId={selectedId}
 			rowId={(s) => s.id}
 			rowActions={rowActions}
-			emptyLabel="No satellites bound yet."
+			emptyLabel={m.sat_empty()}
 		/>
 	)
 }

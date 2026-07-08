@@ -9,9 +9,12 @@ import { domiaTargetsQueryOptions } from "@/server/fleet"
 import { templatesQueryOptions } from "@/server/templates"
 import { DEFAULT_CONFIG_SNAPSHOT } from "@/constants/config-defaults"
 import { accentFor } from "@/utils/accent"
+import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/templates_/new")({
-	head: () => ({ meta: [{ title: "New template | Domia Console" }] }),
+	head: () => ({
+		meta: [{ title: m.meta_title({ page: m.route_template_new() }) }],
+	}),
 	component: NewTemplatePage,
 })
 
@@ -48,19 +51,25 @@ function NewTemplatePage() {
 				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
 			>
 				<ArrowLeft className="size-4" />
-				Templates
+				{m.nav_templates()}
 			</Link>
 
 			<div className="space-y-1">
-				<h1 className="text-2xl font-semibold tracking-tight">New template</h1>
+				<h1 className="text-2xl font-semibold tracking-tight">
+					{m.route_template_new()}
+				</h1>
 				<p className="text-muted-foreground text-sm">
 					{choice === "scratch"
-						? "Starting from a Domia's initial factory defaults. Edit anything, then save."
+						? m.tpl_new_desc_scratch()
 						: isTemplateClone
-							? `Editing a copy of ${sourceTemplate?.name ?? "a template"}.`
+							? m.tpl_new_desc_template_clone({
+									name: sourceTemplate?.name ?? m.tpl_new_a_template(),
+								})
 							: isDomiaClone
-								? `Editing a copy of ${sourceDomia?.name ?? domiaKey}. Device identity and network are excluded automatically.`
-								: "Build a portable configuration once, then apply it to any Domia."}
+								? m.tpl_new_desc_domia_clone({
+										name: sourceDomia?.name ?? domiaKey,
+									})
+								: m.tpl_new_desc_default()}
 				</p>
 			</div>
 
@@ -75,25 +84,25 @@ function NewTemplatePage() {
 							<Sparkles className="size-4" />
 						</div>
 						<div>
-							<p className="text-sm font-medium">Start from scratch</p>
+							<p className="text-sm font-medium">{m.tpl_new_start_scratch()}</p>
 							<p className="text-muted-foreground text-xs">
-								A Domia's initial factory defaults — no Domia required.
+								{m.tpl_new_start_scratch_hint()}
 							</p>
 						</div>
 					</button>
 
 					<div className="space-y-2">
 						<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-							Or clone an existing template
+							{m.tpl_new_clone_template()}
 						</p>
 						{templatesQuery.isLoading ? (
 							<div className="text-muted-foreground flex items-center gap-2 text-sm">
 								<Loader2 className="size-4 animate-spin" />
-								Loading templates…
+								{m.tpl_new_loading_templates()}
 							</div>
 						) : templatesQuery.isError ? (
 							<p className="text-destructive text-sm">
-								Couldn't load templates to clone.
+								{m.tpl_new_templates_load_failed()}
 							</p>
 						) : templates.length > 0 ? (
 							<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -112,12 +121,12 @@ function NewTemplatePage() {
 												<p className="truncate text-sm font-medium">{t.name}</p>
 												{t.isSystem && (
 													<Badge variant="secondary" className="text-[10px]">
-														System
+														{m.templates_system_badge()}
 													</Badge>
 												)}
 											</div>
 											<p className="text-muted-foreground truncate text-xs">
-												{t.description || "No description"}
+												{t.description || m.templates_no_description()}
 											</p>
 										</div>
 									</button>
@@ -125,7 +134,7 @@ function NewTemplatePage() {
 							</div>
 						) : (
 							<p className="text-muted-foreground text-sm">
-								No templates to clone yet.
+								{m.tpl_new_no_templates()}
 							</p>
 						)}
 					</div>
@@ -133,16 +142,16 @@ function NewTemplatePage() {
 					{targetsQuery.isLoading ? (
 						<div className="text-muted-foreground flex items-center gap-2 text-sm">
 							<Loader2 className="size-4 animate-spin" />
-							Loading Domias…
+							{m.tpl_new_loading_domias()}
 						</div>
 					) : targetsQuery.isError ? (
 						<p className="text-destructive text-sm">
-							Couldn't load Domias to clone.
+							{m.tpl_new_domias_load_failed()}
 						</p>
 					) : allTargets.length > 0 ? (
 						<div className="space-y-2">
 							<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-								Or clone a Domia (offline ones use their last reported config)
+								{m.tpl_new_clone_domia()}
 							</p>
 							<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 								{allTargets.map((t) => (
@@ -163,7 +172,7 @@ function NewTemplatePage() {
 											<p className="truncate text-sm font-medium">{t.name}</p>
 											<p className="text-muted-foreground font-mono text-xs">
 												{t.domiaKey}
-												{!t.online ? " · offline" : ""}
+												{!t.online ? m.tpl_new_offline_suffix() : ""}
 											</p>
 										</div>
 									</button>
@@ -175,7 +184,7 @@ function NewTemplatePage() {
 			) : choice === "scratch" ? (
 				<ConfigWorkspace
 					domiaKey=""
-					domiaName="New template"
+					domiaName={m.route_template_new()}
 					config={DEFAULT_CONFIG_SNAPSHOT}
 					online
 					accent={accentFor("template")}
@@ -186,7 +195,7 @@ function NewTemplatePage() {
 				sourceTemplate ? (
 					<ConfigWorkspace
 						domiaKey=""
-						domiaName={`Copy of ${sourceTemplate.name}`}
+						domiaName={m.tpl_new_copy_of({ name: sourceTemplate.name })}
 						config={{ ...DEFAULT_CONFIG_SNAPSHOT, ...sourceTemplate.config }}
 						online
 						accent={accentFor(sourceTemplate.id)}
@@ -195,7 +204,7 @@ function NewTemplatePage() {
 					/>
 				) : (
 					<p className="text-destructive py-16 text-center text-sm">
-						That template is no longer available.
+						{m.tpl_new_gone()}
 					</p>
 				)
 			) : configQuery.isLoading ? (

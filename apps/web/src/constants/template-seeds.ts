@@ -6,6 +6,7 @@ import jetson from "./system-templates/jetson.json"
 import snappy from "./system-templates/snappy.json"
 import balanced from "./system-templates/balanced.json"
 import rich from "./system-templates/rich.json"
+import espanol from "./system-templates/espanol.json"
 import type { ConfigSnapshot } from "@/types/config"
 
 export const SYSTEM_TEMPLATES: {
@@ -67,7 +68,14 @@ export const SYSTEM_TEMPLATES: {
 		id: "system:rich",
 		name: "Rich",
 		description:
-			"Top of the quality ladder — 8B model for fuller, more personal replies, wider memory window, all companion layers on, reflection on a separate 3B. Slower per turn; for capable machines. Pull llama3.1:8b and llama3.2:3b in Ollama first.",
+			"Top of the quality ladder — all companion layers on, wider memory window, reflection on its own 1B model. Uses llama3.2:3b; pull llama3.2:3b and llama3.2:1b in Ollama first.",
 		config: rich as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:espanol",
+		name: "Español",
+		description:
+			'A full standalone Domia that listens, thinks and replies in Spanish — multilingual Whisper STT (language forced to es) and a Kokoro Spanish voice (ef_dora). The wake word stays English ("computer"). Run `npm run setup:models:whisper-multilingual` first; the LLM (qwen2.5:3b) speaks fluent Spanish; pull it in Ollama first.',
+		config: espanol as unknown as ConfigSnapshot,
 	},
 ]
