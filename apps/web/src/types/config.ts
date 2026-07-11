@@ -212,6 +212,22 @@ export type ModelJob = {
 	detail: string
 }
 
+export type ConfigResult = {
+	config: ConfigSnapshot
+}
+
+export type ConfigHealthResult = {
+	health: ConfigHealth
+}
+
+export type ModelsResult = {
+	models: ModelsReport
+}
+
+export type ModelJobResult = {
+	job: ModelJob
+}
+
 export type InstallModelInput = {
 	domiaKey: string
 	spec: Record<string, unknown>

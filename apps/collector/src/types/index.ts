@@ -26,7 +26,17 @@ export type SyncResponse = {
 	announcements: NodeAnnouncement[]
 	turnEvents: NodeTurnEvent[]
 	nextCursor: string
-	nextTurnCursor: { since: string; id: string } | null
+	nextTurnCursor: TurnCursor | null
 }
 
 export type AudioKind = "input" | "tts" | "announce"
+
+export type TurnCursor = {
+	since: string
+	id: string
+}
+
+export type RetryOptions = {
+	attempts?: number
+	baseDelayMs?: number
+}

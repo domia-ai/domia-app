@@ -77,3 +77,41 @@ export type IntercomResult = {
 export type CancelTurnResult = {
 	aborted: boolean
 }
+
+export type PresenceListResult = {
+	presence: PresenceEntry[]
+}
+
+export type SpeakBody = {
+	domiaKey?: string
+	broadcast?: boolean
+	active?: boolean
+	text: string
+	broadcastId?: string
+}
+
+export type AnnounceAudioBody = {
+	domiaKey?: string
+	audioBase64: string
+	mode: "voice" | "transcribe"
+	broadcastId?: string
+}
+
+export type AnnounceAudioResult = {
+	mode: "voice" | "transcribe"
+	delivered: boolean
+	target?: string
+	transcript?: string
+}
+
+export type AnnounceAudioActionResult = Omit<AnnounceAudioResult, "mode">
+
+export type IntercomBody = {
+	from: string
+	to?: string
+	stop?: boolean
+}
+
+export type CancelTurnBody = {
+	domiaKey: string
+}

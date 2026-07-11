@@ -29,6 +29,8 @@ import {
 	setSatelliteFollowUpFn,
 	setSatelliteVolumeFn,
 } from "@/server/satellites"
+import { domiaTargetsQueryOptions } from "@/server/fleet"
+import { AddSatelliteDialog } from "./add-satellite-dialog"
 import { MetricCard } from "./satellite-bits"
 import { SatellitesTable } from "./satellites-table"
 import { SatelliteDetail } from "./satellite-detail"
@@ -36,6 +38,7 @@ import type { SatelliteWithContext } from "@/types/satellites"
 
 export function SatellitesView() {
 	const query = useQuery(allSatellitesQueryOptions())
+	const targets = useQuery(domiaTargetsQueryOptions())
 	const qc = useQueryClient()
 	const navigate = useNavigate()
 	const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -51,6 +54,10 @@ export function SatellitesView() {
 	}, [])
 
 	const sats = query.data?.ok ? (query.data.data ?? []) : []
+	const hostedTargets =
+		targets.data
+			?.filter((t) => t.isHosted)
+			.map((t) => ({ domiaKey: t.domiaKey, name: t.name })) ?? []
 	const errored = query.isError || query.data?.ok === false
 	const loading = query.isLoading && sats.length === 0
 	const selected = sats.find((s) => s.id === selectedId) ?? null
@@ -112,14 +119,22 @@ export function SatellitesView() {
 				title={m.sat_title()}
 				description={m.sat_view_desc()}
 				actions={
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						aria-label={m.aria_refresh()}
-						onClick={refresh}
-					>
-						<RefreshCw className="size-4" />
-					</Button>
+					<div className="flex items-center gap-2">
+						<AddSatelliteDialog
+							hosted={hostedTargets}
+							onCreated={() =>
+								qc.invalidateQueries({ queryKey: ["satellites-all"] })
+							}
+						/>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							aria-label={m.aria_refresh()}
+							onClick={refresh}
+						>
+							<RefreshCw className="size-4" />
+						</Button>
+					</div>
 				}
 			/>
 

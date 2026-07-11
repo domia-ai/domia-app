@@ -134,4 +134,5 @@ export type DomiaTarget = {
 	domiaKey: string
 	name: string
 	online: boolean
+	isHosted: boolean
 }

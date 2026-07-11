@@ -6,7 +6,7 @@ import {
 	nodeCancelTurn,
 } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
-import type { IntercomResult } from "@/types/rooms"
+import type { IntercomResult, AnnounceAudioActionResult } from "@/types/rooms"
 
 const baseFor = async (domiaKey: string): Promise<string | null> => {
 	const endpoint = await getNodeEndpoint(domiaKey)
@@ -41,9 +41,7 @@ export const announceAudioToDomia = async (
 	audioBase64: string,
 	mode: "voice" | "transcribe",
 	broadcastId?: string,
-): Promise<
-	ActionResult<{ delivered: boolean; target?: string; transcript?: string }>
-> => {
+): Promise<ActionResult<AnnounceAudioActionResult>> => {
 	try {
 		const base = await baseFor(domiaKey)
 		if (!base)

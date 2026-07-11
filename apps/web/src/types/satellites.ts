@@ -15,6 +15,28 @@ export type DiscoveredSatellite = {
 	port: number
 }
 
+export type LivekitTokenGrant = {
+	url: string
+	roomName: string
+	token: string
+}
+
+export type DiscoverSatellitesResult = {
+	satellites: DiscoveredSatellite[]
+}
+
+export type ListSatellitesResult = {
+	satellites: BoundSatelliteRow[]
+}
+
+export type LivekitLabStatus = "idle" | "connecting" | "connected" | "error"
+
+export type LivekitLabLogEntry = {
+	at: number
+	kind: "transcript" | "error" | "info"
+	text: string
+}
+
 export type BoundSatelliteRow = {
 	id: string
 	satelliteId: string
@@ -94,6 +116,20 @@ export type BindSatelliteBody = {
 	host: string
 	port?: number
 	encryptionKey?: string
+	protocol?: string
+	livekitRoom?: string
+	livekitApiKey?: string
+	livekitApiSecret?: string
+}
+
+export type SatelliteTargetOption = {
+	domiaKey: string
+	name: string
+}
+
+export type AddSatelliteDialogProps = {
+	hosted: SatelliteTargetOption[]
+	onCreated?: (targetKey: string) => void | Promise<void>
 }
 
 export type BindSatelliteResult = {

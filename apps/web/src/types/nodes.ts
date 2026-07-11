@@ -17,6 +17,18 @@ export type RemoveIdentityResult = {
 	removed: boolean
 }
 
+export type CreateIdentityBody = {
+	name: string
+}
+
+export type IdentitiesResult = {
+	identities: NodeIdentity[]
+}
+
+export type RestartResult = {
+	restarting: boolean
+}
+
 export type NodeIdentitySummary = {
 	domiaKey: string
 	name: string

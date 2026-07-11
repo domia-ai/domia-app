@@ -92,3 +92,8 @@ export type RecordingIndicatorProps = {
 	level: number
 	className?: string
 }
+
+export type LivePlaybackFormat = {
+	sampleRate: number
+	channels: number
+}

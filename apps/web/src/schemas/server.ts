@@ -27,6 +27,11 @@ export const discoverSatellitesInputSchema = z.string().min(1).max(200)
 
 export const listSatellitesInputSchema = z.string().min(1).max(200)
 
+export const livekitTokenInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	satelliteId: z.string().min(1).max(200),
+})
+
 export const bindSatelliteInputSchema = z.object({
 	domiaKey: z.string().min(1).max(200),
 	satelliteId: z.string().min(1).max(200),
@@ -34,6 +39,10 @@ export const bindSatelliteInputSchema = z.object({
 	host: z.string().min(1).max(200),
 	port: z.number().int().positive().max(65535).optional(),
 	encryptionKey: z.string().min(1).max(200).optional(),
+	protocol: z.string().min(1).max(40).optional(),
+	livekitRoom: z.string().min(1).max(200).optional(),
+	livekitApiKey: z.string().min(1).max(200).optional(),
+	livekitApiSecret: z.string().min(1).max(200).optional(),
 })
 
 export const unbindSatelliteInputSchema = z.object({

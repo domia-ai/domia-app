@@ -541,6 +541,21 @@ export const CONFIG_SECTIONS: ConfigSectionDef[] = [
 				kind: "boolean",
 			},
 			{
+				key: "truncationReplayEnabled",
+				label: m.config_field_truncation_replay,
+				kind: "boolean",
+				hint: m.config_hint_truncation_replay,
+			},
+			{
+				key: "truncationReplayThresholdMs",
+				label: m.config_field_truncation_replay_threshold,
+				kind: "slider",
+				min: 0,
+				max: 3000,
+				step: 50,
+				hint: m.config_hint_truncation_replay_threshold,
+			},
+			{
 				key: "outputDevice",
 				label: m.config_field_output_device,
 				kind: "text",

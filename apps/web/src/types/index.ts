@@ -47,6 +47,11 @@ export type FleetStats = {
 	active: number
 }
 
+export type ShellData = {
+	stats: FleetStats
+	propertyName: string
+}
+
 export type OverviewStats = {
 	discovered: number
 	online: number

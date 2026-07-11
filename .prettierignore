@@ -6,3 +6,5 @@ out
 drizzle
 package-lock.json
 .output
+**/paraglide/**
+**/routeTree.gen.ts

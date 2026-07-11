@@ -91,6 +91,7 @@ export const listDomiaTargets = async (): Promise<DomiaTarget[]> => {
 			domiaKey: domiaRegistry.domiaKey,
 			name: domiaRegistry.name,
 			lastSeenAt: domiaRegistry.lastSeenAt,
+			isHosted: domiaRegistry.isHosted,
 		})
 		.from(domiaRegistry)
 		.orderBy(domiaRegistry.name)
@@ -98,6 +99,7 @@ export const listDomiaTargets = async (): Promise<DomiaTarget[]> => {
 		domiaKey: r.domiaKey,
 		name: r.name,
 		online: isOnline(r.lastSeenAt),
+		isHosted: r.isHosted,
 	}))
 }
 

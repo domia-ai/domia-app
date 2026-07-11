@@ -3,6 +3,7 @@ import type {
 	LiveVoiceState,
 	LiveVoiceStatus,
 	LiveVoiceTarget,
+	LivePlaybackFormat,
 } from "@/types/chat"
 
 const CAPTURE_SAMPLE_RATE = 16000
@@ -29,7 +30,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 	const workletRef = useRef<AudioWorkletNode | null>(null)
 	const listeningRef = useRef(false)
 	const playHeadRef = useRef(0)
-	const playFmtRef = useRef<{ sampleRate: number; channels: number }>({
+	const playFmtRef = useRef<LivePlaybackFormat>({
 		sampleRate: 24000,
 		channels: 1,
 	})
@@ -141,7 +142,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 					patch({ status: "listening", transcript: "", reply: "" })
 				} else if (msg.type === "transcript") {
 					patch({ transcript: msg.text })
-				} else if (msg.type === "speech_end") {
+				} else if (msg.type === "speech_stopped") {
 					listeningRef.current = false
 					patch({ status: "thinking" })
 				} else if (msg.type === "audio_stream_begin") {

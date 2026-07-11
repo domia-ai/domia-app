@@ -6,27 +6,36 @@ import type {
 	NodeVoiceResponse,
 } from "@/types/conversations"
 import type {
-	ConfigSnapshot,
 	ConfigImportResult,
-	ConfigHealth,
-	ModelsReport,
-	ModelJob,
+	ConfigResult,
+	ConfigHealthResult,
+	ModelsResult,
+	ModelJobResult,
 } from "@/types/config"
-import type { KnowledgeEntry, KnowledgeInput } from "@/types/knowledge"
 import type {
-	PresenceEntry,
+	KnowledgeInput,
+	KnowledgeListResult,
+	KnowledgeMutationResult,
+} from "@/types/knowledge"
+import type {
 	SpeakResult,
 	IntercomResult,
 	CancelTurnResult,
+	PresenceListResult,
+	SpeakBody,
+	AnnounceAudioBody,
+	AnnounceAudioResult,
+	IntercomBody,
+	CancelTurnBody,
 } from "@/types/rooms"
 import type {
-	NodeIdentity,
 	CreateIdentityResult,
 	RemoveIdentityResult,
+	CreateIdentityBody,
+	IdentitiesResult,
+	RestartResult,
 } from "@/types/nodes"
 import type {
-	DiscoveredSatellite,
-	BoundSatelliteRow,
 	BindSatelliteBody,
 	BindSatelliteResult,
 	UnbindSatelliteResult,
@@ -35,6 +44,9 @@ import type {
 	SetFollowUpResult,
 	SetVolumeResult,
 	TestSpeakerResult,
+	LivekitTokenGrant,
+	DiscoverSatellitesResult,
+	ListSatellitesResult,
 } from "@/types/satellites"
 
 export const meshHeaders = (): Record<string, string> => ({
@@ -104,41 +116,18 @@ const patch = async <T>(
 }
 
 export const nodePresence = (base: string) =>
-	get<{ presence: PresenceEntry[] }>(base, "/presence")
+	get<PresenceListResult>(base, "/presence")
 
-export const nodeSpeak = (
-	base: string,
-	body: {
-		domiaKey?: string
-		broadcast?: boolean
-		active?: boolean
-		text: string
-		broadcastId?: string
-	},
-) => post<SpeakResult>(base, "/speak", body)
+export const nodeSpeak = (base: string, body: SpeakBody) =>
+	post<SpeakResult>(base, "/speak", body)
 
-export const nodeAnnounceAudio = (
-	base: string,
-	body: {
-		domiaKey?: string
-		audioBase64: string
-		mode: "voice" | "transcribe"
-		broadcastId?: string
-	},
-) =>
-	post<{
-		mode: "voice" | "transcribe"
-		delivered: boolean
-		target?: string
-		transcript?: string
-	}>(base, "/announce-audio", body)
+export const nodeAnnounceAudio = (base: string, body: AnnounceAudioBody) =>
+	post<AnnounceAudioResult>(base, "/announce-audio", body)
 
-export const nodeIntercom = (
-	base: string,
-	body: { from: string; to?: string; stop?: boolean },
-) => post<IntercomResult>(base, "/intercom", body)
+export const nodeIntercom = (base: string, body: IntercomBody) =>
+	post<IntercomResult>(base, "/intercom", body)
 
-export const nodeCancelTurn = (base: string, body: { domiaKey: string }) =>
+export const nodeCancelTurn = (base: string, body: CancelTurnBody) =>
 	post<CancelTurnResult>(base, "/turn/cancel", body)
 
 export const nodeChat = (base: string, body: NodeChatBody) =>
@@ -148,7 +137,7 @@ export const nodeVoice = (base: string, body: NodeVoiceBody) =>
 	post<NodeVoiceResponse>(base, "/voice", body)
 
 export const nodeGetConfig = (base: string, domiaKey?: string) =>
-	get<{ config: ConfigSnapshot }>(base, withKey("/config", domiaKey))
+	get<ConfigResult>(base, withKey("/config", domiaKey))
 
 export const nodeImportConfig = (
 	base: string,
@@ -157,59 +146,56 @@ export const nodeImportConfig = (
 ) => post<ConfigImportResult>(base, withKey("/config", domiaKey), bundle)
 
 export const nodeGetConfigHealth = (base: string, domiaKey?: string) =>
-	get<{ health: ConfigHealth }>(base, withKey("/config/health", domiaKey))
+	get<ConfigHealthResult>(base, withKey("/config/health", domiaKey))
 
 export const nodeGetKnowledge = (base: string, domiaKey?: string) =>
-	get<{ entries: KnowledgeEntry[] }>(base, withKey("/knowledge", domiaKey))
+	get<KnowledgeListResult>(base, withKey("/knowledge", domiaKey))
 
 export const nodeUpsertKnowledge = (
 	base: string,
 	body: KnowledgeInput,
 	domiaKey?: string,
-) => post<{ ok: boolean }>(base, withKey("/knowledge", domiaKey), body)
+) => post<KnowledgeMutationResult>(base, withKey("/knowledge", domiaKey), body)
 
 export const nodeDeleteKnowledge = (
 	base: string,
 	id: string,
 	domiaKey?: string,
 ) =>
-	del<{ ok: boolean }>(
+	del<KnowledgeMutationResult>(
 		base,
 		withKey(`/knowledge/${encodeURIComponent(id)}`, domiaKey),
 	)
 
 export const nodeRestart = (base: string) =>
-	post<{ restarting: boolean }>(base, "/admin/restart", {})
+	post<RestartResult>(base, "/admin/restart", {})
 
 export const nodeGetModels = (base: string, domiaKey?: string) =>
-	get<{ models: ModelsReport }>(base, withKey("/models", domiaKey))
+	get<ModelsResult>(base, withKey("/models", domiaKey))
 
 export const nodeInstallModel = (
 	base: string,
 	spec: Record<string, unknown>,
 	domiaKey?: string,
-) => post<{ job: ModelJob }>(base, withKey("/models/install", domiaKey), spec)
+) => post<ModelJobResult>(base, withKey("/models/install", domiaKey), spec)
 
 export const nodeGetModelJob = (base: string, id: string, domiaKey?: string) =>
-	get<{ job: ModelJob }>(base, withKey(`/models/jobs/${id}`, domiaKey))
+	get<ModelJobResult>(base, withKey(`/models/jobs/${id}`, domiaKey))
 
 export const nodeListIdentities = (base: string) =>
-	get<{ identities: NodeIdentity[] }>(base, "/identities")
+	get<IdentitiesResult>(base, "/identities")
 
-export const nodeCreateIdentity = (base: string, body: { name: string }) =>
+export const nodeCreateIdentity = (base: string, body: CreateIdentityBody) =>
 	post<CreateIdentityResult>(base, "/identities", body)
 
 export const nodeRemoveIdentity = (base: string, domiaKey: string) =>
 	del<RemoveIdentityResult>(base, `/identities/${encodeURIComponent(domiaKey)}`)
 
 export const nodeDiscoverSatellites = (base: string) =>
-	get<{ satellites: DiscoveredSatellite[] }>(base, "/satellites/discover")
+	get<DiscoverSatellitesResult>(base, "/satellites/discover")
 
 export const nodeListSatellites = (base: string, domiaKey: string) =>
-	get<{ satellites: BoundSatelliteRow[] }>(
-		base,
-		withKey("/satellites", domiaKey),
-	)
+	get<ListSatellitesResult>(base, withKey("/satellites", domiaKey))
 
 export const nodeBindSatellite = (
 	base: string,
@@ -225,6 +211,19 @@ export const nodeUnbindSatellite = (
 	del<UnbindSatelliteResult>(
 		base,
 		withKey(`/satellites/${encodeURIComponent(satelliteId)}`, domiaKey),
+	)
+
+export const nodeGetLivekitToken = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+) =>
+	get<LivekitTokenGrant>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/livekit-token`,
+			domiaKey,
+		),
 	)
 
 export const nodeSetSatelliteWakeWords = (

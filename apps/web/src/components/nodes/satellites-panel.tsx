@@ -53,6 +53,7 @@ import {
 	testSatelliteSpeakerFn,
 } from "@/server/satellites"
 import { isDemoMode } from "@/lib/demo"
+import { AddSatelliteDialog } from "@/components/satellites/add-satellite-dialog"
 import { groupSatelliteNumbers } from "@/utils/satellites"
 import type {
 	DiscoveredSatellite,
@@ -636,6 +637,7 @@ export function SatellitesPanel({
 	hosted: NodeIdentitySummary[]
 }) {
 	const demo = isDemoMode()
+	const queryClient = useQueryClient()
 	const [bindingDevice, setBindingDevice] =
 		useState<DiscoveredSatellite | null>(null)
 	const [pending, setPending] = useState<{
@@ -651,15 +653,23 @@ export function SatellitesPanel({
 		<Card>
 			<CardHeader className="flex-row items-center justify-between space-y-0">
 				<CardTitle>{m.sat_title()}</CardTitle>
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={demo || discovery.isFetching}
-					onClick={() => void discovery.refetch()}
-				>
-					<RadarIcon className="size-4" />
-					{discovery.isFetching ? m.sat_scanning() : m.sat_scan()}
-				</Button>
+				<div className="flex items-center gap-2">
+					<AddSatelliteDialog
+						hosted={hosted}
+						onCreated={() =>
+							queryClient.invalidateQueries({ queryKey: ["node", nodeId] })
+						}
+					/>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={demo || discovery.isFetching}
+						onClick={() => void discovery.refetch()}
+					>
+						<RadarIcon className="size-4" />
+						{discovery.isFetching ? m.sat_scanning() : m.sat_scan()}
+					</Button>
+				</div>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				<div className="space-y-2">

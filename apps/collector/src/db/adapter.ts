@@ -13,7 +13,7 @@ import {
 	type AudioAssetInsert,
 } from "@domia-app/db"
 import { db } from "@/db"
-import type { SyncResponse } from "@/types"
+import type { SyncResponse, TurnCursor } from "@/types"
 
 const dbAdapter = {
 	upsertRegistry: (
@@ -78,7 +78,7 @@ const dbAdapter = {
 			.get()
 		return row?.at ?? ""
 	},
-	readTurnCursor: (domiaKey: string): { since: string; id: string } => {
+	readTurnCursor: (domiaKey: string): TurnCursor => {
 		const row = db
 			.select({ at: syncCursor.lastTurnAt, id: syncCursor.lastTurnId })
 			.from(syncCursor)
@@ -100,10 +100,7 @@ const dbAdapter = {
 			.where(eq(domiaRegistry.domiaKey, domiaKey))
 			.run()
 	},
-	writeTurnCursor: (
-		domiaKey: string,
-		cursor: { since: string; id: string },
-	) => {
+	writeTurnCursor: (domiaKey: string, cursor: TurnCursor) => {
 		db.insert(syncCursor)
 			.values({
 				domiaKey,

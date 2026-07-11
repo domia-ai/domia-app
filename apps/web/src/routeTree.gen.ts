@@ -27,6 +27,7 @@ import { Route as ApiConversationsExportRouteImport } from './routes/api/convers
 import { Route as ApiAudioIdRouteImport } from './routes/api/audio.$id'
 import { Route as DashboardTemplatesNewRouteImport } from './routes/_dashboard/templates_.new'
 import { Route as DashboardNodesNodeIdRouteImport } from './routes/_dashboard/nodes.$nodeId'
+import { Route as DashboardLabLivekitRouteImport } from './routes/_dashboard/lab.livekit'
 import { Route as DashboardDomiasKeyRouteImport } from './routes/_dashboard/domias.$key'
 import { Route as DashboardConversationsIdRouteImport } from './routes/_dashboard/conversations.$id'
 import { Route as ApiDomiasKeyAvatarRouteImport } from './routes/api/domias.$key.avatar'
@@ -124,6 +125,11 @@ const DashboardNodesNodeIdRoute = DashboardNodesNodeIdRouteImport.update({
   path: '/nodes/$nodeId',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardLabLivekitRoute = DashboardLabLivekitRouteImport.update({
+  id: '/lab/livekit',
+  path: '/lab/livekit',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDomiasKeyRoute = DashboardDomiasKeyRouteImport.update({
   id: '/domias/$key',
   path: '/domias/$key',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/api/node-audio': typeof ApiNodeAudioRoute
   '/conversations/$id': typeof DashboardConversationsIdRoute
   '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/lab/livekit': typeof DashboardLabLivekitRoute
   '/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
   '/templates/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/conversations/$id': typeof DashboardConversationsIdRoute
   '/domias/$key': typeof DashboardDomiasKeyRoute
+  '/lab/livekit': typeof DashboardLabLivekitRoute
   '/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
   '/templates/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/conversations/$id': typeof DashboardConversationsIdRoute
   '/_dashboard/domias/$key': typeof DashboardDomiasKeyRoute
+  '/_dashboard/lab/livekit': typeof DashboardLabLivekitRoute
   '/_dashboard/nodes/$nodeId': typeof DashboardNodesNodeIdRoute
   '/_dashboard/templates_/new': typeof DashboardTemplatesNewRoute
   '/api/audio/$id': typeof ApiAudioIdRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/api/node-audio'
     | '/conversations/$id'
     | '/domias/$key'
+    | '/lab/livekit'
     | '/nodes/$nodeId'
     | '/templates/new'
     | '/api/audio/$id'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/'
     | '/conversations/$id'
     | '/domias/$key'
+    | '/lab/livekit'
     | '/nodes/$nodeId'
     | '/templates/new'
     | '/api/audio/$id'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/_dashboard/'
     | '/_dashboard/conversations/$id'
     | '/_dashboard/domias/$key'
+    | '/_dashboard/lab/livekit'
     | '/_dashboard/nodes/$nodeId'
     | '/_dashboard/templates_/new'
     | '/api/audio/$id'
@@ -451,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNodesNodeIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/lab/livekit': {
+      id: '/_dashboard/lab/livekit'
+      path: '/lab/livekit'
+      fullPath: '/lab/livekit'
+      preLoaderRoute: typeof DashboardLabLivekitRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/domias/$key': {
       id: '/_dashboard/domias/$key'
       path: '/domias/$key'
@@ -507,6 +526,7 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardConversationsIdRoute: typeof DashboardConversationsIdRoute
   DashboardDomiasKeyRoute: typeof DashboardDomiasKeyRoute
+  DashboardLabLivekitRoute: typeof DashboardLabLivekitRoute
   DashboardNodesNodeIdRoute: typeof DashboardNodesNodeIdRoute
   DashboardTemplatesNewRoute: typeof DashboardTemplatesNewRoute
   DashboardBroadcastIndexRoute: typeof DashboardBroadcastIndexRoute
@@ -529,6 +549,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardConversationsIdRoute: DashboardConversationsIdRoute,
   DashboardDomiasKeyRoute: DashboardDomiasKeyRoute,
+  DashboardLabLivekitRoute: DashboardLabLivekitRoute,
   DashboardNodesNodeIdRoute: DashboardNodesNodeIdRoute,
   DashboardTemplatesNewRoute: DashboardTemplatesNewRoute,
   DashboardBroadcastIndexRoute: DashboardBroadcastIndexRoute,

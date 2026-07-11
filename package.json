@@ -26,6 +26,9 @@
 		"lint:web": "npm run lint --workspace apps/web --if-present",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
+		"typecheck": "npm run typecheck --workspace apps/web --if-present",
+		"validate": "npm run typecheck && npm run lint && npm run format",
+		"validate:fix": "npm run lint:fix && npm run format:fix && npm run typecheck",
 		"prepare": "husky",
 		"lint-staged": "lint-staged"
 	},

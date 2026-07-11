@@ -18,3 +18,11 @@ export type KnowledgeInput = {
 	priority?: number
 	isActive?: boolean
 }
+
+export type KnowledgeListResult = {
+	entries: KnowledgeEntry[]
+}
+
+export type KnowledgeMutationResult = {
+	ok: boolean
+}
