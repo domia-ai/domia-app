@@ -86,7 +86,7 @@ export const recentChatTurns = async (
 
 		const turns: ChatTurn[] = []
 		for (const r of [...rows].reverse()) {
-			const isVoice = r.inputType === "voice"
+			const isVoice = r.inputType === "VOICE"
 			const at = r.createdAt ?? new Date().toISOString()
 			turns.push({
 				id: `${r.id}-u`,

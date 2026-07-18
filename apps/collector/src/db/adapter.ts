@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, notInArray } from "drizzle-orm"
+import { and, desc, eq, isNotNull, notInArray } from "drizzle-orm"
 import {
 	domiaRegistry,
 	interactionTrace,
@@ -140,6 +140,7 @@ const dbAdapter = {
 						notInArray(announcement.id, archived),
 					),
 				)
+				.orderBy(desc(announcement.createdAt))
 				.limit(limit)
 				.all()
 				.map((r) => r.id)
@@ -158,6 +159,7 @@ const dbAdapter = {
 					notInArray(interactionTrace.id, archived),
 				),
 			)
+			.orderBy(desc(interactionTrace.createdAt))
 			.limit(limit)
 			.all()
 			.map((r) => r.id)

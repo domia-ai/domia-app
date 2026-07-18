@@ -15,6 +15,7 @@ const SYNC_LIMIT = env.DOMIA_APP_SYNC_PAGE_SIZE
 const MAX_PAGES = env.DOMIA_APP_SYNC_MAX_PAGES
 const AUDIO_DIR = resolve(env.DOMIA_APP_AUDIO_DIR)
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/
+const WAV_HEADER_BYTES = 44
 
 const safeSegment = (value: string, label: string): string => {
 	if (value === "." || value === ".." || !SAFE_SEGMENT.test(value)) {
@@ -35,7 +36,7 @@ const archiveAudio = async (
 	const safeKey = safeSegment(snapshot.domiaKey, "domiaKey")
 	const safeId = safeSegment(interactionId, "interactionId")
 	const buf = await fetchAudio(snapshot, interactionId, kind)
-	if (!buf) return
+	if (!buf || buf.length <= WAV_HEADER_BYTES) return
 	const dir = join(AUDIO_DIR, safeKey, kind)
 	const localPath = join(dir, `${safeId}.wav`)
 	if (!resolve(localPath).startsWith(AUDIO_DIR + sep)) {
