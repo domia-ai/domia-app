@@ -47,4 +47,9 @@ export const syncResponseSchema = z.object({
 		.nullable()
 		.optional()
 		.default(null),
+	nextFactsCursor: z
+		.object({ since: z.string(), id: z.string() })
+		.nullable()
+		.optional()
+		.default(null),
 })

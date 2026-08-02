@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e0bb41bb-1c96-4fc1-ad98-131b000a5a0d",
+  "id": "2f4d4d93-6d3c-43ee-bcf1-d7cad6364552",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "announcement": {
@@ -1072,6 +1072,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "value_key": {
+          "name": "value_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "confidence": {
           "name": "confidence",
           "type": "real",
@@ -1081,6 +1088,13 @@
         },
         "kind": {
           "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "superseded_at": {
+          "name": "superseded_at",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1226,6 +1240,20 @@
         },
         "last_turn_id": {
           "name": "last_turn_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_facts_at": {
+          "name": "last_facts_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_facts_id": {
+          "name": "last_facts_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

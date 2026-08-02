@@ -17,11 +17,12 @@ export const fetchSync = async (
 	snapshot: DomiaSnapshot,
 	since: string,
 	turnCursor: TurnCursor,
+	factsCursor: TurnCursor,
 	limit: number,
 ): Promise<SyncResponse | null> => {
 	const base = baseUrl(snapshot)
 	if (!base) return null
-	const url = `${base}/sync?since=${encodeURIComponent(since)}&turnSince=${encodeURIComponent(turnCursor.since)}&turnId=${encodeURIComponent(turnCursor.id)}&limit=${limit}&domiaKey=${encodeURIComponent(snapshot.domiaKey)}`
+	const url = `${base}/sync?since=${encodeURIComponent(since)}&turnSince=${encodeURIComponent(turnCursor.since)}&turnId=${encodeURIComponent(turnCursor.id)}&factsSince=${encodeURIComponent(factsCursor.since)}&factsId=${encodeURIComponent(factsCursor.id)}&limit=${limit}&domiaKey=${encodeURIComponent(snapshot.domiaKey)}`
 	return withRetry(async () => {
 		const res = await fetch(url, {
 			headers: meshHeaders(),

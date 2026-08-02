@@ -111,6 +111,7 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 	try {
 		let cursor = dbAdapter.readCursor(domiaKey)
 		let turnCursor = dbAdapter.readTurnCursor(domiaKey)
+		let factsCursor = dbAdapter.readFactsCursor(domiaKey)
 		await retryMissingAudio(snapshot)
 		const marker = snapshot.lastInteractionAt
 		const turnMarker = snapshot.lastTurnAt
@@ -120,7 +121,13 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 		let total = 0
 
 		for (let page = 0; page < MAX_PAGES; page++) {
-			const data = await fetchSync(snapshot, cursor, turnCursor, SYNC_LIMIT)
+			const data = await fetchSync(
+				snapshot,
+				cursor,
+				turnCursor,
+				factsCursor,
+				SYNC_LIMIT,
+			)
 			if (!data) break
 
 			const hasData =
@@ -151,6 +158,10 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				!!data.nextTurnCursor &&
 				(data.nextTurnCursor.since !== turnCursor.since ||
 					data.nextTurnCursor.id !== turnCursor.id)
+			const factsAdvanced =
+				!!data.nextFactsCursor &&
+				(data.nextFactsCursor.since !== factsCursor.since ||
+					data.nextFactsCursor.id !== factsCursor.id)
 
 			if (interactionAdvanced) {
 				cursor = data.nextCursor
@@ -160,8 +171,12 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				turnCursor = data.nextTurnCursor
 				dbAdapter.writeTurnCursor(domiaKey, turnCursor)
 			}
+			if (factsAdvanced && data.nextFactsCursor) {
+				factsCursor = data.nextFactsCursor
+				dbAdapter.writeFactsCursor(domiaKey, factsCursor)
+			}
 
-			if (!interactionAdvanced && !turnAdvanced && pageFull) {
+			if (!interactionAdvanced && !turnAdvanced && !factsAdvanced && pageFull) {
 				ingestionLogger.warn(
 					`sync cursor stalled for ${domiaKey} at "${cursor}" with a full page — aborting this run`,
 				)

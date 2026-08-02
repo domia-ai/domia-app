@@ -159,8 +159,10 @@ CREATE TABLE `memory_fact` (
 	`subject` text,
 	`relation` text,
 	`value` text,
+	`value_key` text,
 	`confidence` real,
 	`kind` text,
+	`superseded_at` text,
 	`source_interaction_id` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
@@ -184,6 +186,8 @@ CREATE TABLE `sync_cursor` (
 	`last_interaction_at` text,
 	`last_turn_at` text,
 	`last_turn_id` text,
+	`last_facts_at` text,
+	`last_facts_id` text,
 	`last_synced_at` integer
 );
 --> statement-breakpoint

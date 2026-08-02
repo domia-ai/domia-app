@@ -27,6 +27,7 @@ export type SyncResponse = {
 	turnEvents: NodeTurnEvent[]
 	nextCursor: string
 	nextTurnCursor: TurnCursor | null
+	nextFactsCursor: TurnCursor | null
 }
 
 export type AudioKind = "input" | "tts" | "announce"

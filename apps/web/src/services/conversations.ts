@@ -6,6 +6,7 @@ import {
 	eq,
 	getTableColumns,
 	isNotNull,
+	ne,
 } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import {
@@ -47,6 +48,9 @@ export const listInteractions = async (
 ): Promise<Paginated<ConversationRow>> => {
 	const where = and(
 		buildSearchWhere(SEARCH_COLUMNS, params.search),
+		params.filters?.status
+			? undefined
+			: ne(interactionTrace.status, "no_speech"),
 		...buildConversationFilters(params.filters),
 	)
 	const orderBy = buildOrderBy(
@@ -188,6 +192,9 @@ export const exportInteractions = async (
 ): Promise<ConversationExportRow[]> => {
 	const where = and(
 		buildSearchWhere(SEARCH_COLUMNS, params.search),
+		params.filters?.status
+			? undefined
+			: ne(interactionTrace.status, "no_speech"),
 		...buildConversationFilters(params.filters),
 	)
 	const rows = await db

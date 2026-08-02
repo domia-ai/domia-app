@@ -178,8 +178,10 @@ export const memoryFact = sqliteTable(
 		subject: text("subject"),
 		relation: text("relation"),
 		value: text("value"),
+		valueKey: text("value_key"),
 		confidence: real("confidence"),
 		kind: text("kind"),
+		supersededAt: text("superseded_at"),
 		sourceInteractionId: text("source_interaction_id"),
 		createdAt: text("created_at").notNull(),
 		updatedAt: text("updated_at").notNull(),
@@ -200,6 +202,8 @@ export const syncCursor = sqliteTable("sync_cursor", {
 	lastInteractionAt: text("last_interaction_at"),
 	lastTurnAt: text("last_turn_at"),
 	lastTurnId: text("last_turn_id"),
+	lastFactsAt: text("last_facts_at"),
+	lastFactsId: text("last_facts_id"),
 	lastSyncedAt: integer("last_synced_at"),
 })
 

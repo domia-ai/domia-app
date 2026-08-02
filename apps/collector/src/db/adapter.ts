@@ -100,6 +100,32 @@ const dbAdapter = {
 			.where(eq(domiaRegistry.domiaKey, domiaKey))
 			.run()
 	},
+	readFactsCursor: (domiaKey: string): TurnCursor => {
+		const row = db
+			.select({ at: syncCursor.lastFactsAt, id: syncCursor.lastFactsId })
+			.from(syncCursor)
+			.where(eq(syncCursor.domiaKey, domiaKey))
+			.get()
+		return { since: row?.at ?? "", id: row?.id ?? "" }
+	},
+	writeFactsCursor: (domiaKey: string, cursor: TurnCursor) => {
+		db.insert(syncCursor)
+			.values({
+				domiaKey,
+				lastFactsAt: cursor.since,
+				lastFactsId: cursor.id,
+				lastSyncedAt: Date.now(),
+			})
+			.onConflictDoUpdate({
+				target: syncCursor.domiaKey,
+				set: {
+					lastFactsAt: cursor.since,
+					lastFactsId: cursor.id,
+					lastSyncedAt: Date.now(),
+				},
+			})
+			.run()
+	},
 	writeTurnCursor: (domiaKey: string, cursor: TurnCursor) => {
 		db.insert(syncCursor)
 			.values({
@@ -289,8 +315,10 @@ const dbAdapter = {
 					subject: r.subject ?? null,
 					relation: r.relation ?? null,
 					value: r.value ?? null,
+					valueKey: r.valueKey ?? null,
 					confidence: r.confidence ?? null,
 					kind: r.kind ?? null,
+					supersededAt: r.supersededAt ?? null,
 					sourceInteractionId: r.sourceInteractionId ?? null,
 					createdAt: r.createdAt,
 					updatedAt: r.updatedAt,
@@ -303,7 +331,9 @@ const dbAdapter = {
 							subject: values.subject,
 							relation: values.relation,
 							value: values.value,
+							valueKey: values.valueKey,
 							confidence: values.confidence,
+							supersededAt: values.supersededAt,
 							sourceInteractionId: values.sourceInteractionId,
 							updatedAt: values.updatedAt,
 						},

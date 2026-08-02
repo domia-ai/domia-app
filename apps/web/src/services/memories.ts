@@ -1,4 +1,4 @@
-import { and, count, desc, eq, getTableColumns } from "drizzle-orm"
+import { and, count, desc, eq, getTableColumns, isNull } from "drizzle-orm"
 import { domiaRegistry, memoryFact } from "@domia-app/db"
 import { db } from "@/db"
 import { buildOrderBy, buildSearchWhere } from "@/utils/table-builders"
@@ -21,6 +21,9 @@ export const listFacts = async (
 ): Promise<Paginated<MemoryFactRow>> => {
 	const where = and(
 		buildSearchWhere(SEARCH_COLUMNS, params.search),
+		params.filters.superseded === "all"
+			? undefined
+			: isNull(memoryFact.supersededAt),
 		params.filters.domia
 			? eq(memoryFact.sourceDomiaKey, params.filters.domia)
 			: undefined,
@@ -71,6 +74,9 @@ export const getFactDomiaOptions = async (): Promise<FilterFacetOption[]> => {
 }
 
 export const getFactCount = async (): Promise<number> => {
-	const [t] = await db.select({ value: count() }).from(memoryFact)
+	const [t] = await db
+		.select({ value: count() })
+		.from(memoryFact)
+		.where(isNull(memoryFact.supersededAt))
 	return t?.value ?? 0
 }
