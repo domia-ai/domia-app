@@ -284,10 +284,7 @@ const MODULE_FLAGS: { key: keyof ModuleSettings; label: () => string }[] = [
 	{ key: "memoryEngine", label: m.mind_module_memory_engine },
 	{ key: "factCapture", label: m.config_field_fact_capture },
 	{ key: "factRecall", label: m.config_field_fact_recall },
-	{ key: "collectiveMind", label: m.mind_module_collective_mind },
-	{ key: "narrativeEngine", label: m.mind_module_narrative_engine },
 	{ key: "identityEngine", label: m.mind_module_identity_engine },
-	{ key: "remoteAccessEngine", label: m.mind_module_remote_access },
 	{ key: "reflectionOnlyWhenIdle", label: m.config_field_reflect_only_idle },
 ]
 

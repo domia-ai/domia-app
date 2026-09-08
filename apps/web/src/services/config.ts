@@ -1,9 +1,17 @@
+import { eq } from "drizzle-orm"
+import { domiaRegistry } from "@domia-app/db"
+import { db } from "@/db"
+import { env } from "@/config"
+import { isOnline } from "@/utils/presence"
 import { getNodeEndpoint } from "@/services/fleet"
 import { getDomia } from "@/services/domia"
+import { listNodes } from "@/services/nodes"
 import { domiaConfigToSnapshot } from "@/utils/config"
 import { DEFAULT_CONFIG_SNAPSHOT } from "@/constants/config-defaults"
+import { CONFIG_SCHEMA_SNAPSHOT } from "@/constants/config-schema"
 import {
 	nodeGetConfig,
+	nodeGetConfigSchema,
 	nodeImportConfig,
 	nodeGetConfigHealth,
 	nodeRestart,
@@ -14,6 +22,7 @@ import type {
 	ConfigFetchSource,
 	ConfigImportResult,
 	ConfigHealth,
+	ConfigSchemaResult,
 	ImportConfigInput,
 } from "@/types/config"
 
@@ -22,6 +31,28 @@ const resolveBase = async (domiaKey: string): Promise<ActionResult<string>> => {
 	if (!endpoint)
 		return { ok: false, error: "This Domia has no reachable address" }
 	return { ok: true, data: `http://${endpoint.localIp}:${endpoint.httpPort}` }
+}
+
+const anyOnlineBase = async (): Promise<string | null> => {
+	const node = (await listNodes()).find((n) => n.online)
+	return node ? `http://${node.localIp}:${node.httpPort}` : null
+}
+
+const onlineBaseFor = async (domiaKey: string): Promise<string | null> => {
+	if (domiaKey) {
+		const [row] = await db
+			.select({
+				localIp: domiaRegistry.localIp,
+				httpPort: domiaRegistry.httpPort,
+				lastSeenAt: domiaRegistry.lastSeenAt,
+			})
+			.from(domiaRegistry)
+			.where(eq(domiaRegistry.domiaKey, domiaKey))
+			.limit(1)
+		if (row?.localIp && row.httpPort && isOnline(row.lastSeenAt))
+			return `http://${row.localIp}:${row.httpPort}`
+	}
+	return anyOnlineBase()
 }
 
 const snapshotFallback = async (
@@ -59,6 +90,24 @@ export const getConfig = async (
 			error:
 				err instanceof Error ? err.message : "Could not load configuration",
 		}
+	}
+}
+
+export const getConfigSchema = async (
+	domiaKey: string,
+): Promise<ConfigSchemaResult> => {
+	const base = await onlineBaseFor(domiaKey)
+	if (!base) return { schema: CONFIG_SCHEMA_SNAPSHOT, source: "snapshot" }
+	try {
+		const schema = await nodeGetConfigSchema(
+			base,
+			env.DOMIA_NODE_PROBE_TIMEOUT_MS,
+		)
+		if (!Array.isArray(schema?.sections) || schema.sections.length === 0)
+			return { schema: CONFIG_SCHEMA_SNAPSHOT, source: "snapshot" }
+		return { schema, source: "live" }
+	} catch {
+		return { schema: CONFIG_SCHEMA_SNAPSHOT, source: "snapshot" }
 	}
 }
 

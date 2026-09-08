@@ -77,26 +77,97 @@ export type ConfigFieldKind =
 	| "select"
 	| "model"
 	| "tags"
+	| "json"
+	| "secret"
+
+export type ConfigSchemaFieldType =
+	| "boolean"
+	| "number"
+	| "string"
+	| "enum"
+	| "json"
+
+export type ConfigSchemaField = {
+	key: string
+	column: string
+	type: ConfigSchemaFieldType
+	default: JsonValue
+	enumValues?: string[]
+	nullable: boolean
+	secret?: boolean
+}
+
+export type ConfigSchemaSection = {
+	id: string
+	table: string
+	fields: ConfigSchemaField[]
+}
+
+export type ConfigSchema = {
+	sections: ConfigSchemaSection[]
+	scalarSectionsOnly?: boolean
+}
+
+export type ConfigSchemaResult = {
+	schema: ConfigSchema
+	source: ConfigFetchSource
+}
+
+export type ConfigOptionLabels = Record<string, () => string>
 
 export type ConfigField = {
 	key: string
 	label: () => string
 	kind: ConfigFieldKind
 	options?: readonly string[]
+	optionLabels?: ConfigOptionLabels
 	min?: number
 	max?: number
 	step?: number
 	unit?: string
 	stage?: string
 	hint?: () => string
+	advanced?: boolean
+	readOnly?: boolean
+	nullable?: boolean
+	default?: JsonValue
+	schemaType?: ConfigSchemaFieldType
 }
 
-export type ConfigSectionKind =
-	| "fields"
-	| "radar"
-	| "diagnostics"
-	| "models"
-	| "skill"
+export type ConfigFieldMeta = {
+	label?: () => string
+	hint?: () => string
+	kind?: Exclude<ConfigFieldKind, "secret">
+	options?: readonly string[]
+	optionLabels?: ConfigOptionLabels
+	min?: number
+	max?: number
+	step?: number
+	unit?: string
+	stage?: string
+	advanced?: boolean
+	readOnly?: boolean
+}
+
+export type ConfigFieldMetaEntry = ConfigFieldMeta & { key: string }
+
+export type ConfigSectionFieldMeta = {
+	primary: ConfigFieldMetaEntry[]
+	advanced: ConfigFieldMetaEntry[]
+}
+
+export type ConfigSectionMeta = {
+	id: string
+	label: () => string
+	icon: string
+	group: string
+	kind: ConfigSectionKind
+	source?: string
+	only?: readonly string[]
+	description?: () => string
+}
+
+export type ConfigSectionKind = "fields" | "diagnostics" | "models" | "skill"
 
 export type SkillFinalizeMode = "agent_loop" | "template" | "async" | "deadline"
 
@@ -162,6 +233,11 @@ export type ConfigSectionDef = {
 	source?: string
 	description?: () => string
 	fields: ConfigField[]
+}
+
+export type ConfigCatalog = {
+	sections: ConfigSectionDef[]
+	source: ConfigFetchSource
 }
 
 export type ArchetypePreset = {
@@ -246,4 +322,23 @@ export type SectionImpact = {
 export type DraftImpact = {
 	totalChanged: number
 	sections: SectionImpact[]
+}
+
+export type ConfigWorkspaceMode = "live" | "template"
+
+export type ConfigWorkspaceTemplateRef = {
+	id: string
+	name: string
+	description: string
+}
+
+export type ConfigWorkspaceProps = {
+	domiaKey: string
+	domiaName: string
+	config: ConfigSnapshot
+	online: boolean
+	mode?: ConfigWorkspaceMode
+	onSaved?: () => void
+	editTemplate?: ConfigWorkspaceTemplateRef
+	readOnly?: boolean
 }

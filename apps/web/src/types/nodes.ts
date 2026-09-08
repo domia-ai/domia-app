@@ -55,3 +55,26 @@ export type NodeDetail = NodeSummary & {
 	hosted: NodeIdentitySummary[]
 	peers: NodeIdentitySummary[]
 }
+
+export type NodeHealth = {
+	status: string
+	timestamp: string
+}
+
+export type NodeProbeInput = {
+	host: string
+	port: number
+}
+
+export type NodeProbeResult = {
+	host: string
+	port: number
+	health: NodeHealth
+	identities: NodeIdentity[]
+}
+
+export type AddNodeResult = {
+	nodeId: string
+	domiaKey: string
+	identities: NodeIdentity[]
+}

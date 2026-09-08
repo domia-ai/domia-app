@@ -1,5 +1,6 @@
 import { m } from "@/paraglide/messages"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -21,6 +22,9 @@ const UNIT_LABELS: Record<string, () => string> = {
 	sentences: m.config_unit_sentences,
 	tokens: m.config_unit_tokens,
 	turns: m.config_unit_turns,
+	ms: m.config_unit_ms,
+	s: m.config_unit_s,
+	Hz: m.config_unit_hz,
 }
 
 const unitLabel = (unit: string): string => UNIT_LABELS[unit]?.() ?? unit
@@ -33,6 +37,11 @@ function ChangedDot({ changed }: { changed: boolean }) {
 function FieldError({ error }: { error?: string | null }) {
 	if (!error) return null
 	return <p className="text-destructive text-xs">{error}</p>
+}
+
+function Hint({ field }: { field: ConfigField }) {
+	if (!field.hint) return null
+	return <p className="text-muted-foreground text-xs">{field.hint()}</p>
 }
 
 export function ConfigFieldRow({
@@ -63,9 +72,7 @@ export function ConfigFieldRow({
 						<p className="text-sm font-medium">{field.label()}</p>
 						<ChangedDot changed={changed} />
 					</div>
-					{field.hint && (
-						<p className="text-muted-foreground text-xs">{field.hint()}</p>
-					)}
+					<Hint field={field} />
 				</div>
 				<Switch checked={Boolean(value)} onCheckedChange={(c) => onChange(c)} />
 			</div>
@@ -85,7 +92,7 @@ export function ConfigFieldRow({
 	)
 
 	if (field.kind === "slider") {
-		const num = Number(value)
+		const num = value === "" ? Number(field.default ?? 0) : Number(value)
 		return (
 			<Field>
 				<div className="flex items-center justify-between">
@@ -102,9 +109,7 @@ export function ConfigFieldRow({
 					value={[num]}
 					onValueChange={(v) => onChange(Array.isArray(v) ? v[0] : v)}
 				/>
-				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint()}</p>
-				)}
+				<Hint field={field} />
 				<FieldError error={error} />
 			</Field>
 		)
@@ -119,6 +124,7 @@ export function ConfigFieldRow({
 					onChange={(next) => onChange(next)}
 					placeholder={m.config_add_tag({ label: field.label().toLowerCase() })}
 				/>
+				<Hint field={field} />
 			</Field>
 		)
 	}
@@ -133,9 +139,7 @@ export function ConfigFieldRow({
 					value={String(value)}
 					onChange={(v) => onChange(v)}
 				/>
-				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint()}</p>
-				)}
+				<Hint field={field} />
 			</Field>
 		)
 	}
@@ -151,41 +155,84 @@ export function ConfigFieldRow({
 					<SelectContent>
 						{(field.options ?? []).map((opt) => (
 							<SelectItem key={opt} value={opt}>
-								{opt}
+								{field.optionLabels?.[opt]?.() ?? opt}
 							</SelectItem>
 						))}
 					</SelectContent>
 				</Select>
-				{field.hint && (
-					<p className="text-muted-foreground text-xs">{field.hint()}</p>
-				)}
+				<Hint field={field} />
 			</Field>
 		)
 	}
 
+	if (field.kind === "json") {
+		return (
+			<Field>
+				{label}
+				<Textarea
+					value={String(value)}
+					rows={4}
+					className="font-mono text-xs"
+					spellCheck={false}
+					readOnly={field.readOnly}
+					aria-invalid={error ? true : undefined}
+					placeholder={field.nullable ? "null" : "{}"}
+					onChange={
+						field.readOnly ? undefined : (e) => onChange(e.target.value)
+					}
+				/>
+				<Hint field={field} />
+				<FieldError error={error} />
+			</Field>
+		)
+	}
+
+	if (field.kind === "secret") {
+		return (
+			<Field>
+				{label}
+				<FieldContent>
+					<Input
+						type="password"
+						autoComplete="off"
+						value={String(value)}
+						placeholder={m.config_secret_placeholder()}
+						onChange={(e) => onChange(e.target.value)}
+					/>
+				</FieldContent>
+				<p className="text-muted-foreground text-xs">
+					{field.hint ? `${field.hint()} ` : ""}
+					{m.config_secret_hint()}
+				</p>
+			</Field>
+		)
+	}
+
+	const isNumber = field.kind === "number"
 	return (
 		<Field>
 			{label}
 			<FieldContent>
 				<Input
-					type={field.kind === "number" ? "number" : "text"}
-					step={field.kind === "number" ? "any" : undefined}
+					type={isNumber ? "number" : "text"}
+					step={isNumber ? "any" : undefined}
 					value={String(value)}
 					aria-invalid={error ? true : undefined}
+					placeholder={isNumber && field.nullable ? "—" : undefined}
 					onChange={(e) =>
 						onChange(
-							field.kind === "number"
+							isNumber
 								? e.target.value === ""
-									? 0
+									? field.nullable
+										? ""
+										: 0
 									: Number(e.target.value)
 								: e.target.value,
 						)
 					}
 				/>
 			</FieldContent>
-			{field.hint && (
-				<p className="text-muted-foreground text-xs">{field.hint()}</p>
-			)}
+			<Hint field={field} />
 			<FieldError error={error} />
 		</Field>
 	)

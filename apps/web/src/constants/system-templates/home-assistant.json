@@ -17,10 +17,7 @@
 		"memoryEngine": true,
 		"factCapture": true,
 		"factRecall": true,
-		"collectiveMind": false,
-		"narrativeEngine": false,
 		"identityEngine": true,
-		"remoteAccessEngine": true,
 		"skillsEngine": true
 	},
 	"stt": {
@@ -114,9 +111,9 @@
 		{
 			"name": "home-assistant",
 			"protocol": "mcp",
-			"type": "sse",
-			"url": "https://homeassistant.local:8123/mcp_server/sse",
-			"description": "Home Assistant — control devices and read live state over MCP.",
+			"type": "http",
+			"url": "http://homeassistant.local:8123/api/mcp",
+			"description": "Home Assistant \u2014 control devices and read live state over MCP.",
 			"toolWhitelist": [
 				"HassTurnOn",
 				"HassTurnOff",

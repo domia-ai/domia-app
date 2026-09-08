@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { ConfigWorkspace } from "@/components/domia/config/config-workspace"
 import { templatesQueryOptions } from "@/server/templates"
-import { accentFor } from "@/utils/accent"
 import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/templates_/$id/edit")({
@@ -59,7 +58,6 @@ function EditTemplatePage() {
 					domiaName={template.name}
 					config={template.config}
 					online
-					accent={accentFor(template.id)}
 					mode="template"
 					editTemplate={{
 						id: template.id,

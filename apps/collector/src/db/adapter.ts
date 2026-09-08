@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, notInArray } from "drizzle-orm"
+import { and, desc, eq, inArray, isNotNull, notInArray } from "drizzle-orm"
 import {
 	domiaRegistry,
 	interactionTrace,
@@ -49,6 +49,18 @@ const dbAdapter = {
 				),
 			)
 			.all(),
+	bumpMirrorLastSeen: (keys: string[], at: number) => {
+		if (keys.length === 0) return
+		db.update(domiaRegistry)
+			.set({ lastSeenAt: at })
+			.where(
+				and(
+					eq(domiaRegistry.isActive, true),
+					inArray(domiaRegistry.domiaKey, keys),
+				),
+			)
+			.run()
+	},
 	retireMirrorIdentitiesByNode: (nodeId: string, keepKeys: string[]) => {
 		if (keepKeys.length === 0) return
 		db.update(domiaRegistry)

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter } from "@tanstack/react-router"
-import { Pencil, Sparkles, Trash2 } from "lucide-react"
+import { Lock, Pencil, Sparkles, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { errText } from "@/utils/service-errors"
@@ -48,7 +48,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 			toast.success(
 				m.toast_template_applied({ template: template.name, name }),
 				{
-					description: m.toast_template_applied_desc({ name }),
+					description: `${m.toast_template_applied_desc({ name })} ${m.templates_secrets_note()}`,
 				},
 			)
 			queryClient.invalidateQueries({ queryKey: ["fleet"] })
@@ -129,6 +129,13 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 						))}
 					</div>
 				)}
+				<p
+					className="text-muted-foreground flex items-start gap-1.5 text-[11px]"
+					title={m.templates_secrets_note()}
+				>
+					<Lock className="mt-0.5 size-3 shrink-0" />
+					{m.templates_secrets_short()}
+				</p>
 				<div className="flex items-center gap-2">
 					<Select
 						value={targetKey}

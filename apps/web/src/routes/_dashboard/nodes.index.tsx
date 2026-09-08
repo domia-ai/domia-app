@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/shell/page-header"
 import { StatusPill } from "@/components/domia/status"
+import { AddNodeDialog } from "@/components/nodes/add-node-dialog"
+import { FirstRunBanner } from "@/components/setup/first-run-banner"
 import { nodesQueryOptions } from "@/server/nodes"
 import { m } from "@/paraglide/messages"
 
@@ -20,7 +22,9 @@ function NodesPage() {
 			<PageHeader
 				title={m.nav_nodes()}
 				description={m.route_nodes_description()}
+				actions={<AddNodeDialog />}
 			/>
+			<FirstRunBanner />
 			{isLoading && (
 				<p className="text-muted-foreground text-sm">{m.cmd_loading()}</p>
 			)}

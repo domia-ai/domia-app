@@ -11,6 +11,8 @@ const MAX_AUDIO_BASE64 = 20_000_000
 
 export const idSchema = z.string().min(1).max(200)
 
+export const configSchemaInputSchema = z.string().max(200)
+
 export const nodeIdSchema = z.string().min(1).max(200)
 
 export const createIdentityInputSchema = z.object({
@@ -24,6 +26,8 @@ export const removeIdentityInputSchema = z.object({
 })
 
 export const discoverSatellitesInputSchema = z.string().min(1).max(200)
+export const skillsStatusInputSchema = z.string().min(1).max(200)
+export const discoverSkillProvidersInputSchema = z.string().min(1).max(200)
 
 export const listSatellitesInputSchema = z.string().min(1).max(200)
 
@@ -167,3 +171,36 @@ export const setAvatarInputSchema = z.discriminatedUnion("kind", [
 		domiaKey: z.string().min(1).max(200),
 	}),
 ])
+
+export const benchRunInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	turns: z.number().int().min(1).max(50).optional(),
+})
+
+const IPV4_RE =
+	/^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/
+const IPV6_RE = /^\[?[0-9a-fA-F:]+(%[0-9a-zA-Z]+)?\]?$/
+const HOSTNAME_RE =
+	/^(?=.{1,253}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.?$/
+
+const isNodeHost = (host: string): boolean =>
+	IPV4_RE.test(host) ||
+	(host.includes(":") && IPV6_RE.test(host)) ||
+	HOSTNAME_RE.test(host)
+
+export const probeNodeInputSchema = z.object({
+	host: z.string().trim().min(1).max(253).refine(isNodeHost),
+	port: z.number().int().positive().max(65535),
+})
+
+export const setupNameInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	name: z.string().trim().min(1).max(80),
+})
+
+export const pairHomeAssistantInputSchema = z.object({
+	domiaKey: z.string().min(1).max(200),
+	url: z.string().trim().min(1).max(500),
+	token: z.string().trim().min(1).max(2000),
+	name: z.string().trim().min(1).max(120).optional(),
+})

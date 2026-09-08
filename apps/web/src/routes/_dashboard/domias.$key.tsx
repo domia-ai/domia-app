@@ -1,5 +1,10 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { ArrowLeft, MessageSquareText, SlidersHorizontal } from "lucide-react"
+import {
+	ArrowLeft,
+	MessageSquareText,
+	SlidersHorizontal,
+	WandSparkles,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -106,6 +111,21 @@ function DomiaDetailPage() {
 					</div>
 				</div>
 				<div className="ml-auto flex items-center gap-2">
+					{domia.isHosted && (
+						<Button
+							variant="outline"
+							nativeButton={false}
+							render={
+								<Link
+									to="/setup"
+									search={{ domia: domia.domiaKey, step: undefined }}
+								/>
+							}
+						>
+							<WandSparkles className="size-4" />
+							{m.setup_title()}
+						</Button>
+					)}
 					<Button
 						variant="outline"
 						nativeButton={false}

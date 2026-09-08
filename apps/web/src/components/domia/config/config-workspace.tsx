@@ -1,13 +1,12 @@
-import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMemo, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import {
 	AudioLines,
 	Boxes,
 	Brain,
 	Ear,
-	Fingerprint,
-	Heart,
+	Loader2,
 	Mic,
 	Network,
 	Package,
@@ -27,20 +26,27 @@ import { Input } from "@/components/ui/input"
 import { ConfigSection } from "./config-section"
 import { SaveTemplateDialog } from "./save-template-dialog"
 import { useConfigDraft } from "@/hooks/use-config-draft"
-import { importConfigFn } from "@/server/config"
+import { configSchemaQueryOptions, importConfigFn } from "@/server/config"
 import {
-	CONFIG_SECTIONS,
+	FIELD_META,
+	HIDDEN_FIELDS,
 	SECTION_GROUP_LABELS,
 	SECTION_GROUPS,
+	SECTION_META,
 } from "@/constants/config"
+import { CONFIG_SCHEMA_SNAPSHOT } from "@/constants/config-schema"
+import { buildConfigSections, fieldMatches } from "@/utils/config-schema"
 import { cn } from "@/lib/utils"
 import { summarizeApply } from "@/lib/config-apply"
-import type { ConfigSnapshot } from "@/types/config"
+import type {
+	ConfigFetchSource,
+	ConfigSchema,
+	ConfigSectionDef,
+	ConfigWorkspaceProps,
+} from "@/types/config"
 
 const ICONS: Record<string, typeof User> = {
-	identity: Fingerprint,
 	user: User,
-	heart: Heart,
 	audio: AudioLines,
 	brain: Brain,
 	ear: Ear,
@@ -54,45 +60,75 @@ const ICONS: Record<string, typeof User> = {
 	package: Package,
 }
 
-export function ConfigWorkspace({
+export function ConfigWorkspace(props: ConfigWorkspaceProps) {
+	const schemaQuery = useQuery(configSchemaQueryOptions(props.domiaKey))
+
+	if (schemaQuery.isLoading)
+		return (
+			<div className="text-muted-foreground flex items-center justify-center gap-2 py-16 text-sm">
+				<Loader2 className="size-4 animate-spin" />
+				{m.config_schema_loading()}
+			</div>
+		)
+
+	const schema: ConfigSchema =
+		schemaQuery.data?.schema ?? CONFIG_SCHEMA_SNAPSHOT
+	const source: ConfigFetchSource = schemaQuery.isError
+		? "snapshot"
+		: (schemaQuery.data?.source ?? "snapshot")
+
+	return (
+		<ConfigWorkspaceBody
+			{...props}
+			schema={schema}
+			schemaSource={source}
+			schemaFailed={schemaQuery.isError}
+		/>
+	)
+}
+
+function ConfigWorkspaceBody({
 	domiaKey,
 	domiaName,
 	config,
 	online,
-	accent,
 	mode = "live",
 	onSaved,
 	editTemplate,
 	readOnly = false,
-}: {
-	domiaKey: string
-	domiaName: string
-	config: ConfigSnapshot
-	online: boolean
-	accent: string
-	mode?: "live" | "template"
-	onSaved?: () => void
-	editTemplate?: { id: string; name: string; description: string }
-	readOnly?: boolean
+	schema,
+	schemaSource,
+	schemaFailed,
+}: ConfigWorkspaceProps & {
+	schema: ConfigSchema
+	schemaSource: ConfigFetchSource
+	schemaFailed: boolean
 }) {
 	const queryClient = useQueryClient()
 	const router = useRouter()
-	const draft = useConfigDraft(config)
-	const [activeId, setActiveId] = useState(CONFIG_SECTIONS[0].id)
+	const allSections = useMemo(
+		() => buildConfigSections(schema, SECTION_META, FIELD_META, HIDDEN_FIELDS),
+		[schema],
+	)
+	const sections: ConfigSectionDef[] = domiaKey
+		? allSections
+		: allSections.filter((s) => s.kind !== "diagnostics" && s.kind !== "models")
+	const draft = useConfigDraft(config, allSections)
+	const [activeId, setActiveId] = useState(sections[0]?.id ?? "")
 	const [search, setSearch] = useState("")
 
 	const isTemplate = mode === "template"
 	const snapshotConfig = draft.mergeInto(config)
-	const sections = domiaKey
-		? CONFIG_SECTIONS
-		: CONFIG_SECTIONS.filter(
-				(s) => s.kind !== "diagnostics" && s.kind !== "models",
-			)
-
-	const active =
-		CONFIG_SECTIONS.find((s) => s.id === activeId) ?? CONFIG_SECTIONS[0]
+	const query = search.trim().toLowerCase()
+	const active = sections.find((s) => s.id === activeId) ?? sections[0]
 	const changedBySection = new Map(
 		draft.impact.sections.map((s) => [s.section, s.changed.length]),
+	)
+	const matchesBySection = new Map(
+		sections.map((s) => [
+			s.id,
+			query ? s.fields.filter((f) => fieldMatches(f, query)).length : 0,
+		]),
 	)
 
 	const importMutation = useMutation({
@@ -126,8 +162,22 @@ export function ConfigWorkspace({
 
 	const dirty = draft.impact.totalChanged > 0
 
+	if (!active)
+		return (
+			<p className="text-muted-foreground py-16 text-center text-sm">
+				{m.config_schema_empty()}
+			</p>
+		)
+
 	return (
 		<div className="flex min-h-0 flex-col">
+			{(schemaSource === "snapshot" || schemaFailed) && (
+				<p className="text-muted-foreground mb-4 rounded-lg border border-dashed px-4 py-2.5 text-sm">
+					{schemaFailed
+						? m.config_schema_failed_notice()
+						: m.config_schema_snapshot_notice()}
+				</p>
+			)}
 			<div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
 				<nav className="space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:pr-1">
 					<div className="bg-background sticky top-0 z-10 pb-1">
@@ -151,6 +201,7 @@ export function ConfigWorkspace({
 								.map((section) => {
 									const Icon = ICONS[section.icon] ?? SlidersHorizontal
 									const count = changedBySection.get(section.id) ?? 0
+									const matches = matchesBySection.get(section.id) ?? 0
 									return (
 										<button
 											key={section.id}
@@ -158,15 +209,21 @@ export function ConfigWorkspace({
 											onClick={() => setActiveId(section.id)}
 											className={cn(
 												"flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
-												section.id === activeId
+												section.id === active.id
 													? "bg-muted font-medium"
 													: "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+												query && matches === 0 && "opacity-50",
 											)}
 										>
 											<Icon className="size-4 shrink-0" />
 											<span className="flex-1 text-left">
 												{section.label()}
 											</span>
+											{query && matches > 0 && (
+												<span className="text-muted-foreground text-[10px] tabular-nums">
+													{matches}
+												</span>
+											)}
 											{count > 0 && (
 												<span className="bg-primary text-primary-foreground flex size-4 items-center justify-center rounded-full text-[10px] font-medium tabular-nums">
 													{count}
@@ -191,7 +248,6 @@ export function ConfigWorkspace({
 							section={active}
 							draft={draft}
 							online={online}
-							accent={accent}
 							search={search}
 						/>
 					</fieldset>

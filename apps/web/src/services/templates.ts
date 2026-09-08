@@ -165,6 +165,20 @@ export const updateConfigTemplate = (
 	}
 }
 
+const withoutName = (section: unknown): JsonObject | null =>
+	section && typeof section === "object"
+		? stripMeta(section as Record<string, unknown>, ["name"])
+		: null
+
+const applyBundleOf = (config: ConfigSnapshot): Record<string, unknown> => {
+	const { domia, character, ...rest } = config
+	return {
+		...rest,
+		...(domia ? { domia: withoutName(domia) } : {}),
+		...(character ? { character: withoutName(character) } : {}),
+	}
+}
+
 export const applyConfigTemplate = async (
 	input: ApplyTemplateInput,
 ): Promise<ActionResult<ConfigImportResult>> => {
@@ -172,7 +186,7 @@ export const applyConfigTemplate = async (
 	if (!template) return { ok: false, error: "Template not found" }
 	return importConfig({
 		domiaKey: input.domiaKey,
-		bundle: template.config as unknown as Record<string, unknown>,
+		bundle: applyBundleOf(template.config),
 	})
 }
 

@@ -11,8 +11,8 @@ export const SKILL_PRESETS: SkillPreset[] = [
 		draft: {
 			name: "home-assistant",
 			protocol: "mcp",
-			type: "sse",
-			url: "https://homeassistant.local:8123/mcp_server/sse",
+			type: "http",
+			url: "http://homeassistant.local:8123/api/mcp",
 			authKind: "bearer",
 			whitelist: [
 				"HassTurnOn",

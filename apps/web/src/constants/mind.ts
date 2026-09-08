@@ -136,21 +136,6 @@ export const MIND_MODULE_FIELDS: {
 		hint: m.mind_module_memory_engine_hint,
 	},
 	{
-		key: "collectiveMind",
-		label: m.mind_module_collective_mind,
-		hint: m.mind_module_collective_mind_hint,
-	},
-	{
-		key: "remoteAccessEngine",
-		label: m.mind_module_remote_access,
-		hint: m.mind_module_remote_access_hint,
-	},
-	{
-		key: "narrativeEngine",
-		label: m.mind_module_narrative_engine,
-		hint: m.mind_module_narrative_engine_hint,
-	},
-	{
 		key: "identityEngine",
 		label: m.mind_module_identity_engine,
 		hint: m.mind_module_identity_engine_hint,
@@ -199,9 +184,6 @@ export const DEFAULT_TEMPLATE_MIND: MindSnapshot = {
 	modules: {
 		emotionEngine: true,
 		memoryEngine: true,
-		collectiveMind: true,
-		remoteAccessEngine: true,
-		narrativeEngine: true,
 		identityEngine: true,
 	},
 }

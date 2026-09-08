@@ -10,7 +10,8 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "eslint",
 		"sync:templates": "node scripts/sync-system-templates.mjs",
-		"sync:templates:check": "node scripts/sync-system-templates.mjs --check"
+		"sync:templates:check": "node scripts/sync-system-templates.mjs --check",
+		"check:overlay": "tsx --tsconfig tsconfig.json scripts/schema-overlay-check.ts"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.5.0",

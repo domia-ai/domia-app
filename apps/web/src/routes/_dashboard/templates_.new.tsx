@@ -187,7 +187,6 @@ function NewTemplatePage() {
 					domiaName={m.route_template_new()}
 					config={DEFAULT_CONFIG_SNAPSHOT}
 					online
-					accent={accentFor("template")}
 					mode="template"
 					onSaved={back}
 				/>
@@ -198,7 +197,6 @@ function NewTemplatePage() {
 						domiaName={m.tpl_new_copy_of({ name: sourceTemplate.name })}
 						config={{ ...DEFAULT_CONFIG_SNAPSHOT, ...sourceTemplate.config }}
 						online
-						accent={accentFor(sourceTemplate.id)}
 						mode="template"
 						onSaved={back}
 					/>
@@ -222,7 +220,6 @@ function NewTemplatePage() {
 					domiaName={sourceDomia?.name ?? domiaKey}
 					config={result.data}
 					online
-					accent={accentFor(domiaKey)}
 					mode="template"
 					onSaved={back}
 				/>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/shell/page-header"
 import { FleetView } from "@/components/fleet/fleet-view"
+import { FirstRunBanner } from "@/components/setup/first-run-banner"
 import { fleetGraphQueryOptions } from "@/server/fleet"
 import { validateTableSearch } from "@/utils/table-params"
 import { m } from "@/paraglide/messages"
@@ -20,6 +21,7 @@ function DomiasPage() {
 				title={m.nav_fleet()}
 				description={m.route_fleet_description()}
 			/>
+			<FirstRunBanner />
 			<FleetView />
 		</div>
 	)

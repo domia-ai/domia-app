@@ -3,15 +3,24 @@ import { createServerFn } from "@tanstack/react-start"
 import {
 	getConfig,
 	getConfigHealth,
+	getConfigSchema,
 	importConfig,
 	restartDomia,
 } from "@/services/config"
-import { idSchema, importConfigInputSchema } from "@/schemas/server"
+import {
+	configSchemaInputSchema,
+	idSchema,
+	importConfigInputSchema,
+} from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
 
 export const getConfigFn = createServerFn({ method: "GET" })
 	.validator(idSchema)
 	.handler(({ data }) => getConfig(data))
+
+export const getConfigSchemaFn = createServerFn({ method: "GET" })
+	.validator(configSchemaInputSchema)
+	.handler(({ data }) => getConfigSchema(data))
 
 export const getConfigHealthFn = createServerFn({ method: "GET" })
 	.validator(idSchema)
@@ -35,6 +44,13 @@ export const configQueryOptions = (domiaKey: string) =>
 	queryOptions({
 		queryKey: ["config", domiaKey],
 		queryFn: () => getConfigFn({ data: domiaKey }),
+	})
+
+export const configSchemaQueryOptions = (domiaKey: string) =>
+	queryOptions({
+		queryKey: ["config-schema", domiaKey],
+		queryFn: () => getConfigSchemaFn({ data: domiaKey }),
+		staleTime: 5 * 60 * 1000,
 	})
 
 export const configHealthQueryOptions = (domiaKey: string) =>

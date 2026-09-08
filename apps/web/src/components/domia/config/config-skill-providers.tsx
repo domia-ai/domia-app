@@ -1,4 +1,5 @@
 import { Plus, Trash2, Server, ChevronDown, FilePlus2 } from "lucide-react"
+import type { DiscoveredSkillProvider } from "@/types/skills"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -26,6 +27,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { ConfigSkillDescriptor } from "./config-skill-descriptor"
+import { SkillProviderDiscovery } from "./config-skill-discovery"
 import type { ConfigDraftApi } from "@/hooks/use-config-draft"
 import type { SkillProviderDraft } from "@/types/config"
 
@@ -70,8 +72,23 @@ function Field({
 	)
 }
 
-export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
+export function ConfigSkillProviders({
+	draft,
+	domiaKey,
+}: {
+	draft: ConfigDraftApi
+	domiaKey: string
+}) {
 	const servers = draft.skillProviders
+	const addDiscovered = (found: DiscoveredSkillProvider) => {
+		const preset = SKILL_PRESETS.find((p) => p.id === found.kind)?.draft ?? {}
+		add({
+			...preset,
+			name: found.kind,
+			type: "http",
+			url: found.url,
+		})
+	}
 
 	const update = (index: number, patch: Partial<SkillProviderDraft>) =>
 		draft.setSkillProviders(
@@ -166,7 +183,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 						<Input
 							value={server.url}
 							onChange={(e) => update(index, { url: e.target.value })}
-							placeholder="https://homeassistant.local:8123/mcp_server/sse"
+							placeholder="http://homeassistant.local:8123/api/mcp"
 						/>
 					</Field>
 
@@ -205,7 +222,7 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 									type="password"
 									value={server.token}
 									onChange={(e) => update(index, { token: e.target.value })}
-									placeholder="leave blank to keep current"
+									placeholder={m.config_secret_placeholder()}
 									autoComplete="off"
 								/>
 							</Field>
@@ -319,6 +336,13 @@ export function ConfigSkillProviders({ draft }: { draft: ConfigDraftApi }) {
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
+			{domiaKey && (
+				<SkillProviderDiscovery
+					domiaKey={domiaKey}
+					existingUrls={servers.map((s) => s.url)}
+					onAdd={addDiscovered}
+				/>
+			)}
 		</div>
 	)
 }

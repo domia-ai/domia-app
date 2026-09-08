@@ -164,10 +164,7 @@ export type ModuleSettings = {
 	factRecall: boolean
 	reflectionOnlyWhenIdle: boolean
 	reflectionConcurrency: number
-	collectiveMind: boolean
-	narrativeEngine: boolean
 	identityEngine: boolean
-	remoteAccessEngine: boolean
 }
 
 export type LlmModelConfig = {

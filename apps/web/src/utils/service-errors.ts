@@ -53,6 +53,18 @@ const KNOWN_ERRORS: Record<string, () => string> = {
 		m.err_system_template_readonly,
 	"Template not found": m.err_template_not_found,
 	"name already in use": m.err_name_in_use,
+	"Node unreachable": m.err_node_probe_unreachable,
+	"Node timed out": m.err_node_probe_timeout,
+	"Node rejected the mesh secret": m.err_node_probe_unauthorized,
+	"Node reported no identities": m.err_node_probe_no_identities,
+	"Skills status failed": m.err_skills_status,
+	"Could not load setup candidates": m.err_setup_candidates,
+	"Could not verify setup": m.err_setup_verify,
+	"Could not load config schema": m.err_config_schema,
+	"Config unavailable": m.err_config_unavailable,
+	"Node probe returned no data": m.err_node_probe_no_data,
+	"Health check failed": m.err_health_check_failed,
+	"Could not load configuration": m.err_load_configuration,
 }
 
 export const errText = (error: string | null | undefined): string => {

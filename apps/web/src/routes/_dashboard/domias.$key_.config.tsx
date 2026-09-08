@@ -7,7 +7,6 @@ import { KnowledgeManager } from "@/components/domia/knowledge-manager"
 import { RestartButton } from "@/components/domia/restart-button"
 import { configQueryOptions } from "@/server/config"
 import { getDomiaFn } from "@/server/domia"
-import { accentFor } from "@/utils/accent"
 import { isOnline } from "@/utils/presence"
 import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
@@ -35,7 +34,6 @@ export const Route = createFileRoute("/_dashboard/domias/$key_/config")({
 function ConfigPage() {
 	const { domia } = Route.useLoaderData()
 	const online = isOnline(domia.lastSeenAt)
-	const accent = accentFor(domia.domiaKey)
 
 	const query = useQuery(configQueryOptions(domia.domiaKey))
 
@@ -107,7 +105,6 @@ function ConfigPage() {
 						domiaName={domia.name}
 						config={result.data}
 						online={online}
-						accent={accent}
 						readOnly={result.source === "snapshot"}
 					/>
 					<div className="border-border border-t pt-6">

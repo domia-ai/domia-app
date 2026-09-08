@@ -64,6 +64,32 @@ const stripProviderSecret = (s: unknown): Record<string, unknown> => {
 	return { ...base, auth: auth?.kind ? { kind: auth.kind } : null }
 }
 
+export const configSnapshotToStoredJson = (
+	snapshot: ConfigSnapshot,
+	name: string,
+	domiaKey: string,
+): string => {
+	const skillProviders = (snapshot.skillProviders ?? []).map((p) => {
+		const auth = (p as { auth?: { kind?: string } | null }).auth
+		return { ...p, auth: auth?.kind ? { kind: auth.kind } : null }
+	})
+	return JSON.stringify({
+		domiaKey,
+		name,
+		isActive: true,
+		characterProfile: snapshot.character ?? null,
+		emotionState: snapshot.emotion ?? null,
+		runtimeCapabilities: snapshot.capabilities ?? null,
+		moduleSettings: snapshot.modules ?? null,
+		llmModelConfig: snapshot.llm ?? null,
+		ttsConfig: snapshot.tts ?? null,
+		sttConfig: snapshot.stt ?? null,
+		wakeWordConfig: snapshot.wakeWord ?? null,
+		capabilityDelegations: snapshot.delegations ?? [],
+		skillProviders,
+	})
+}
+
 export const domiaConfigToSnapshot = (
 	config: DomiaConfig,
 	name: string,

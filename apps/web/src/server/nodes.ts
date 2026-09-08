@@ -6,12 +6,15 @@ import {
 	listIdentities,
 	createIdentity,
 	removeIdentity,
+	probeNode,
+	addNodeByAddress,
 } from "@/services/nodes"
 import {
 	idSchema,
 	nodeIdSchema,
 	createIdentityInputSchema,
 	removeIdentityInputSchema,
+	probeNodeInputSchema,
 } from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
 
@@ -59,4 +62,15 @@ export const identitiesQueryOptions = (anchorDomiaKey: string) =>
 	queryOptions({
 		queryKey: ["identities", anchorDomiaKey],
 		queryFn: () => listIdentitiesFn({ data: anchorDomiaKey }),
+	})
+
+export const probeNodeFn = createServerFn({ method: "POST" })
+	.validator(probeNodeInputSchema)
+	.handler(({ data }) => probeNode(data))
+
+export const addNodeFn = createServerFn({ method: "POST" })
+	.validator(probeNodeInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return addNodeByAddress(data)
 	})

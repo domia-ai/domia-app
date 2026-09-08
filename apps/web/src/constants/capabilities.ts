@@ -64,6 +64,8 @@ export const CAPABILITY_META: Record<
 	},
 }
 
+export const CAPABILITY_KEYS = Object.keys(CAPABILITY_META) as CapabilityKey[]
+
 export const CAPABILITY_ORDER: CapabilityKey[] = [
 	"wakeword",
 	"record",

@@ -9,6 +9,7 @@ import type {
 	ConfigImportResult,
 	ConfigResult,
 	ConfigHealthResult,
+	ConfigSchema,
 	ModelsResult,
 	ModelJobResult,
 } from "@/types/config"
@@ -33,6 +34,7 @@ import type {
 	RemoveIdentityResult,
 	CreateIdentityBody,
 	IdentitiesResult,
+	NodeHealth,
 	RestartResult,
 } from "@/types/nodes"
 import type {
@@ -48,6 +50,11 @@ import type {
 	DiscoverSatellitesResult,
 	ListSatellitesResult,
 } from "@/types/satellites"
+import type {
+	SkillsStatusResult,
+	DiscoverSkillProvidersResult,
+} from "@/types/skills"
+import type { BenchRunBody, BenchRunResult } from "@/types/bench"
 
 export const meshHeaders = (): Record<string, string> => ({
 	authorization: `Bearer ${env.DOMIA_MESH_SECRET}`,
@@ -58,10 +65,14 @@ const withKey = (path: string, domiaKey?: string): string =>
 		? `${path}${path.includes("?") ? "&" : "?"}domiaKey=${encodeURIComponent(domiaKey)}`
 		: path
 
-const get = async <T>(base: string, path: string): Promise<T> => {
+const get = async <T>(
+	base: string,
+	path: string,
+	timeoutMs: number = env.DOMIA_NODE_TIMEOUT_MS,
+): Promise<T> => {
 	const res = await fetch(`${base}${path}`, {
 		headers: meshHeaders(),
-		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
+		signal: AbortSignal.timeout(timeoutMs),
 	})
 	if (!res.ok) {
 		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
@@ -136,8 +147,11 @@ export const nodeChat = (base: string, body: NodeChatBody) =>
 export const nodeVoice = (base: string, body: NodeVoiceBody) =>
 	post<NodeVoiceResponse>(base, "/voice", body)
 
-export const nodeGetConfig = (base: string, domiaKey?: string) =>
-	get<ConfigResult>(base, withKey("/config", domiaKey))
+export const nodeGetConfig = (
+	base: string,
+	domiaKey?: string,
+	timeoutMs?: number,
+) => get<ConfigResult>(base, withKey("/config", domiaKey), timeoutMs)
 
 export const nodeImportConfig = (
 	base: string,
@@ -145,8 +159,12 @@ export const nodeImportConfig = (
 	domiaKey?: string,
 ) => post<ConfigImportResult>(base, withKey("/config", domiaKey), bundle)
 
-export const nodeGetConfigHealth = (base: string, domiaKey?: string) =>
-	get<ConfigHealthResult>(base, withKey("/config/health", domiaKey))
+export const nodeGetConfigHealth = (
+	base: string,
+	domiaKey?: string,
+	timeoutMs?: number,
+) =>
+	get<ConfigHealthResult>(base, withKey("/config/health", domiaKey), timeoutMs)
 
 export const nodeGetKnowledge = (base: string, domiaKey?: string) =>
 	get<KnowledgeListResult>(base, withKey("/knowledge", domiaKey))
@@ -182,8 +200,8 @@ export const nodeInstallModel = (
 export const nodeGetModelJob = (base: string, id: string, domiaKey?: string) =>
 	get<ModelJobResult>(base, withKey(`/models/jobs/${id}`, domiaKey))
 
-export const nodeListIdentities = (base: string) =>
-	get<IdentitiesResult>(base, "/identities")
+export const nodeListIdentities = (base: string, timeoutMs?: number) =>
+	get<IdentitiesResult>(base, "/identities", timeoutMs)
 
 export const nodeCreateIdentity = (base: string, body: CreateIdentityBody) =>
 	post<CreateIdentityResult>(base, "/identities", body)
@@ -191,11 +209,24 @@ export const nodeCreateIdentity = (base: string, body: CreateIdentityBody) =>
 export const nodeRemoveIdentity = (base: string, domiaKey: string) =>
 	del<RemoveIdentityResult>(base, `/identities/${encodeURIComponent(domiaKey)}`)
 
+export const nodeGetSkills = (
+	base: string,
+	domiaKey: string,
+	timeoutMs?: number,
+) => get<SkillsStatusResult>(base, withKey("/skills", domiaKey), timeoutMs)
+
+export const nodeDiscoverSkillProviders = (base: string) =>
+	get<DiscoverSkillProvidersResult>(base, "/skills/discover")
+
 export const nodeDiscoverSatellites = (base: string) =>
 	get<DiscoverSatellitesResult>(base, "/satellites/discover")
 
-export const nodeListSatellites = (base: string, domiaKey: string) =>
-	get<ListSatellitesResult>(base, withKey("/satellites", domiaKey))
+export const nodeListSatellites = (
+	base: string,
+	domiaKey: string,
+	timeoutMs?: number,
+) =>
+	get<ListSatellitesResult>(base, withKey("/satellites", domiaKey), timeoutMs)
 
 export const nodeBindSatellite = (
 	base: string,
@@ -302,3 +333,35 @@ export const parseInteractionId = (
 	const match = audioUrl.match(/\/audio\/([^/?]+)/)
 	return match ? match[1] : null
 }
+
+export const nodeRunBench = (
+	base: string,
+	domiaKey: string,
+	body: BenchRunBody,
+) => post<BenchRunResult>(base, withKey("/bench/run", domiaKey), body)
+
+export const nodeGetConfigSchema = (base: string, timeoutMs?: number) =>
+	get<ConfigSchema>(base, "/config/schema", timeoutMs)
+
+const getProbe = async <T>(
+	base: string,
+	path: string,
+	timeoutMs: number,
+	headers: Record<string, string>,
+): Promise<T> => {
+	const res = await fetch(`${base}${path}`, {
+		headers,
+		signal: AbortSignal.timeout(timeoutMs),
+	})
+	if (res.status === 401) throw new Error("Node rejected the mesh secret")
+	if (!res.ok) {
+		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
+	}
+	return res.json() as Promise<T>
+}
+
+export const nodeProbeHealth = (base: string, timeoutMs: number) =>
+	getProbe<NodeHealth>(base, "/health", timeoutMs, {})
+
+export const nodeProbeIdentities = (base: string, timeoutMs: number) =>
+	getProbe<IdentitiesResult>(base, "/identities", timeoutMs, meshHeaders())

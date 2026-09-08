@@ -1,19 +1,28 @@
+import { eq, inArray } from "drizzle-orm"
 import { domiaRegistry } from "@domia-app/db"
 import { db } from "@/db"
+import { env } from "@/config"
 import { isOnline } from "@/utils/presence"
+import { configSnapshotToStoredJson } from "@/utils/config"
 import { resolveNodeBase } from "@/services/fleet"
 import {
 	nodeListIdentities,
 	nodeCreateIdentity,
 	nodeRemoveIdentity,
+	nodeGetConfig,
+	nodeProbeHealth,
+	nodeProbeIdentities,
 } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
 import type {
+	AddNodeResult,
 	IdentityRole,
+	NodeDetail,
 	NodeIdentity,
 	NodeIdentitySummary,
+	NodeProbeInput,
+	NodeProbeResult,
 	NodeSummary,
-	NodeDetail,
 } from "@/types/nodes"
 
 const nodeIdOf = (localIp: string, httpPort: number): string =>
@@ -145,5 +154,115 @@ export const removeIdentity = async (input: {
 			ok: false,
 			error: err instanceof Error ? err.message : "Could not remove identity",
 		}
+	}
+}
+
+const probeErrorMessage = (err: unknown): string => {
+	if (err instanceof Error) {
+		if (err.name === "TimeoutError" || err.name === "AbortError")
+			return "Node timed out"
+		if (err.message === "Node rejected the mesh secret") return err.message
+		if (err.message.startsWith("/")) return err.message
+	}
+	return "Node unreachable"
+}
+
+const baseOf = (input: NodeProbeInput): string =>
+	`http://${input.host.trim()}:${input.port}`
+
+export const probeNode = async (
+	input: NodeProbeInput,
+): Promise<ActionResult<NodeProbeResult>> => {
+	const base = baseOf(input)
+	const timeoutMs = env.DOMIA_NODE_PROBE_TIMEOUT_MS
+	try {
+		const health = await nodeProbeHealth(base, timeoutMs)
+		const { identities } = await nodeProbeIdentities(base, timeoutMs)
+		if (identities.length === 0)
+			return { ok: false, error: "Node reported no identities" }
+		return {
+			ok: true,
+			data: { host: input.host.trim(), port: input.port, health, identities },
+		}
+	} catch (err) {
+		return { ok: false, error: probeErrorMessage(err) }
+	}
+}
+
+export const addNodeByAddress = async (
+	input: NodeProbeInput,
+): Promise<ActionResult<AddNodeResult>> => {
+	const probe = await probeNode(input)
+	if (!probe.ok) return probe
+	if (!probe.data) return { ok: false, error: "Node probe returned no data" }
+	const { host, port } = probe.data
+	const hosted = probe.data.identities.filter((i) => i.isHosted)
+	if (hosted.length === 0)
+		return { ok: false, error: "Node reported no identities" }
+	const hostedKeys = hosted.map((i) => i.domiaKey)
+	const now = Date.now()
+	const syntheticNodeId = nodeIdOf(host, port)
+	const known = await db
+		.select({ nodeId: domiaRegistry.nodeId })
+		.from(domiaRegistry)
+		.where(inArray(domiaRegistry.domiaKey, hostedKeys))
+	const nodeId =
+		known.find((r) => r.nodeId && r.nodeId !== syntheticNodeId)?.nodeId ??
+		syntheticNodeId
+	const onNode = await db
+		.select({ domiaKey: domiaRegistry.domiaKey })
+		.from(domiaRegistry)
+		.where(eq(domiaRegistry.nodeId, nodeId))
+	const stale = onNode.filter((r) => !hostedKeys.includes(r.domiaKey))
+
+	const base = `http://${host}:${port}`
+	const configByKey = new Map<string, string>()
+	for (const identity of hosted) {
+		try {
+			const { config } = await nodeGetConfig(
+				base,
+				identity.domiaKey,
+				env.DOMIA_NODE_PROBE_TIMEOUT_MS,
+			)
+			configByKey.set(
+				identity.domiaKey,
+				configSnapshotToStoredJson(config, identity.name, identity.domiaKey),
+			)
+		} catch {
+			continue
+		}
+	}
+
+	db.transaction((tx) => {
+		for (const identity of hosted) {
+			const configSnapshotJson = configByKey.get(identity.domiaKey)
+			const liveness = {
+				name: identity.name,
+				nodeId,
+				isActive: true,
+				localIp: host,
+				httpPort: port,
+				isHosted: identity.isHosted,
+				isPrincipal: identity.isPrincipal,
+				lastSeenAt: now,
+				updatedAt: now,
+				...(configSnapshotJson != null ? { configSnapshotJson } : {}),
+			}
+			tx.insert(domiaRegistry)
+				.values({ domiaKey: identity.domiaKey, firstSeenAt: now, ...liveness })
+				.onConflictDoUpdate({ target: domiaRegistry.domiaKey, set: liveness })
+				.run()
+		}
+		for (const row of stale)
+			tx.update(domiaRegistry)
+				.set({ isActive: false, updatedAt: now })
+				.where(eq(domiaRegistry.domiaKey, row.domiaKey))
+				.run()
+	})
+
+	const principal = hosted.find((i) => i.isPrincipal) ?? hosted[0]
+	return {
+		ok: true,
+		data: { nodeId, domiaKey: principal.domiaKey, identities: hosted },
 	}
 }

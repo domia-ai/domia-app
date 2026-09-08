@@ -1,0 +1,2817 @@
+{
+	"scalarSectionsOnly": true,
+	"sections": [
+		{
+			"id": "domia",
+			"table": "domia",
+			"fields": [
+				{
+					"key": "domiaKey",
+					"column": "domia_key",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sessionIdTimeoutMs",
+					"column": "session_id_timeout_ms",
+					"type": "number",
+					"default": 300000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "memoryWindowTurns",
+					"column": "memory_window_turns",
+					"type": "number",
+					"default": 8,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "memoryMaxAgeMs",
+					"column": "memory_max_age_ms",
+					"type": "number",
+					"default": 1800000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "maxConcurrentVoiceReplies",
+					"column": "max_concurrent_voice_replies",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "maxQueuedVoiceReplies",
+					"column": "max_queued_voice_replies",
+					"type": "number",
+					"default": 4,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceQueueTimeoutMs",
+					"column": "voice_queue_timeout_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "ownConfigTtlMs",
+					"column": "own_config_ttl_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "warmupOnBoot",
+					"column": "warmup_on_boot",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "isHosted",
+					"column": "is_hosted",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "localIp",
+					"column": "local_ip",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "grpcPort",
+					"column": "grpc_port",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "lastSeenAt",
+					"column": "last_seen_at",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "peerNodeId",
+					"column": "peer_node_id",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "grpcUnaryDeadlineMs",
+					"column": "grpc_unary_deadline_ms",
+					"type": "number",
+					"default": 10000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "grpcStreamIdleTimeoutMs",
+					"column": "grpc_stream_idle_timeout_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "grpcStreamDeadlineMs",
+					"column": "grpc_stream_deadline_ms",
+					"type": "number",
+					"default": 60000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "peerStaleAfterMs",
+					"column": "peer_stale_after_ms",
+					"type": "number",
+					"default": 90000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "configReloadDrainMs",
+					"column": "config_reload_drain_ms",
+					"type": "number",
+					"default": 5000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "modelInstallAllowedHosts",
+					"column": "model_install_allowed_hosts",
+					"type": "json",
+					"default": [
+						"huggingface.co",
+						"hf.co",
+						"github.com",
+						"objects.githubusercontent.com"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "heartbeatSignatureRequired",
+					"column": "heartbeat_signature_required",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "knowledgeMaxChars",
+					"column": "knowledge_max_chars",
+					"type": "number",
+					"default": 20000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "meshSecretGraceMs",
+					"column": "mesh_secret_grace_ms",
+					"type": "number",
+					"default": null,
+					"nullable": false,
+					"secret": true
+				},
+				{
+					"key": "grpcTls",
+					"column": "grpc_tls",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "benchTurns",
+					"column": "bench_turns",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "benchThresholds",
+					"column": "bench_thresholds",
+					"type": "json",
+					"default": {
+						"pi": {
+							"stt_ms": 1500,
+							"llm_ttft_ms": 1500,
+							"llm_ms": 6000,
+							"tts_ms": 2500,
+							"tool_ms": 3000,
+							"total_ms": 9000
+						},
+						"sbc": {
+							"stt_ms": 1500,
+							"llm_ttft_ms": 1500,
+							"llm_ms": 6000,
+							"tts_ms": 2500,
+							"tool_ms": 3000,
+							"total_ms": 9000
+						},
+						"nvidia-jetson": {
+							"stt_ms": 800,
+							"llm_ttft_ms": 900,
+							"llm_ms": 4000,
+							"tts_ms": 1500,
+							"tool_ms": 2500,
+							"total_ms": 6000
+						},
+						"apple-silicon": {
+							"stt_ms": 800,
+							"llm_ttft_ms": 800,
+							"llm_ms": 4000,
+							"tts_ms": 1500,
+							"tool_ms": 2500,
+							"total_ms": 6000
+						},
+						"desktop": {
+							"stt_ms": 1000,
+							"llm_ttft_ms": 1000,
+							"llm_ms": 5000,
+							"tts_ms": 2000,
+							"tool_ms": 3000,
+							"total_ms": 7000
+						}
+					},
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "character",
+			"table": "character_profile",
+			"fields": [
+				{
+					"key": "personality",
+					"column": "personality",
+					"type": "enum",
+					"default": "NEUTRAL",
+					"enumValues": [
+						"OPTIMISTIC",
+						"CALM",
+						"ANALYTICAL",
+						"EMPATHETIC",
+						"NEUTRAL",
+						"PLAYFUL",
+						"CAUTIOUS",
+						"ADAPTIVE",
+						"CUSTOM"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "language",
+					"column": "language",
+					"type": "string",
+					"default": "en",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "profession",
+					"column": "profession",
+					"type": "enum",
+					"default": "HOST",
+					"enumValues": [
+						"HOST",
+						"CHEF",
+						"BARTENDER",
+						"TECHNICIAN",
+						"GUARDIAN",
+						"ARTIST",
+						"STORYTELLER",
+						"PSYCHOLOGIST",
+						"NONE"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "communicationStyle",
+					"column": "communication_style",
+					"type": "enum",
+					"default": "FRIENDLY",
+					"enumValues": [
+						"FRIENDLY",
+						"FORMAL",
+						"CASUAL",
+						"SARCASTIC",
+						"RESERVED",
+						"ENTHUSIASTIC",
+						"NEUTRAL"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "perceivedAge",
+					"column": "perceived_age",
+					"type": "enum",
+					"default": "ADULT",
+					"enumValues": ["CHILD", "TEEN", "YOUNG_ADULT", "ADULT", "SENIOR"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "culturalBackground",
+					"column": "cultural_background",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "languagesSpoken",
+					"column": "languages_spoken",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "knowledgeDepth",
+					"column": "knowledge_depth",
+					"type": "enum",
+					"default": "INTERMEDIATE",
+					"enumValues": ["BASIC", "INTERMEDIATE", "ADVANCED", "EXPERT"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "interests",
+					"column": "interests",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "hobbies",
+					"column": "hobbies",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "skills",
+					"column": "skills",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "relationshipType",
+					"column": "relationship_type",
+					"type": "enum",
+					"default": "COMPANION",
+					"enumValues": [
+						"COMPANION",
+						"GUIDE",
+						"TEACHER",
+						"HELPER",
+						"GUARDIAN",
+						"ENTERTAINER"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "roleMode",
+					"column": "role_mode",
+					"type": "enum",
+					"default": "PASSIVE",
+					"enumValues": ["ACTIVE", "PASSIVE", "OBSERVER", "ADVISOR"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "emotionExpressionStyle",
+					"column": "emotion_expression_style",
+					"type": "enum",
+					"default": "balanced",
+					"enumValues": ["minimal", "balanced", "talkative"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceStyle",
+					"column": "voice_style",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "promptOverrides",
+					"column": "prompt_overrides",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "modules",
+			"table": "module_settings",
+			"fields": [
+				{
+					"key": "emotionEngine",
+					"column": "emotion_engine",
+					"type": "boolean",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "emotionCapture",
+					"column": "emotion_capture",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "memoryEngine",
+					"column": "memory_engine",
+					"type": "boolean",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "factCapture",
+					"column": "fact_capture",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "factRecall",
+					"column": "fact_recall",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "environmentTimeEnabled",
+					"column": "environment_time_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionOnlyWhenIdle",
+					"column": "reflection_only_when_idle",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionConcurrency",
+					"column": "reflection_concurrency",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionQueueMaxDepth",
+					"column": "reflection_queue_max_depth",
+					"type": "number",
+					"default": 12,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionYieldToVoice",
+					"column": "reflection_yield_to_voice",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionTimeoutMs",
+					"column": "reflection_timeout_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionIdlePollMs",
+					"column": "reflection_idle_poll_ms",
+					"type": "number",
+					"default": 250,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionIdleGraceMs",
+					"column": "reflection_idle_grace_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionMaxIdleWaitMs",
+					"column": "reflection_max_idle_wait_ms",
+					"type": "number",
+					"default": 180000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionSlotTimeoutMs",
+					"column": "reflection_slot_timeout_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionYieldMaxAttempts",
+					"column": "reflection_yield_max_attempts",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "identityEngine",
+					"column": "identity_engine",
+					"type": "boolean",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "skillsEngine",
+					"column": "skills_engine",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "metricsSampleResources",
+					"column": "metrics_sample_resources",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "turnEventsPersist",
+					"column": "turn_events_persist",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactivityEngine",
+					"column": "proactivity_engine",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveIdleNudgeEnabled",
+					"column": "proactive_idle_nudge_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveIdleNudgeAfterMs",
+					"column": "proactive_idle_nudge_after_ms",
+					"type": "number",
+					"default": 1800000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveIdleNudgeMinIntervalMs",
+					"column": "proactive_idle_nudge_min_interval_ms",
+					"type": "number",
+					"default": 3600000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveQuietHoursStart",
+					"column": "proactive_quiet_hours_start",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "proactiveQuietHoursEnd",
+					"column": "proactive_quiet_hours_end",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "proactiveMaxPerHour",
+					"column": "proactive_max_per_hour",
+					"type": "number",
+					"default": 6,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveMaxPerDay",
+					"column": "proactive_max_per_day",
+					"type": "number",
+					"default": 20,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveChimeEnabled",
+					"column": "proactive_chime_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveDeferMaxMs",
+					"column": "proactive_defer_max_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveTickMs",
+					"column": "proactive_tick_ms",
+					"type": "number",
+					"default": 5000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveLeaseMs",
+					"column": "proactive_lease_ms",
+					"type": "number",
+					"default": 60000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveMaxAttempts",
+					"column": "proactive_max_attempts",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "proactiveRetryBackoffMs",
+					"column": "proactive_retry_backoff_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "capabilities",
+			"table": "runtime_capabilities",
+			"fields": [
+				{
+					"key": "wakeword",
+					"column": "wakeword",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "record",
+					"column": "record",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "stt",
+					"column": "stt",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentDetection",
+					"column": "intent_detection",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentExecution",
+					"column": "intent_execution",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "promptGeneration",
+					"column": "prompt_generation",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "llm",
+					"column": "llm",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "tts",
+					"column": "tts",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "playback",
+					"column": "playback",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "stt",
+			"table": "stt_config",
+			"fields": [
+				{
+					"key": "engine",
+					"column": "engine",
+					"type": "enum",
+					"default": "PARAKEET",
+					"enumValues": [
+						"WHISPER",
+						"MOONSHINE",
+						"ZIPFORMER",
+						"PARAKEET",
+						"STREAMING_TRANSDUCER",
+						"OPENAI_COMPATIBLE",
+						"NEMO_SPEECH"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "modelName",
+					"column": "model_name",
+					"type": "string",
+					"default": "parakeet-tdt-06b-v2",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "baseUrl",
+					"column": "base_url",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "apiKey",
+					"column": "api_key",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": true
+				},
+				{
+					"key": "language",
+					"column": "language",
+					"type": "string",
+					"default": "en",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "modelPath",
+					"column": "model_path",
+					"type": "string",
+					"default": "data/models/parakeet-tdt-06b-v2",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "quantization",
+					"column": "quantization",
+					"type": "string",
+					"default": "int8",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "silenceThreshold",
+					"column": "silence_threshold",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "bufferSize",
+					"column": "buffer_size",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "timeoutMs",
+					"column": "timeout_ms",
+					"type": "number",
+					"default": 5000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "enableEndpoint",
+					"column": "enable_endpoint",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "rule1MinTrailingSilence",
+					"column": "rule1_min_trailing_silence",
+					"type": "number",
+					"default": 1.2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "rule2MinTrailingSilence",
+					"column": "rule2_min_trailing_silence",
+					"type": "number",
+					"default": 0.6,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "rule3MinUtteranceLength",
+					"column": "rule3_min_utterance_length",
+					"type": "number",
+					"default": 12,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "numThreads",
+					"column": "stt_num_threads",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "provider",
+					"column": "stt_provider",
+					"type": "string",
+					"default": "cpu",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "decodePaddingMs",
+					"column": "stt_decode_padding_ms",
+					"type": "number",
+					"default": 600,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "partialAtEndpointEnabled",
+					"column": "stt_partial_at_endpoint_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolWarmWorkers",
+					"column": "stt_pool_warm_workers",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolMaxWorkers",
+					"column": "stt_pool_max_workers",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolAutoScaleEnabled",
+					"column": "stt_pool_auto_scale_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolIdleTimeoutMs",
+					"column": "stt_pool_idle_timeout_ms",
+					"type": "number",
+					"default": 60000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolQueueMaxDepth",
+					"column": "stt_pool_queue_max_depth",
+					"type": "number",
+					"default": 8,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolQueueTimeoutMs",
+					"column": "stt_pool_queue_timeout_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolExecutionTimeoutMs",
+					"column": "stt_pool_execution_timeout_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "maxConcurrentStreamingSessions",
+					"column": "stt_max_concurrent_streaming_sessions",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sessionIdleTimeoutMs",
+					"column": "stt_session_idle_timeout_ms",
+					"type": "number",
+					"default": 10000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "workerRecycleAfterJobs",
+					"column": "stt_worker_recycle_after_jobs",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "tts",
+			"table": "tts_config",
+			"fields": [
+				{
+					"key": "engine",
+					"column": "engine",
+					"type": "enum",
+					"default": "KOKORO",
+					"enumValues": [
+						"KOKORO",
+						"POCKET",
+						"VITS",
+						"KITTEN",
+						"MATCHA",
+						"SUPERTONIC"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceName",
+					"column": "voice_name",
+					"type": "string",
+					"default": "af_heart",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "language",
+					"column": "language",
+					"type": "string",
+					"default": "en",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "modelPath",
+					"column": "model_path",
+					"type": "string",
+					"default": "data/models/kokoro-multi-lang-v1_0",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "espeakNgDataPath",
+					"column": "espeak_ng_data_path",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "engineConfig",
+					"column": "engine_config",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "quantization",
+					"column": "quantization",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "pitch",
+					"column": "pitch",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speed",
+					"column": "speed",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "silenceScale",
+					"column": "silence_scale",
+					"type": "number",
+					"default": 0.2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "numThreads",
+					"column": "num_threads",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "provider",
+					"column": "provider",
+					"type": "string",
+					"default": "cpu",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "maxNumSentences",
+					"column": "max_num_sentences",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "streamingEnabled",
+					"column": "streaming_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pacerEnabled",
+					"column": "pacer_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pacerMinRemainingMs",
+					"column": "pacer_min_remaining_ms",
+					"type": "number",
+					"default": 5000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pacerMaxChars",
+					"column": "pacer_max_chars",
+					"type": "number",
+					"default": 300,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolWarmWorkers",
+					"column": "tts_pool_warm_workers",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolMaxWorkers",
+					"column": "tts_pool_max_workers",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolAutoScaleEnabled",
+					"column": "tts_pool_auto_scale_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolIdleTimeoutMs",
+					"column": "tts_pool_idle_timeout_ms",
+					"type": "number",
+					"default": 60000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolQueueMaxDepth",
+					"column": "tts_pool_queue_max_depth",
+					"type": "number",
+					"default": 8,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolQueueTimeoutMs",
+					"column": "tts_pool_queue_timeout_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "poolExecutionTimeoutMs",
+					"column": "tts_pool_execution_timeout_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheEnabled",
+					"column": "phrase_cache_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheEntries",
+					"column": "phrase_cache_entries",
+					"type": "number",
+					"default": 32,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheMaxChars",
+					"column": "phrase_cache_max_chars",
+					"type": "number",
+					"default": 80,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceSoftFlushMinChars",
+					"column": "sentence_soft_flush_min_chars",
+					"type": "number",
+					"default": 20,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceFirstUnitMaxWords",
+					"column": "sentence_first_unit_max_words",
+					"type": "number",
+					"default": 5,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceMediumFlushChars",
+					"column": "sentence_medium_flush_chars",
+					"type": "number",
+					"default": 60,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceHardFlushChars",
+					"column": "sentence_hard_flush_chars",
+					"type": "number",
+					"default": 200,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceFirstFlushMaxMs",
+					"column": "sentence_first_flush_max_ms",
+					"type": "number",
+					"default": 800,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pipelineMaxQueueDepth",
+					"column": "pipeline_max_queue_depth",
+					"type": "number",
+					"default": 4,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pipelineEagerTtsSentences",
+					"column": "pipeline_eager_tts_sentences",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "workerRecycleAfterJobs",
+					"column": "tts_worker_recycle_after_jobs",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheMaxBytes",
+					"column": "phrase_cache_max_bytes",
+					"type": "number",
+					"default": 8000000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheWarmupEnabled",
+					"column": "phrase_cache_warmup_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "phraseCacheReplyUnitsEnabled",
+					"column": "phrase_cache_reply_units_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sentenceFirstFragmentMaxWords",
+					"column": "sentence_first_fragment_max_words",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "llm",
+			"table": "llm_model_config",
+			"fields": [
+				{
+					"key": "engine",
+					"column": "engine",
+					"type": "enum",
+					"default": "OLLAMA",
+					"enumValues": ["OLLAMA", "OPENAI_COMPATIBLE"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "modelName",
+					"column": "model_name",
+					"type": "string",
+					"default": "llama3.2:3b",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "baseUrl",
+					"column": "base_url",
+					"type": "string",
+					"default": "http://localhost:11434",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "apiKey",
+					"column": "api_key",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": true
+				},
+				{
+					"key": "reflectionModelName",
+					"column": "reflection_model_name",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "temperature",
+					"column": "temperature",
+					"type": "number",
+					"default": 0.7,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "contextWindow",
+					"column": "context_window",
+					"type": "number",
+					"default": 4096,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "numPredict",
+					"column": "num_predict",
+					"type": "number",
+					"default": 80,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "llmConcurrency",
+					"column": "llm_concurrency",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "keepAliveMs",
+					"column": "keep_alive_ms",
+					"type": "number",
+					"default": -1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "streamUsage",
+					"column": "stream_usage",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "useCompactPrompt",
+					"column": "use_compact_prompt",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentPromptMode",
+					"column": "agent_prompt_mode",
+					"type": "enum",
+					"default": "compact",
+					"enumValues": ["lean", "compact", "full"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "skillsRouting",
+					"column": "skills_routing",
+					"type": "enum",
+					"default": "embedding-gate",
+					"enumValues": [
+						"always-agent",
+						"intent-gate",
+						"embedding-gate",
+						"fast-router"
+					],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentModelName",
+					"column": "intent_model_name",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "embeddingModelName",
+					"column": "embedding_model_name",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "intentEmbedThreshold",
+					"column": "intent_embed_threshold",
+					"type": "number",
+					"default": 0.66,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "descriptorRoutingEnabled",
+					"column": "descriptor_routing_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "toolModelName",
+					"column": "tool_model_name",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "agentMaxSteps",
+					"column": "agent_max_steps",
+					"type": "number",
+					"default": 5,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentBudgetMs",
+					"column": "agent_budget_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "confirmationTtlMs",
+					"column": "confirmation_ttl_ms",
+					"type": "number",
+					"default": 120000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentAckAfterMs",
+					"column": "agent_ack_after_ms",
+					"type": "number",
+					"default": 600,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "toolShortlistMax",
+					"column": "tool_shortlist_max",
+					"type": "number",
+					"default": 8,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "matcherEngine",
+					"column": "matcher_engine",
+					"type": "enum",
+					"default": "hybrid",
+					"enumValues": ["lexical", "semantic", "hybrid"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "matcherSemanticThreshold",
+					"column": "matcher_semantic_threshold",
+					"type": "number",
+					"default": 0.55,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "matcherRrfK",
+					"column": "matcher_rrf_k",
+					"type": "number",
+					"default": 60,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "matcherCascadeExit",
+					"column": "matcher_cascade_exit",
+					"type": "number",
+					"default": 6,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "embedBackend",
+					"column": "embed_backend",
+					"type": "enum",
+					"default": "transformers",
+					"enumValues": ["transformers", "ollama"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "embedModelPath",
+					"column": "embed_model_path",
+					"type": "string",
+					"default": "data/models/bge-small-en-v1.5",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "slotAffinityEnabled",
+					"column": "slot_affinity_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "repeatPenalty",
+					"column": "repeat_penalty",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "topK",
+					"column": "top_k",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "minP",
+					"column": "min_p",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "seed",
+					"column": "seed",
+					"type": "number",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "stopSequences",
+					"column": "stop_sequences",
+					"type": "json",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "toolTemperature",
+					"column": "tool_temperature",
+					"type": "number",
+					"default": 0.2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "toolNumPredict",
+					"column": "tool_num_predict",
+					"type": "number",
+					"default": 512,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "asyncFollowUpPolicy",
+					"column": "async_follow_up_policy",
+					"type": "enum",
+					"default": "queue",
+					"enumValues": ["queue", "drop"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "asyncFollowUpMaxWaitMs",
+					"column": "async_follow_up_max_wait_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "llmStreamIdleMs",
+					"column": "llm_stream_idle_ms",
+					"type": "number",
+					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "quietAudioPollMs",
+					"column": "quiet_audio_poll_ms",
+					"type": "number",
+					"default": 250,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "quietAudioDeadlineMs",
+					"column": "quiet_audio_deadline_ms",
+					"type": "number",
+					"default": 20000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentRepeatWarnAt",
+					"column": "agent_repeat_warn_at",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentRepeatBlockAt",
+					"column": "agent_repeat_block_at",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentMaxToolCallsPerTurn",
+					"column": "agent_max_tool_calls_per_turn",
+					"type": "number",
+					"default": 6,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentRecentToolsTurns",
+					"column": "agent_recent_tools_turns",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentQuestionGuardEnabled",
+					"column": "agent_question_guard_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentTargetGuardEnabled",
+					"column": "agent_target_guard_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentReadThenAnswerEnabled",
+					"column": "agent_read_then_answer_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "toolRequestMaxRetries",
+					"column": "tool_request_max_retries",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "anaphoraMaxAgeMs",
+					"column": "anaphora_max_age_ms",
+					"type": "number",
+					"default": 120000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathEnabled",
+					"column": "fast_path_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathMinCoverage",
+					"column": "fast_path_min_coverage",
+					"type": "number",
+					"default": 0.1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathCompoundEnabled",
+					"column": "fast_path_compound_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathCompoundMaxTargets",
+					"column": "fast_path_compound_max_targets",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathMaxUtteranceChars",
+					"column": "fast_path_max_utterance_chars",
+					"type": "number",
+					"default": 80,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "fastPathBlocklistEnabled",
+					"column": "fast_path_blocklist_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "constrainedRepairEnabled",
+					"column": "constrained_repair_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "slotWaitTimeoutMs",
+					"column": "slot_wait_timeout_ms",
+					"type": "number",
+					"default": 8000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "slotWaitPollMs",
+					"column": "slot_wait_poll_ms",
+					"type": "number",
+					"default": 25,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentLlmOnSingleSlot",
+					"column": "intent_llm_on_single_slot",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "agentDecisionMode",
+					"column": "agent_decision_mode",
+					"type": "enum",
+					"default": "native",
+					"enumValues": ["native", "structured"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "authoredSpeechEnabled",
+					"column": "authored_speech_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "wakeWord",
+			"table": "wake_word_config",
+			"fields": [
+				{
+					"key": "engine",
+					"column": "engine",
+					"type": "enum",
+					"default": "KWS",
+					"enumValues": ["KWS"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeWord",
+					"column": "wake_word",
+					"type": "string",
+					"default": "computer",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sensitivity",
+					"column": "sensitivity",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "threshold",
+					"column": "threshold",
+					"type": "number",
+					"default": 0.25,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "cooldown",
+					"column": "cooldown",
+					"type": "number",
+					"default": 2,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "numThreads",
+					"column": "ww_num_threads",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "provider",
+					"column": "ww_provider",
+					"type": "string",
+					"default": "cpu",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "framework",
+					"column": "framework",
+					"type": "enum",
+					"default": "onnx",
+					"enumValues": ["onnx"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "model",
+					"column": "model",
+					"type": "string",
+					"default": "kws-zipformer-gigaspeech",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "customModelPath",
+					"column": "custom_model_path",
+					"type": "string",
+					"default": "data/models/kws-zipformer-gigaspeech-3.3M-2024-01-01",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "quantization",
+					"column": "quantization",
+					"type": "string",
+					"default": "int8",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadEngine",
+					"column": "vad_engine",
+					"type": "enum",
+					"default": "SILERO",
+					"enumValues": ["SILERO"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadModelPath",
+					"column": "vad_model_path",
+					"type": "string",
+					"default": "data/models/silero_vad.onnx",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadThreshold",
+					"column": "vad_threshold",
+					"type": "number",
+					"default": 0.5,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadMinSilenceS",
+					"column": "vad_min_silence_s",
+					"type": "number",
+					"default": 0.5,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadEndOfSpeechMs",
+					"column": "vad_end_of_speech_ms",
+					"type": "number",
+					"default": 200,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "inputDeviceIndex",
+					"column": "device",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sampleRate",
+					"column": "sample_rate",
+					"type": "number",
+					"default": 16000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "bitsPerSample",
+					"column": "bits_per_sample",
+					"type": "number",
+					"default": 16,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "channels",
+					"column": "channels",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "maxRecordingMs",
+					"column": "max_recording_ms",
+					"type": "number",
+					"default": 15000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "followUpWindowMs",
+					"column": "follow_up_window_ms",
+					"type": "number",
+					"default": 8000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "bargeInEnabled",
+					"column": "barge_in_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculativeSilenceMs",
+					"column": "speculative_silence_ms",
+					"type": "number",
+					"default": 300,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "satelliteSpeculationEnabled",
+					"column": "satellite_speculation_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "semanticEndpointingEnabled",
+					"column": "semantic_endpointing_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticEndpointingEnabled",
+					"column": "acoustic_endpointing_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticEndpointCompleteThreshold",
+					"column": "acoustic_endpoint_complete_threshold",
+					"type": "number",
+					"default": 0.85,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticGateCooldownMs",
+					"column": "acoustic_gate_cooldown_ms",
+					"type": "number",
+					"default": 250,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticMaxHoldMs",
+					"column": "acoustic_max_hold_ms",
+					"type": "number",
+					"default": 2000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticTailKeepMs",
+					"column": "acoustic_tail_keep_ms",
+					"type": "number",
+					"default": 150,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "acousticLocalMaxHoldMs",
+					"column": "acoustic_local_max_hold_ms",
+					"type": "number",
+					"default": 1000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "bargeInMinRms",
+					"column": "barge_in_min_rms",
+					"type": "number",
+					"default": 0.008,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "suppressWakeWhilePeerSpeaks",
+					"column": "suppress_wake_while_peer_speaks",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "turnDetectorEngine",
+					"column": "turn_detector_engine",
+					"type": "enum",
+					"default": "SMART_TURN",
+					"enumValues": ["SMART_TURN"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "turnDetectorModelPath",
+					"column": "turn_detector_model_path",
+					"type": "string",
+					"default": "data/models/smart-turn/smart-turn-v3.2-cpu.onnx",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculativeTtsEnabled",
+					"column": "speculative_tts_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculateWithSkills",
+					"column": "speculate_with_skills",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculationSkillGateMaxScore",
+					"column": "speculation_skill_gate_max_score",
+					"type": "number",
+					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "twoTierEndpointEnabled",
+					"column": "two_tier_endpoint_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "twoTierEagerMinPartialChars",
+					"column": "two_tier_eager_min_partial_chars",
+					"type": "number",
+					"default": 8,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "twoTierPrefillIdleGuardMs",
+					"column": "two_tier_prefill_idle_guard_ms",
+					"type": "number",
+					"default": 150,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "twoTierResumeGraceMs",
+					"column": "two_tier_resume_grace_ms",
+					"type": "number",
+					"default": 300,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "twoTierMaxEagerPrefills",
+					"column": "two_tier_max_eager_prefills",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "sharedMicStreamEnabled",
+					"column": "shared_mic_stream_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "endpointCompleteMs",
+					"column": "endpoint_complete_ms",
+					"type": "number",
+					"default": 350,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "endpointIncompleteMs",
+					"column": "endpoint_incomplete_ms",
+					"type": "number",
+					"default": 900,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "endpointWaitMs",
+					"column": "endpoint_wait_ms",
+					"type": "number",
+					"default": 1400,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "dynamicEndpointingEnabled",
+					"column": "dynamic_endpointing_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "dynamicEndpointMinMs",
+					"column": "dynamic_endpoint_min_ms",
+					"type": "number",
+					"default": 300,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "dynamicEndpointMaxMs",
+					"column": "dynamic_endpoint_max_ms",
+					"type": "number",
+					"default": 1500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "dynamicEndpointAlpha",
+					"column": "dynamic_endpoint_alpha",
+					"type": "number",
+					"default": 0.9,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "dynamicEndpointMargin",
+					"column": "dynamic_endpoint_margin",
+					"type": "number",
+					"default": 1.5,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pauseBargeInEnabled",
+					"column": "pause_barge_in_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "falseInterruptionTimeoutMs",
+					"column": "false_interruption_timeout_ms",
+					"type": "number",
+					"default": 2000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoSuppressEnabled",
+					"column": "echo_suppress_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoSuppressMarginMs",
+					"column": "echo_suppress_margin_ms",
+					"type": "number",
+					"default": 500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "followUpLeadPadMs",
+					"column": "follow_up_lead_pad_ms",
+					"type": "number",
+					"default": 300,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecEnabled",
+					"column": "aec_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecBackend",
+					"column": "aec_backend",
+					"type": "enum",
+					"default": "AUTO",
+					"enumValues": ["AUTO", "PIPEWIRE", "PULSEAUDIO"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecMethod",
+					"column": "aec_method",
+					"type": "string",
+					"default": "webrtc",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecSourceMaster",
+					"column": "aec_source_master",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "aecSinkMaster",
+					"column": "aec_sink_master",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "aecSourceName",
+					"column": "aec_source_name",
+					"type": "string",
+					"default": "domia_aec_source",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecSinkName",
+					"column": "aec_sink_name",
+					"type": "string",
+					"default": "domia_aec_sink",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "aecSetDefaultDevices",
+					"column": "aec_set_default_devices",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "denoiseEnabled",
+					"column": "denoise_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "denoiseEngine",
+					"column": "denoise_engine",
+					"type": "enum",
+					"default": "GTCRN",
+					"enumValues": ["GTCRN"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "denoiseModelPath",
+					"column": "denoise_model_path",
+					"type": "string",
+					"default": "data/models/gtcrn_simple.onnx",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "denoiseNumThreads",
+					"column": "denoise_num_threads",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "denoiseProvider",
+					"column": "denoise_provider",
+					"type": "string",
+					"default": "cpu",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualGateEnabled",
+					"column": "echo_residual_gate_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualMinRatio",
+					"column": "echo_residual_min_ratio",
+					"type": "number",
+					"default": 0.62,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualWindowMs",
+					"column": "echo_residual_window_ms",
+					"type": "number",
+					"default": 100,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualMaxDelayMs",
+					"column": "echo_residual_max_delay_ms",
+					"type": "number",
+					"default": 1500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualMinRms",
+					"column": "echo_residual_min_rms",
+					"type": "number",
+					"default": 0.018,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoResidualMinFrames",
+					"column": "echo_residual_min_frames",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "stopWordAbortEnabled",
+					"column": "stop_word_abort_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "stopWordMaxWords",
+					"column": "stop_word_max_words",
+					"type": "number",
+					"default": 4,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifier",
+					"column": "wake_verifier",
+					"type": "enum",
+					"default": "NONE",
+					"enumValues": ["NONE", "ENERGY"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifierWindowMs",
+					"column": "wake_verifier_window_ms",
+					"type": "number",
+					"default": 1500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifierMinRms",
+					"column": "wake_verifier_min_rms",
+					"type": "number",
+					"default": 0.01,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifierMinSpeechMs",
+					"column": "wake_verifier_min_speech_ms",
+					"type": "number",
+					"default": 200,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifierMinScore",
+					"column": "wake_verifier_min_score",
+					"type": "number",
+					"default": 0.5,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "playback",
+			"table": "audio_playback_config",
+			"fields": [
+				{
+					"key": "engine",
+					"column": "engine",
+					"type": "enum",
+					"default": "SOX",
+					"enumValues": ["SOX", "PLAY-SOUND"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "volume",
+					"column": "volume",
+					"type": "number",
+					"default": 100,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "streamingEnabled",
+					"column": "streaming_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "pauseEnabled",
+					"column": "pause_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wordLevelHeardEnabled",
+					"column": "word_level_heard_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "watchdogGraceMs",
+					"column": "watchdog_grace_ms",
+					"type": "number",
+					"default": 2500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "truncationReplayEnabled",
+					"column": "truncation_replay_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "truncationReplayThresholdMs",
+					"column": "truncation_replay_threshold_ms",
+					"type": "number",
+					"default": 750,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "outputDevice",
+					"column": "output_device",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "feedbackSoundsEnabled",
+					"column": "feedback_sounds_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "ackSoundEnabled",
+					"column": "ack_sound_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "errorSoundEnabled",
+					"column": "error_sound_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "doneSoundEnabled",
+					"column": "done_sound_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "thinkingSoundEnabled",
+					"column": "thinking_sound_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "endpointSoundEnabled",
+					"column": "endpoint_sound_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "ackSoundPath",
+					"column": "ack_sound_path",
+					"type": "string",
+					"default": "data/sounds/ack.wav",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "errorSoundPath",
+					"column": "error_sound_path",
+					"type": "string",
+					"default": "data/sounds/error.wav",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "doneSoundPath",
+					"column": "done_sound_path",
+					"type": "string",
+					"default": "data/sounds/done.wav",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "thinkingSoundPath",
+					"column": "thinking_sound_path",
+					"type": "string",
+					"default": "data/sounds/thinking.wav",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "endpointSoundPath",
+					"column": "endpoint_sound_path",
+					"type": "string",
+					"default": "data/sounds/endpoint.wav",
+					"nullable": false,
+					"secret": false
+				}
+			]
+		},
+		{
+			"id": "mqttLocal",
+			"table": "mqtt_config",
+			"fields": [
+				{
+					"key": "type",
+					"column": "type",
+					"type": "enum",
+					"default": "LOCAL",
+					"enumValues": ["LOCAL"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "host",
+					"column": "host",
+					"type": "string",
+					"default": "localhost",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "username",
+					"column": "username",
+					"type": "string",
+					"default": "domia",
+					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "password",
+					"column": "password",
+					"type": "string",
+					"default": null,
+					"nullable": true,
+					"secret": true
+				},
+				{
+					"key": "qos",
+					"column": "qos",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "topicRoot",
+					"column": "topic_root",
+					"type": "string",
+					"default": "domia",
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "protocol",
+					"column": "protocol",
+					"type": "enum",
+					"default": "mqtt",
+					"enumValues": ["mqtt", "mqtts", "ws", "wss"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "port",
+					"column": "port",
+					"type": "number",
+					"default": 1883,
+					"nullable": false,
+					"secret": false
+				}
+			]
+		}
+	]
+}

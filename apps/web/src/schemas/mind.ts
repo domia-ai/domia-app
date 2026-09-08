@@ -50,9 +50,6 @@ export const mindCharacterSchema = z.object({
 export const mindModulesSchema = z.object({
 	emotionEngine: z.boolean(),
 	memoryEngine: z.boolean(),
-	collectiveMind: z.boolean(),
-	remoteAccessEngine: z.boolean(),
-	narrativeEngine: z.boolean(),
 	identityEngine: z.boolean(),
 })
 

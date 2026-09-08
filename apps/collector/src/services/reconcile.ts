@@ -34,6 +34,7 @@ export const reconcileRosters = async (): Promise<void> => {
 				)
 				continue
 			}
+			dbAdapter.bumpMirrorLastSeen(live, Date.now())
 			const retired = node.keys.filter((k) => !live.includes(k))
 			if (retired.length === 0) continue
 			dbAdapter.retireMirrorIdentitiesByNode(nodeId, live)
