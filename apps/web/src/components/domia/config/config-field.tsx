@@ -14,20 +14,8 @@ import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { TagEditor } from "../tag-editor"
 import { ModelPicker } from "./model-picker"
 import { cn } from "@/lib/utils"
+import { unitLabel } from "@/utils/config"
 import type { ConfigField, FieldValue } from "@/types/config"
-
-const UNIT_LABELS: Record<string, () => string> = {
-	chars: m.config_unit_chars,
-	words: m.config_unit_words,
-	sentences: m.config_unit_sentences,
-	tokens: m.config_unit_tokens,
-	turns: m.config_unit_turns,
-	ms: m.config_unit_ms,
-	s: m.config_unit_s,
-	Hz: m.config_unit_hz,
-}
-
-const unitLabel = (unit: string): string => UNIT_LABELS[unit]?.() ?? unit
 
 function ChangedDot({ changed }: { changed: boolean }) {
 	if (!changed) return null

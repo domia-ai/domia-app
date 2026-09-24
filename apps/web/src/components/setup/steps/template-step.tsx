@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Check, Layers, Loader2, Lock } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { summarizeApply } from "@/lib/config-apply"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,39 +28,36 @@ export function TemplateStep({
 	const [selected, setSelected] = useState<string | null>(null)
 	const [applied, setApplied] = useState<string | null>(null)
 
-	const apply = useMutation({
+	const apply = useActionMutation({
 		mutationFn: (templateId: string) =>
 			applyConfigTemplateFn({ data: { templateId, domiaKey } }),
-	})
-
-	const onApply = async () => {
-		if (!selected) return
-		const template = (templates.data ?? []).find((t) => t.id === selected)
-		const result = await apply.mutateAsync(selected)
-		if (result.ok && result.data) {
-			setApplied(selected)
+		failureTitle: m.toast_template_apply_failed,
+		onDone: (data, templateId) => {
+			const template = (templates.data ?? []).find((t) => t.id === templateId)
+			setApplied(templateId)
 			toast.success(
 				m.toast_template_applied({
-					template: template?.name ?? selected,
+					template: template?.name ?? templateId,
 					name: domiaName,
 				}),
 				{
-					description: result.data.apply
-						? summarizeApply(result.data.apply)
+					description: data?.apply
+						? summarizeApply(data.apply)
 						: m.toast_template_applied_desc({ name: domiaName }),
 				},
 			)
-			await Promise.all([
+			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 				queryClient.invalidateQueries({ queryKey: ["config", domiaKey] }),
 				queryClient.invalidateQueries({ queryKey: ["setup-targets"] }),
 				queryClient.invalidateQueries({ queryKey: ["setup-candidates"] }),
 			])
-		} else {
-			toast.error(m.toast_template_apply_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
+		},
+	})
+
+	const onApply = () => {
+		if (!selected) return
+		apply.mutate(selected)
 	}
 
 	return (

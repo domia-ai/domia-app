@@ -8,6 +8,7 @@ CREATE TABLE `announcement` (
 	`target` text,
 	`delivered` integer DEFAULT false NOT NULL,
 	`audio_path` text,
+	`person_id` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -35,6 +36,7 @@ CREATE TABLE `domia_registry` (
 	`local_ip` text,
 	`grpc_port` integer,
 	`http_port` integer,
+	`http_scheme` text DEFAULT 'http' NOT NULL,
 	`is_hosted` integer DEFAULT true NOT NULL,
 	`is_principal` integer DEFAULT false NOT NULL,
 	`config_snapshot_json` text,
@@ -57,6 +59,16 @@ CREATE TABLE `emotion_event` (
 );
 --> statement-breakpoint
 CREATE INDEX `emotion_event_source_created_idx` ON `emotion_event` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE TABLE `fact_evidence` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`fact_id` text NOT NULL,
+	`source_interaction_id` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `fact_evidence_fact_idx` ON `fact_evidence` (`fact_id`);--> statement-breakpoint
+CREATE INDEX `fact_evidence_source_created_idx` ON `fact_evidence` (`source_domia_key`,`created_at`);--> statement-breakpoint
 CREATE TABLE `interaction_label` (
 	`id` text PRIMARY KEY NOT NULL,
 	`interaction_id` text NOT NULL,
@@ -96,6 +108,7 @@ CREATE TABLE `interaction_trace` (
 	`stt_result` text,
 	`intent_decision` text,
 	`intent_ms` integer,
+	`fast_path_ms` integer,
 	`agent_decision_ms` integer,
 	`agent_tool_ms` integer,
 	`agent_finalize_ms` integer,
@@ -121,6 +134,21 @@ CREATE TABLE `interaction_trace` (
 	`llm_ttft_ms` integer,
 	`llm_context_window` integer,
 	`llm_finish_reason` text,
+	`llm_request_id` text,
+	`llm_fresh_tokens` integer,
+	`llm_cached_tokens` integer,
+	`transcription_delay_ms` integer,
+	`eou_delay_ms` integer,
+	`endpoint_debounce_ms` integer,
+	`speech_end_at` integer,
+	`endpoint_decision_at` integer,
+	`stt_final_at` integer,
+	`prompt_ready_at` integer,
+	`llm_queued_at` integer,
+	`llm_first_token_at` integer,
+	`tts_first_unit_at` integer,
+	`audio_delivered_at` integer,
+	`audio_audible_at` integer,
 	`tool_call_count` integer,
 	`tool_error_count` integer,
 	`input_audio_ms` integer,
@@ -144,6 +172,9 @@ CREATE TABLE `interaction_trace` (
 	`error_message` text,
 	`satellite_id` text,
 	`satellite_protocol` text,
+	`implicit_feedback` text,
+	`abort_reason` text,
+	`trace_id` text,
 	`domia_snapshot` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
@@ -153,6 +184,33 @@ CREATE INDEX `interaction_trace_source_created_idx` ON `interaction_trace` (`sou
 CREATE INDEX `interaction_trace_created_idx` ON `interaction_trace` (`created_at`);--> statement-breakpoint
 CREATE INDEX `interaction_trace_session_trace_idx` ON `interaction_trace` (`interaction_session_trace_id`);--> statement-breakpoint
 CREATE INDEX `interaction_trace_source_updated_idx` ON `interaction_trace` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE INDEX `interaction_trace_trace_id_idx` ON `interaction_trace` (`trace_id`);--> statement-breakpoint
+CREATE TABLE `knowledge_entry` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`title` text,
+	`content` text,
+	`keywords` text,
+	`priority` integer,
+	`is_active` integer,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `knowledge_entry_source_updated_idx` ON `knowledge_entry` (`source_domia_key`,`updated_at`);--> statement-breakpoint
+CREATE INDEX `knowledge_entry_source_active_idx` ON `knowledge_entry` (`source_domia_key`,`is_active`);--> statement-breakpoint
+CREATE TABLE `memory_episode` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`session_id` text,
+	`summary` text,
+	`mood_arc` text,
+	`topics` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `memory_episode_source_created_idx` ON `memory_episode` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE INDEX `memory_episode_session_idx` ON `memory_episode` (`session_id`);--> statement-breakpoint
 CREATE TABLE `memory_fact` (
 	`id` text PRIMARY KEY NOT NULL,
 	`source_domia_key` text NOT NULL,
@@ -162,6 +220,10 @@ CREATE TABLE `memory_fact` (
 	`value_key` text,
 	`confidence` real,
 	`kind` text,
+	`source_kind` text,
+	`person_id` text,
+	`valid_from` text,
+	`valid_until` text,
 	`superseded_at` text,
 	`source_interaction_id` text,
 	`created_at` text NOT NULL,
@@ -171,6 +233,8 @@ CREATE TABLE `memory_fact` (
 CREATE INDEX `memory_fact_source_subject_idx` ON `memory_fact` (`source_domia_key`,`subject`,`relation`);--> statement-breakpoint
 CREATE INDEX `memory_fact_source_updated_idx` ON `memory_fact` (`source_domia_key`,`updated_at`);--> statement-breakpoint
 CREATE INDEX `memory_fact_interaction_idx` ON `memory_fact` (`source_interaction_id`);--> statement-breakpoint
+CREATE INDEX `memory_fact_source_valid_idx` ON `memory_fact` (`source_domia_key`,`valid_until`);--> statement-breakpoint
+CREATE INDEX `memory_fact_source_person_idx` ON `memory_fact` (`source_domia_key`,`person_id`);--> statement-breakpoint
 CREATE TABLE `mind_template` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -188,9 +252,42 @@ CREATE TABLE `sync_cursor` (
 	`last_turn_id` text,
 	`last_facts_at` text,
 	`last_facts_id` text,
+	`last_tool_at` text,
+	`last_tool_id` text,
+	`last_episode_at` text,
+	`last_episode_id` text,
+	`last_knowledge_at` text,
+	`last_knowledge_id` text,
+	`last_voice_feel_at` text,
+	`last_voice_feel_id` text,
+	`last_evidence_at` text,
+	`last_evidence_id` text,
 	`last_synced_at` integer
 );
 --> statement-breakpoint
+CREATE TABLE `tool_run` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`interaction_id` text NOT NULL,
+	`tool` text NOT NULL,
+	`provider_slug` text,
+	`args_hash` text,
+	`risk_class` text,
+	`policy_decision` text,
+	`policy_source` text,
+	`confirmation_id` text,
+	`routine_slug` text,
+	`step_index` integer,
+	`status` text,
+	`duration_ms` integer,
+	`spoken_at` text,
+	`settled_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `tool_run_source_created_idx` ON `tool_run` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE INDEX `tool_run_interaction_idx` ON `tool_run` (`interaction_id`);--> statement-breakpoint
+CREATE INDEX `tool_run_routine_idx` ON `tool_run` (`routine_slug`);--> statement-breakpoint
 CREATE TABLE `turn_event` (
 	`id` text PRIMARY KEY NOT NULL,
 	`source_domia_key` text NOT NULL,
@@ -207,4 +304,33 @@ CREATE TABLE `turn_event` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `turn_event_interaction_seq_idx` ON `turn_event` (`interaction_id`,`seq`);--> statement-breakpoint
-CREATE INDEX `turn_event_source_created_idx` ON `turn_event` (`source_domia_key`,`created_at`);
+CREATE INDEX `turn_event_source_created_idx` ON `turn_event` (`source_domia_key`,`created_at`);--> statement-breakpoint
+CREATE TABLE `user_model` (
+	`source_domia_key` text PRIMARY KEY NOT NULL,
+	`id` text,
+	`summary` text,
+	`mood_tendencies` text,
+	`interests` text,
+	`prefs` text,
+	`familiarity` real,
+	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `voice_feel_adjustment` (
+	`id` text PRIMARY KEY NOT NULL,
+	`source_domia_key` text NOT NULL,
+	`rule` text,
+	`section` text,
+	`field` text,
+	`from_value` real,
+	`to_value` real,
+	`features` text,
+	`sample_size` integer,
+	`confidence` real,
+	`config_revision` integer,
+	`applied_at` text,
+	`reverted_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `voice_feel_source_created_idx` ON `voice_feel_adjustment` (`source_domia_key`,`created_at`);

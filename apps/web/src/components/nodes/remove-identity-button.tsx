@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -35,29 +35,22 @@ export function RemoveIdentityButton({
 	const queryClient = useQueryClient()
 	const demo = isDemoMode()
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: () => removeIdentityFn({ data: { anchorDomiaKey, domiaKey } }),
-	})
-
-	const onConfirm = async () => {
-		const result = await mutation.mutateAsync()
-		if (result.ok) {
+		failureTitle: m.err_remove_identity,
+		onDone: () => {
 			toast.success(m.toast_identity_removed(), {
 				description: m.toast_identity_removed_desc({ name }),
 			})
 			setOpen(false)
-			await Promise.all([
+			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["nodes"] }),
 				queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
 				queryClient.invalidateQueries({ queryKey: ["identities"] }),
 				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 			])
-		} else {
-			toast.error(m.err_remove_identity(), {
-				description: errText(result.error),
-			})
-		}
-	}
+		},
+	})
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -80,7 +73,7 @@ export function RemoveIdentityButton({
 					/>
 					<Button
 						variant="destructive"
-						onClick={onConfirm}
+						onClick={() => mutation.mutate(undefined)}
 						disabled={mutation.isPending}
 					>
 						{mutation.isPending

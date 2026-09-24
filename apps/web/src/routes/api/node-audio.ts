@@ -4,10 +4,13 @@ import { getNodeEndpoint } from "@/services/fleet"
 import { getAudioAsset } from "@/services/audio"
 import { env } from "@/config"
 import { meshHeaders } from "@/lib/node-client"
+import { nodeBaseUrl } from "@/utils/node-base"
+
+const NODE_AUDIO_KINDS = ["input", "tts", "announce"] as const
 
 const archivedResponse = async (
 	id: string,
-	kind: "input" | "tts",
+	kind: (typeof NODE_AUDIO_KINDS)[number],
 ): Promise<Response | null> => {
 	const asset = await getAudioAsset(id, kind)
 	if (!asset) return null
@@ -39,36 +42,35 @@ export const Route = createFileRoute("/api/node-audio")({
 						{ status: 400 },
 					)
 				}
-				if (kind !== "input" && kind !== "tts") {
+				if (
+					!NODE_AUDIO_KINDS.includes(kind as (typeof NODE_AUDIO_KINDS)[number])
+				) {
 					return Response.json({ error: "Invalid kind" }, { status: 400 })
 				}
+				const audioKind = kind as (typeof NODE_AUDIO_KINDS)[number]
 
 				const endpoint = await getNodeEndpoint(domia)
 				if (endpoint) {
-					try {
-						const upstream = await fetch(
-							`http://${endpoint.localIp}:${endpoint.httpPort}/audio/${encodeURIComponent(id)}?kind=${kind}`,
-							{
-								headers: meshHeaders(),
-								signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
-							},
+					const upstream = await fetch(
+						`${nodeBaseUrl(endpoint)}/audio/${encodeURIComponent(id)}?kind=${audioKind}`,
+						{
+							headers: meshHeaders(),
+							signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
+						},
+					).catch(() => null)
+					if (upstream?.ok && upstream.body) {
+						const headers = new Headers({ "Cache-Control": "no-store" })
+						headers.set(
+							"Content-Type",
+							upstream.headers.get("Content-Type") ?? "audio/wav",
 						)
-						if (upstream.ok && upstream.body) {
-							const headers = new Headers({ "Cache-Control": "no-store" })
-							headers.set(
-								"Content-Type",
-								upstream.headers.get("Content-Type") ?? "audio/wav",
-							)
-							const contentLength = upstream.headers.get("Content-Length")
-							if (contentLength) headers.set("Content-Length", contentLength)
-							return new Response(upstream.body, { headers })
-						}
-					} catch {
-						/* node unreachable — fall through to the archived copy */
+						const contentLength = upstream.headers.get("Content-Length")
+						if (contentLength) headers.set("Content-Length", contentLength)
+						return new Response(upstream.body, { headers })
 					}
 				}
 
-				const archived = await archivedResponse(id, kind)
+				const archived = await archivedResponse(id, audioKind)
 				if (archived) return archived
 				return Response.json({ error: "Audio not found" }, { status: 404 })
 			},

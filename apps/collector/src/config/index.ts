@@ -3,8 +3,18 @@ import { z } from "zod"
 const envSchema = z.object({
 	DATABASE_URL: z.string().default("../../data/db/domia-app.db"),
 	DOMIA_APP_AUDIO_DIR: z.string().default("../../data/audio"),
-	DOMIA_APP_SYNC_PAGE_SIZE: z.coerce.number().int().positive().default(200),
+	DOMIA_APP_SYNC_PAGE_SIZE: z.coerce
+		.number()
+		.int()
+		.positive()
+		.max(1000)
+		.default(200),
 	DOMIA_APP_SYNC_MAX_PAGES: z.coerce.number().int().positive().default(50),
+	DOMIA_APP_SLOW_STREAM_SWEEP_MS: z.coerce
+		.number()
+		.int()
+		.positive()
+		.default(300_000),
 	DOMIA_APP_MAX_AUDIO_BYTES: z.coerce
 		.number()
 		.int()
@@ -23,5 +33,3 @@ const envSchema = z.object({
 })
 
 export const env = envSchema.parse(process.env)
-
-export type Env = z.infer<typeof envSchema>

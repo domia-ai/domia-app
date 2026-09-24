@@ -1,7 +1,7 @@
 import type { MeshDomiaRow } from "@/types/fleet"
 import type { RunTimings } from "@/types/conversations"
 
-export type ChatTurnRole = "user" | "domia"
+export type ChatTurnRole = "user" | "domia" | "system"
 
 export type ChatTurnKind = "text" | "voice"
 
@@ -28,6 +28,7 @@ export type SendMessageInput = {
 	text?: string
 	audioBase64?: string
 	speak: boolean
+	satelliteId?: string
 }
 
 export type ChatExchangeResult = {
@@ -76,8 +77,14 @@ export type AudioRecorderControls = {
 
 export type ComposerProps = {
 	disabled: boolean
-	onSendText: (text: string, speak: boolean) => void
-	onSendVoice: (audioBase64: string, fileName: string, speak: boolean) => void
+	domiaKey?: string
+	onSendText: (text: string, speak: boolean, satelliteId?: string) => void
+	onSendVoice: (
+		audioBase64: string,
+		fileName: string,
+		speak: boolean,
+		satelliteId?: string,
+	) => void
 }
 
 export type TurnBubbleProps = {
@@ -85,6 +92,7 @@ export type TurnBubbleProps = {
 	domiaKey: string
 	domiaName: string
 	domiaAvatarId: string | null
+	stream?: ChatStreamState | null
 }
 
 export type RecordingIndicatorProps = {
@@ -96,4 +104,74 @@ export type RecordingIndicatorProps = {
 export type LivePlaybackFormat = {
 	sampleRate: number
 	channels: number
+}
+
+export type UseLiveVoiceReturn = {
+	state: LiveVoiceState
+	connect: () => Promise<void>
+	disconnect: () => void
+	connected: boolean
+}
+
+export type LiveVoiceProps = {
+	target: LiveVoiceTarget
+	domiaName: string
+	disabled?: boolean
+}
+
+export type ChatStreamRequestBody = {
+	domiaKey: string
+	text: string
+	satelliteId?: string
+}
+
+export type ChatStreamStatus = "idle" | "streaming" | "done" | "error"
+
+export type ChatStreamStep = {
+	id: string
+	name: string
+	status: "ok" | "failed" | null
+	elapsedMs: number | null
+}
+
+export type ChatStreamTool = {
+	id: string
+	name: string
+	provider: string | null
+	status: string | null
+	toolMs: number | null
+}
+
+export type ChatStreamState = {
+	status: ChatStreamStatus
+	runId: string | null
+	steps: ChatStreamStep[]
+	tools: ChatStreamTool[]
+	text: string
+	error: string | null
+}
+
+export type ChatStreamInput = {
+	domiaKey: string
+	text: string
+	satelliteId?: string
+}
+
+export type ChatStreamResult = {
+	ok: boolean
+	runId: string | null
+	text: string
+	error: string | null
+	started: boolean
+}
+
+export type UseChatStreamReturn = {
+	state: ChatStreamState
+	start: (input: ChatStreamInput) => Promise<ChatStreamResult>
+	stop: () => void
+	reset: () => void
+}
+
+export type StreamStripProps = {
+	state: ChatStreamState
 }

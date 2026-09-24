@@ -5,6 +5,7 @@ import { Loader2, Plus, Radar, ServerCog } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -19,16 +20,30 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
 import { probeNodeFn, addNodeFn } from "@/server/nodes"
 import { isDemoMode } from "@/lib/demo"
 import { DEFAULT_NODE_HTTP_PORT } from "@/constants/nodes"
-import type { IdentityRole } from "@/types/nodes"
+import type { HttpScheme, IdentityRole } from "@/types/nodes"
 
 const ROLE_LABELS: Record<IdentityRole, () => string> = {
 	principal: m.node_role_principal,
 	hosted: m.node_role_hosted,
 	peer: m.node_role_peer,
 }
+
+const SCHEME_LABELS: Record<HttpScheme, () => string> = {
+	http: m.node_scheme_http,
+	https: m.node_scheme_https,
+}
+
+const SCHEMES: HttpScheme[] = ["http", "https"]
 
 const parsePort = (raw: string): number | null => {
 	const n = Number(raw)
@@ -38,6 +53,7 @@ const parsePort = (raw: string): number | null => {
 export function AddNodeDialog() {
 	const [open, setOpen] = useState(false)
 	const [host, setHost] = useState("")
+	const [scheme, setScheme] = useState<HttpScheme>("http")
 	const [portText, setPortText] = useState(String(DEFAULT_NODE_HTTP_PORT))
 	const queryClient = useQueryClient()
 	const navigate = useNavigate()
@@ -47,26 +63,24 @@ export function AddNodeDialog() {
 	const canProbe = host.trim() !== "" && port !== null
 
 	const probe = useMutation({
-		mutationFn: () => probeNodeFn({ data: { host: host.trim(), port: port! } }),
+		mutationFn: (vars: { port: number }) =>
+			probeNodeFn({ data: { host: host.trim(), port: vars.port, scheme } }),
 	})
-	const add = useMutation({
-		mutationFn: () => addNodeFn({ data: { host: host.trim(), port: port! } }),
-	})
-
-	const reset = () => {
-		probe.reset()
-		add.reset()
-	}
-
-	const onAdd = async () => {
-		const result = await add.mutateAsync()
-		if (result.ok && result.data) {
+	const add = useActionMutation({
+		mutationFn: (vars: { port: number }) =>
+			addNodeFn({ data: { host: host.trim(), port: vars.port, scheme } }),
+		failureTitle: m.toast_node_add_failed,
+		onDone: (data) => {
+			if (!data) {
+				toast.error(m.toast_node_add_failed())
+				return
+			}
 			toast.success(m.toast_node_added(), {
 				description: m.toast_node_added_desc({
-					count: result.data.identities.length,
+					count: data.identities.length,
 				}),
 			})
-			await Promise.all([
+			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["nodes"] }),
 				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 				queryClient.invalidateQueries({ queryKey: ["fleet-graph"] }),
@@ -75,13 +89,19 @@ export function AddNodeDialog() {
 			setOpen(false)
 			void navigate({
 				to: "/domias/$key",
-				params: { key: result.data.domiaKey },
+				params: { key: data.domiaKey },
 			})
-		} else {
-			toast.error(m.toast_node_add_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
+		},
+	})
+
+	const reset = () => {
+		probe.reset()
+		add.reset()
+	}
+
+	const onAdd = () => {
+		if (port === null) return
+		add.mutate({ port })
 	}
 
 	const probed = probe.data?.ok ? probe.data.data : null
@@ -115,11 +135,34 @@ export function AddNodeDialog() {
 				<form
 					onSubmit={(e) => {
 						e.preventDefault()
-						if (canProbe) probe.mutate()
+						if (canProbe && port !== null) probe.mutate({ port })
 					}}
 					className="space-y-4"
 				>
-					<div className="grid grid-cols-[1fr_7rem] gap-3">
+					<div className="grid grid-cols-[7rem_1fr_7rem] gap-3">
+						<Field>
+							<FieldLabel htmlFor="add-node-scheme">
+								{m.node_scheme_label()}
+							</FieldLabel>
+							<Select
+								value={scheme}
+								onValueChange={(v) => {
+									if (v === "http" || v === "https") setScheme(v)
+									reset()
+								}}
+							>
+								<SelectTrigger id="add-node-scheme" className="h-9 w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{SCHEMES.map((s) => (
+										<SelectItem key={s} value={s}>
+											{SCHEME_LABELS[s]()}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</Field>
 						<Field>
 							<FieldLabel htmlFor="add-node-host">
 								{m.dlg_add_node_host()}
@@ -177,7 +220,7 @@ export function AddNodeDialog() {
 							<div className="flex items-center gap-2 text-sm">
 								<ServerCog className="text-muted-foreground size-4" />
 								<span className="font-mono text-xs">
-									{probed.host}:{probed.port}
+									{probed.scheme}://{probed.host}:{probed.port}
 								</span>
 								<Badge
 									variant={

@@ -50,5 +50,5 @@ export const fleetGraphQueryOptions = () =>
 	queryOptions({
 		queryKey: ["fleet-graph"],
 		queryFn: () => getFleetGraphFn(),
-		refetchInterval: 5000,
+		refetchInterval: 3000,
 	})

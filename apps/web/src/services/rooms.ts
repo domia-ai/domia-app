@@ -5,20 +5,32 @@ import {
 	nodeIntercom,
 	nodeCancelTurn,
 } from "@/lib/node-client"
+import { nodeBaseUrl } from "@/utils/node-base"
 import type { ActionResult } from "@/types"
-import type { IntercomResult, AnnounceAudioActionResult } from "@/types/rooms"
+import type {
+	IntercomResult,
+	AnnounceAudioActionResult,
+	SpeakDeliveryReason,
+	SpeakTarget,
+} from "@/types/rooms"
 
 const baseFor = async (domiaKey: string): Promise<string | null> => {
 	const endpoint = await getNodeEndpoint(domiaKey)
 	if (!endpoint) return null
-	return `http://${endpoint.localIp}:${endpoint.httpPort}`
+	return nodeBaseUrl(endpoint)
 }
 
 export const announceToDomia = async (
 	domiaKey: string,
 	text: string,
 	broadcastId?: string,
-): Promise<ActionResult<{ delivered: boolean; target?: string }>> => {
+): Promise<
+	ActionResult<{
+		delivered: boolean
+		target?: SpeakTarget
+		reason?: SpeakDeliveryReason
+	}>
+> => {
 	try {
 		const base = await baseFor(domiaKey)
 		if (!base)
@@ -27,7 +39,10 @@ export const announceToDomia = async (
 		const delivered = Array.isArray(res.delivered)
 			? res.delivered.length > 0
 			: !!res.delivered
-		return { ok: true, data: { delivered, target: res.target } }
+		return {
+			ok: true,
+			data: { delivered, target: res.target, reason: res.reason },
+		}
 	} catch (err) {
 		return {
 			ok: false,

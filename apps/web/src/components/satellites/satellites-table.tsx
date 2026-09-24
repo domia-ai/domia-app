@@ -1,3 +1,4 @@
+import { noop } from "@/lib/utils"
 import { Volume2, Megaphone } from "lucide-react"
 import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
@@ -50,9 +51,9 @@ export function SatellitesTable({
 			page={0}
 			pageSize={Math.max(satellites.length, 1)}
 			sort={null}
-			onPageChange={() => {}}
-			onPageSizeChange={() => {}}
-			onSortChange={() => {}}
+			onPageChange={noop}
+			onPageSizeChange={noop}
+			onSortChange={noop}
 			onRowClick={onSelect}
 			selectedRowId={selectedId}
 			rowId={(s) => s.id}

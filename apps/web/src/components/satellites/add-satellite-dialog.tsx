@@ -6,6 +6,12 @@ import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
+import {
+	applyNeedsAttention,
+	applyOf,
+	summarizeApply,
+} from "@/lib/config-apply"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -36,7 +42,11 @@ import {
 	buildDiscoverSatelliteFormSchema,
 } from "@/schemas/satellites"
 import { isDemoMode } from "@/lib/demo"
-import type { AddSatelliteDialogProps } from "@/types/satellites"
+import type {
+	AddSatelliteDialogProps,
+	BindSatelliteBody,
+	BindSatelliteResult,
+} from "@/types/satellites"
 
 export function AddSatelliteDialog({
 	hosted,
@@ -60,33 +70,53 @@ export function AddSatelliteDialog({
 	const found =
 		discovery.data && discovery.data.ok ? (discovery.data.data ?? []) : []
 
+	const boundToast = (data: BindSatelliteResult | undefined) => {
+		const apply = applyOf(data)
+		if (apply && applyNeedsAttention(apply))
+			toast.warning(m.toast_satellite_bound(), {
+				description: summarizeApply(apply),
+			})
+		else
+			toast.success(m.toast_satellite_bound(), {
+				description: m.toast_satellite_bound_desc(),
+			})
+	}
+
+	const bindDiscovered = useActionMutation({
+		mutationFn: (body: BindSatelliteBody) =>
+			bindSatelliteFn({ data: { domiaKey: targetKey, ...body } }),
+		failureTitle: m.toast_bind_failed,
+		onDone: (data) => {
+			boundToast(data)
+			discoverForm.reset()
+			void finish()
+		},
+	})
+
+	const bindLivekit = useActionMutation({
+		mutationFn: (body: BindSatelliteBody) =>
+			bindSatelliteFn({ data: { domiaKey: targetKey, ...body } }),
+		failureTitle: m.toast_bind_failed,
+		onDone: (data) => {
+			boundToast(data)
+			form.reset()
+			void finish()
+		},
+	})
+
 	const discoverForm = useForm({
 		defaultValues: { deviceId: "", encryptionKey: "" },
 		validators: { onChange: buildDiscoverSatelliteFormSchema() },
-		onSubmit: async ({ value }) => {
+		onSubmit: ({ value }) => {
 			const device = found.find((d) => d.satelliteId === value.deviceId)
 			if (!device) return
-			const result = await bindSatelliteFn({
-				data: {
-					domiaKey: targetKey,
-					satelliteId: device.satelliteId,
-					name: device.name,
-					host: device.host,
-					port: device.port,
-					encryptionKey: value.encryptionKey.trim() || undefined,
-				},
+			bindDiscovered.mutate({
+				satelliteId: device.satelliteId,
+				name: device.name,
+				host: device.host,
+				port: device.port,
+				encryptionKey: value.encryptionKey.trim() || undefined,
 			})
-			if (result.ok) {
-				toast.success(m.toast_satellite_bound(), {
-					description: m.toast_satellite_bound_desc(),
-				})
-				discoverForm.reset()
-				await finish()
-			} else {
-				toast.error(m.toast_bind_failed(), {
-					description: errText(result.error),
-				})
-			}
 		},
 	})
 
@@ -101,31 +131,17 @@ export function AddSatelliteDialog({
 			apiSecret: "",
 		},
 		validators: { onChange: buildAddLivekitSatelliteFormSchema() },
-		onSubmit: async ({ value }) => {
-			const result = await bindSatelliteFn({
-				data: {
-					domiaKey: targetKey,
-					satelliteId: value.satelliteId.trim(),
-					name: value.name.trim() || undefined,
-					host: value.host.trim(),
-					port: value.port,
-					protocol: "livekit",
-					livekitRoom: value.room.trim(),
-					livekitApiKey: value.apiKey.trim(),
-					livekitApiSecret: value.apiSecret.trim(),
-				},
+		onSubmit: ({ value }) => {
+			bindLivekit.mutate({
+				satelliteId: value.satelliteId.trim(),
+				name: value.name.trim() || undefined,
+				host: value.host.trim(),
+				port: value.port,
+				protocol: "livekit",
+				livekitRoom: value.room.trim(),
+				livekitApiKey: value.apiKey.trim(),
+				livekitApiSecret: value.apiSecret.trim(),
 			})
-			if (result.ok) {
-				toast.success(m.toast_satellite_bound(), {
-					description: m.toast_satellite_bound_desc(),
-				})
-				form.reset()
-				await finish()
-			} else {
-				toast.error(m.toast_bind_failed(), {
-					description: errText(result.error),
-				})
-			}
 		},
 	})
 
@@ -279,9 +295,16 @@ export function AddSatelliteDialog({
 									{({ canSubmit, isSubmitting }) => (
 										<Button
 											type="submit"
-											disabled={demo || !canSubmit || isSubmitting}
+											disabled={
+												demo ||
+												!canSubmit ||
+												isSubmitting ||
+												bindDiscovered.isPending
+											}
 										>
-											{isSubmitting ? m.dlg_creating() : m.dlg_create()}
+											{isSubmitting || bindDiscovered.isPending
+												? m.dlg_creating()
+												: m.dlg_create()}
 										</Button>
 									)}
 								</discoverForm.Subscribe>
@@ -423,8 +446,15 @@ export function AddSatelliteDialog({
 									})}
 								>
 									{({ canSubmit, isSubmitting }) => (
-										<Button type="submit" disabled={!canSubmit || isSubmitting}>
-											{isSubmitting ? m.dlg_creating() : m.dlg_create()}
+										<Button
+											type="submit"
+											disabled={
+												!canSubmit || isSubmitting || bindLivekit.isPending
+											}
+										>
+											{isSubmitting || bindLivekit.isPending
+												? m.dlg_creating()
+												: m.dlg_create()}
 										</Button>
 									)}
 								</form.Subscribe>

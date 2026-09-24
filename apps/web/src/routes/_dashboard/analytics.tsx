@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/shell/page-header"
 import { AnalyticsView } from "@/components/analytics/analytics-view"
+import { LiveNodeMetrics } from "@/components/analytics/latency-stats"
 import { getAnalyticsFn } from "@/server/analytics"
 import { m } from "@/paraglide/messages"
 
@@ -21,6 +22,7 @@ function AnalyticsPage() {
 				description={m.route_analytics_description()}
 			/>
 			<AnalyticsView data={data} />
+			<LiveNodeMetrics />
 		</div>
 	)
 }

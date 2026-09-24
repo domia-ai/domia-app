@@ -19,14 +19,12 @@ export const useTableParams = (filterKeys: string[] = []) => {
 			navigate({
 				to: ".",
 				replace: false,
-				search: (prev: Record<string, string | undefined>) => {
-					const next: Record<string, string | undefined> = { ...prev }
-					for (const [k, v] of Object.entries(changes)) {
-						if (v === null || v === "") delete next[k]
-						else next[k] = v
-					}
-					return next
-				},
+				search: (prev: Record<string, string | undefined>) =>
+					Object.fromEntries(
+						Object.entries({ ...prev, ...changes }).filter(
+							([, v]) => v !== null && v !== undefined && v !== "",
+						),
+					) as Record<string, string | undefined>,
 			})
 		},
 		[navigate],

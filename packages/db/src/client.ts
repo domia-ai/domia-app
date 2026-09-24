@@ -11,5 +11,3 @@ export const createDb = (dbPath: string) => {
 	sqlite.pragma("temp_store = MEMORY")
 	return drizzle(sqlite, { schema })
 }
-
-export type Db = ReturnType<typeof createDb>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/message"
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
+import { StreamStrip } from "./stream-strip"
 import { cn } from "@/lib/utils"
 import { formatMs } from "@/utils/format"
 import { FLOWS } from "@/constants/conversations"
@@ -27,7 +28,17 @@ export function TurnBubble({
 	domiaKey,
 	domiaName,
 	domiaAvatarId,
+	stream,
 }: TurnBubbleProps) {
+	if (turn.role === "system") {
+		return (
+			<div className="text-muted-foreground my-3 flex items-center gap-3 text-xs">
+				<span className="bg-border h-px flex-1" />
+				<span>{turn.text}</span>
+				<span className="bg-border h-px flex-1" />
+			</div>
+		)
+	}
 	if (turn.role === "user") {
 		const inputSrc =
 			turn.kind === "voice" && turn.audioUrl
@@ -77,12 +88,25 @@ export function TurnBubble({
 			</MessageAvatar>
 			<MessageContent>
 				{turn.pending ? (
-					<Marker role="status">
-						<MarkerIcon>
-							<Loader2 className="size-3.5 animate-spin" />
-						</MarkerIcon>
-						<MarkerContent>thinking…</MarkerContent>
-					</Marker>
+					stream ? (
+						<>
+							<StreamStrip state={stream} />
+							{stream.text && (
+								<Bubble variant="muted">
+									<BubbleContent className="whitespace-pre-wrap">
+										{stream.text}
+									</BubbleContent>
+								</Bubble>
+							)}
+						</>
+					) : (
+						<Marker role="status">
+							<MarkerIcon>
+								<Loader2 className="size-3.5 animate-spin" />
+							</MarkerIcon>
+							<MarkerContent>thinking…</MarkerContent>
+						</Marker>
+					)
 				) : turn.cancelled ? (
 					<Marker>
 						<MarkerContent className="italic">cancelled</MarkerContent>

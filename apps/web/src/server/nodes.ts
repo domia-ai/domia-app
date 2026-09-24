@@ -3,11 +3,12 @@ import { createServerFn } from "@tanstack/react-start"
 import {
 	listNodes,
 	getNode,
-	listIdentities,
 	createIdentity,
 	removeIdentity,
 	probeNode,
 	addNodeByAddress,
+	getNodeConfig,
+	updateNodeConfig,
 } from "@/services/nodes"
 import {
 	idSchema,
@@ -15,6 +16,7 @@ import {
 	createIdentityInputSchema,
 	removeIdentityInputSchema,
 	probeNodeInputSchema,
+	nodeConfigUpdateInputSchema,
 } from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
 
@@ -25,10 +27,6 @@ export const listNodesFn = createServerFn({ method: "GET" }).handler(() =>
 export const getNodeFn = createServerFn({ method: "GET" })
 	.validator(nodeIdSchema)
 	.handler(({ data }) => getNode(data))
-
-export const listIdentitiesFn = createServerFn({ method: "GET" })
-	.validator(idSchema)
-	.handler(({ data }) => listIdentities(data))
 
 export const createIdentityFn = createServerFn({ method: "POST" })
 	.validator(createIdentityInputSchema)
@@ -44,6 +42,24 @@ export const removeIdentityFn = createServerFn({ method: "POST" })
 		return removeIdentity(data)
 	})
 
+export const getNodeConfigFn = createServerFn({ method: "GET" })
+	.validator(idSchema)
+	.handler(({ data }) => getNodeConfig(data))
+
+export const updateNodeConfigFn = createServerFn({ method: "POST" })
+	.validator(nodeConfigUpdateInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return updateNodeConfig(data)
+	})
+
+export const nodeConfigQueryOptions = (anchorDomiaKey: string) =>
+	queryOptions({
+		queryKey: ["node-config", anchorDomiaKey],
+		queryFn: () => getNodeConfigFn({ data: anchorDomiaKey }),
+		enabled: anchorDomiaKey.length > 0,
+	})
+
 export const nodesQueryOptions = () =>
 	queryOptions({
 		queryKey: ["nodes"],
@@ -56,12 +72,6 @@ export const nodeQueryOptions = (nodeId: string) =>
 		queryKey: ["node", nodeId],
 		queryFn: () => getNodeFn({ data: nodeId }),
 		refetchInterval: 5000,
-	})
-
-export const identitiesQueryOptions = (anchorDomiaKey: string) =>
-	queryOptions({
-		queryKey: ["identities", anchorDomiaKey],
-		queryFn: () => listIdentitiesFn({ data: anchorDomiaKey }),
 	})
 
 export const probeNodeFn = createServerFn({ method: "POST" })

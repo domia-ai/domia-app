@@ -1,9 +1,8 @@
 import { useState } from "react"
-import { useMutation } from "@tanstack/react-query"
 import { Power } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -28,23 +27,16 @@ export function RestartButton({
 }) {
 	const [open, setOpen] = useState(false)
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: () => restartDomiaFn({ data: domiaKey }),
-	})
-
-	const onConfirm = async () => {
-		const result = await mutation.mutateAsync()
-		if (result.ok) {
+		failureTitle: m.toast_restart_failed,
+		onDone: () => {
 			toast.success(m.toast_restart_requested(), {
 				description: m.toast_restart_requested_desc({ name: domiaName }),
 			})
 			setOpen(false)
-		} else {
-			toast.error(m.toast_restart_failed(), {
-				description: errText(result.error),
-			})
-		}
-	}
+		},
+	})
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -68,7 +60,7 @@ export function RestartButton({
 					<Button
 						variant="destructive"
 						disabled={mutation.isPending}
-						onClick={onConfirm}
+						onClick={() => mutation.mutate(undefined)}
 					>
 						<Power className="size-4" />
 						{mutation.isPending ? m.dlg_restarting() : m.dlg_restart_now()}

@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { errText } from "@/utils/service-errors"
-import { ArrowRight, MessagesSquare, Square } from "lucide-react"
+import {
+	ArrowRight,
+	MessageSquareOff,
+	MessagesSquare,
+	Square,
+} from "lucide-react"
 import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useActionQuery } from "@/hooks/use-query-state"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { cancelTurn } from "@/server/rooms"
+import { resetConversationFn } from "@/server/domia"
 import { chatHistoryQueryOptions } from "@/server/chat"
 import {
 	Select,
@@ -31,23 +40,29 @@ import {
 import { Composer } from "./composer"
 import { TurnBubble } from "./turn-bubble"
 import { LiveVoice } from "./live-voice"
+import { useChatStream } from "./use-chat-stream"
 import { sendMessage } from "@/server/chat"
 import { accentFor } from "@/utils/accent"
+import { isDemoMode } from "@/lib/demo"
 import { isOnline } from "@/utils/presence"
 import type { ChatConsoleProps, ChatTurn, SendMessageInput } from "@/types/chat"
 
 export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 	const navigate = useNavigate()
+	const queryClient = useQueryClient()
+	const stream = useChatStream()
 	const selectedKey = initialKey
 	const [threads, setThreads] = useState<Record<string, ChatTurn[]>>({})
 	const [pending, setPending] = useState(false)
+	const [streamingId, setStreamingId] = useState<string | null>(null)
 	const activeRef = useRef<{ key: string; id: string } | null>(null)
 	const cancelledRef = useRef<Set<string>>(new Set())
 
 	const selected = domias.find((d) => d.domiaKey === selectedKey) ?? domias[0]
+	const online = !!selected && isOnline(selected.lastSeenAt)
 	const config = selected ? selected.config : null
 	const seeded = threads[selectedKey] !== undefined
-	const history = useQuery({
+	const { query: history, state: historyState } = useActionQuery({
 		...chatHistoryQueryOptions(selectedKey),
 		enabled: !!selectedKey && !seeded,
 	})
@@ -116,9 +131,67 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 		}
 	}
 
+	const resetChat = useActionMutation({
+		mutationFn: () => resetConversationFn({ data: selectedKey }),
+		failureTitle: m.admin_danger_reset_failed,
+		onDone: () => {
+			toast.success(m.admin_danger_reset_done())
+			append(selectedKey, {
+				id: `reset-${Date.now()}`,
+				role: "system",
+				kind: "text",
+				text: m.chat_reset_marker(),
+				at: new Date().toISOString(),
+			})
+		},
+	})
+
+	const runStreamed = async (
+		key: string,
+		userTurn: ChatTurn,
+		domiaTurnId: string,
+		input: SendMessageInput,
+	) => {
+		setPending(true)
+		setStreamingId(domiaTurnId)
+		activeRef.current = { key, id: domiaTurnId }
+		const res = await stream.start({
+			domiaKey: key,
+			text: input.text ?? "",
+			satelliteId: input.satelliteId,
+		})
+		setStreamingId(null)
+		if (cancelledRef.current.has(domiaTurnId)) {
+			cancelledRef.current.delete(domiaTurnId)
+			stream.reset()
+			return
+		}
+		if (!res.started) {
+			stream.reset()
+			await run(key, userTurn, domiaTurnId, input)
+			return
+		}
+		setPending(false)
+		activeRef.current = null
+		if (res.ok) {
+			patch(key, domiaTurnId, {
+				pending: false,
+				text: res.text,
+				interactionId: res.runId,
+			})
+			void queryClient.invalidateQueries({ queryKey: ["chat-history", key] })
+		} else {
+			const message = res.error ?? m.stream_failed()
+			patch(key, domiaTurnId, { pending: false, error: true, text: message })
+			toast.error(message)
+		}
+		stream.reset()
+	}
+
 	const onCancel = () => {
 		const active = activeRef.current
 		if (!active) return
+		stream.stop()
 		cancelledRef.current.add(active.id)
 		patch(active.key, active.id, { pending: false, cancelled: true })
 		setPending(false)
@@ -128,7 +201,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 		}).catch(() => undefined)
 	}
 
-	const onSendText = (text: string, speak: boolean) => {
+	const onSendText = (text: string, speak: boolean, satelliteId?: string) => {
 		const key = selectedKey
 		const userTurn: ChatTurn = {
 			id: crypto.randomUUID(),
@@ -147,18 +220,25 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 			pending: true,
 			spoken: speak,
 		})
-		void run(key, userTurn, domiaTurnId, {
+		const input: SendMessageInput = {
 			targetDomiaKey: key,
 			kind: "text",
 			text,
 			speak,
-		})
+			satelliteId,
+		}
+		if (online && !speak && !isDemoMode()) {
+			void runStreamed(key, userTurn, domiaTurnId, input)
+			return
+		}
+		void run(key, userTurn, domiaTurnId, input)
 	}
 
 	const onSendVoice = (
 		audioBase64: string,
 		fileName: string,
 		speak: boolean,
+		satelliteId?: string,
 	) => {
 		const key = selectedKey
 		const userTurn: ChatTurn = {
@@ -184,11 +264,11 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 			kind: "voice",
 			audioBase64,
 			speak,
+			satelliteId,
 		})
 	}
 
 	if (!selected) return null
-	const online = isOnline(selected.lastSeenAt)
 
 	return (
 		<div className="grid gap-6 lg:grid-cols-3">
@@ -212,10 +292,34 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 							))}
 						</SelectContent>
 					</Select>
-					<StatusPill online={online} />
+					<div className="flex items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={
+								!online || pending || isDemoMode() || resetChat.isPending
+							}
+							onClick={() => resetChat.mutate(undefined)}
+						>
+							<MessageSquareOff className="size-3.5" />
+							{m.admin_danger_reset_action()}
+						</Button>
+						<StatusPill online={online} />
+					</div>
 				</CardHeader>
 
-				{turns.length === 0 ? (
+				{!seeded && historyState.status === "error" ? (
+					<div className="text-destructive flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center text-sm">
+						<MessagesSquare className="size-8 opacity-40" />
+						<p>{historyState.message}</p>
+					</div>
+				) : !seeded && historyState.status === "loading" ? (
+					<div className="flex-1 space-y-3 p-4">
+						<Skeleton className="h-14 w-2/3" />
+						<Skeleton className="ml-auto h-14 w-2/3" />
+						<Skeleton className="h-14 w-1/2" />
+					</div>
+				) : turns.length === 0 ? (
 					<div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center text-sm">
 						<MessagesSquare className="size-8 opacity-40" />
 						<p>{m.chat_start_conversation({ name: selected.name })}</p>
@@ -242,6 +346,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 												domiaKey={selected.domiaKey}
 												domiaName={selected.name}
 												domiaAvatarId={selected.avatarId}
+												stream={turn.id === streamingId ? stream.state : null}
 											/>
 										</MessageScrollerItem>
 									))}
@@ -266,6 +371,7 @@ export function ChatConsole({ domias, initialKey }: ChatConsoleProps) {
 					)}
 					<Composer
 						disabled={pending}
+						domiaKey={selected.domiaKey}
 						onSendText={onSendText}
 						onSendVoice={onSendVoice}
 					/>

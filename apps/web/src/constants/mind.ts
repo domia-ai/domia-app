@@ -1,11 +1,5 @@
 import { m } from "@/paraglide/messages"
-import type {
-	CharacterEnumKey,
-	CharacterTagKey,
-	EmotionKey,
-	MindModules,
-	MindSnapshot,
-} from "@/types/mind"
+import type { CharacterEnumKey, CharacterTagKey } from "@/types/mind"
 
 export const PERSONALITY_VALUES = [
 	"OPTIMISTIC",
@@ -119,71 +113,3 @@ export const CHARACTER_TAG_FIELDS: {
 	{ key: "hobbies", label: m.mind_field_hobbies },
 	{ key: "skills", label: m.mind_field_skills },
 ]
-
-export const MIND_MODULE_FIELDS: {
-	key: keyof MindModules
-	label: () => string
-	hint: () => string
-}[] = [
-	{
-		key: "emotionEngine",
-		label: m.mind_module_emotion_engine,
-		hint: m.mind_module_emotion_engine_hint,
-	},
-	{
-		key: "memoryEngine",
-		label: m.mind_module_memory_engine,
-		hint: m.mind_module_memory_engine_hint,
-	},
-	{
-		key: "identityEngine",
-		label: m.mind_module_identity_engine,
-		hint: m.mind_module_identity_engine_hint,
-	},
-]
-
-export const EMOTION_FIELDS: { key: EmotionKey; label: () => string }[] = [
-	{ key: "joy", label: m.enum_emotion_joy },
-	{ key: "sadness", label: m.enum_emotion_sadness },
-	{ key: "anger", label: m.enum_emotion_anger },
-	{ key: "fear", label: m.enum_emotion_fear },
-	{ key: "trust", label: m.enum_emotion_trust },
-	{ key: "disgust", label: m.enum_emotion_disgust },
-	{ key: "anticipation", label: m.enum_emotion_anticipation },
-	{ key: "surprise", label: m.enum_emotion_surprise },
-]
-
-export const DEFAULT_TEMPLATE_MIND: MindSnapshot = {
-	character: {
-		name: "New Persona",
-		personality: "NEUTRAL",
-		language: "en",
-		profession: "NONE",
-		communicationStyle: "NEUTRAL",
-		perceivedAge: "ADULT",
-		culturalBackground: null,
-		languagesSpoken: ["en"],
-		knowledgeDepth: "INTERMEDIATE",
-		interests: [],
-		hobbies: [],
-		skills: [],
-		relationshipType: "COMPANION",
-		roleMode: "ACTIVE",
-		promptOverrides: null,
-	},
-	emotionBaseline: {
-		joy: 0.5,
-		sadness: 0.1,
-		anger: 0.05,
-		fear: 0.15,
-		trust: 0.6,
-		disgust: 0.05,
-		anticipation: 0.4,
-		surprise: 0.2,
-	},
-	modules: {
-		emotionEngine: true,
-		memoryEngine: true,
-		identityEngine: true,
-	},
-}

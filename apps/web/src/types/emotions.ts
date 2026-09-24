@@ -1,7 +1,12 @@
 import type { EmotionEventRow as DbEmotionEventRow } from "@domia-app/db"
 import type { EmotionState } from "@/types"
-import type { EmotionKey } from "@/constants/emotions"
-import type { EmotionSeriesPoint } from "@/utils/emotion-series"
+
+export type EmotionKey = keyof EmotionState
+
+export type EmotionSeriesPoint = { ts: string; time: string } & Record<
+	EmotionKey,
+	number
+> & { dominantBand: number }
 
 export type EmotionEventRow = DbEmotionEventRow & { domiaName: string | null }
 

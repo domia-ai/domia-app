@@ -1,6 +1,8 @@
 import { m } from "@/paraglide/messages"
 import { Lightbulb } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FactBadges } from "@/components/memories/fact-badges"
+import { FactEvidence } from "@/components/memories/fact-card"
 import type { FactsCardProps } from "@/types/conversations"
 
 export function FactsCard({ facts }: FactsCardProps) {
@@ -22,6 +24,8 @@ export function FactsCard({ facts }: FactsCardProps) {
 							<span className="text-muted-foreground">{fact.relation}</span>{" "}
 							<span className="font-medium">{fact.value}</span>
 						</p>
+						<FactBadges fact={fact} />
+						<FactEvidence factId={fact.id} count={fact.evidenceCount} />
 						{fact.confidence != null && (
 							<div className="bg-muted h-1 w-full overflow-hidden rounded-full">
 								<div

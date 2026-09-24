@@ -1,4 +1,12 @@
-import { and, desc, eq, inArray, isNotNull, notInArray } from "drizzle-orm"
+import {
+	and,
+	desc,
+	eq,
+	getTableColumns,
+	inArray,
+	isNotNull,
+	notInArray,
+} from "drizzle-orm"
 import {
 	domiaRegistry,
 	interactionTrace,
@@ -9,11 +17,95 @@ import {
 	audioAsset,
 	announcement,
 	turnEvent,
+	toolRun,
+	memoryEpisode,
+	userModel,
+	knowledgeEntry,
+	voiceFeelAdjustment,
+	factEvidence,
 	type DomiaRegistryInsert,
 	type AudioAssetInsert,
+	type SyncCursorInsert,
 } from "@domia-app/db"
 import { db } from "@/db"
-import type { SyncResponse, TurnCursor } from "@/types"
+import { ingestionLogger } from "@/utils"
+import type { MirrorColumn, SyncCursors, SyncResponse } from "@/types"
+
+const mirrorColumns = (columns: Record<string, unknown>): MirrorColumn[] =>
+	Object.entries(columns).filter(
+		([name]) => name !== "sourceDomiaKey",
+	) as MirrorColumn[]
+
+const TRACE_COLUMNS = mirrorColumns(getTableColumns(interactionTrace))
+const SESSION_COLUMNS = mirrorColumns(getTableColumns(interactionSessionTrace))
+const EMOTION_EVENT_COLUMNS = mirrorColumns(getTableColumns(emotionEvent))
+const FACT_COLUMNS = mirrorColumns(getTableColumns(memoryFact))
+const ANNOUNCEMENT_COLUMNS = mirrorColumns(getTableColumns(announcement))
+const TOOL_RUN_COLUMNS = mirrorColumns(getTableColumns(toolRun))
+const EPISODE_COLUMNS = mirrorColumns(getTableColumns(memoryEpisode))
+const USER_MODEL_COLUMNS = mirrorColumns(getTableColumns(userModel))
+const KNOWLEDGE_COLUMNS = mirrorColumns(getTableColumns(knowledgeEntry))
+const VOICE_FEEL_COLUMNS = mirrorColumns(getTableColumns(voiceFeelAdjustment))
+const EVIDENCE_COLUMNS = mirrorColumns(getTableColumns(factEvidence))
+
+const MIRROR_NAMES = new Map<MirrorColumn[], string>([
+	[TRACE_COLUMNS, "interaction_trace"],
+	[SESSION_COLUMNS, "interaction_session_trace"],
+	[EMOTION_EVENT_COLUMNS, "emotion_event"],
+	[FACT_COLUMNS, "memory_fact"],
+	[ANNOUNCEMENT_COLUMNS, "announcement"],
+	[TOOL_RUN_COLUMNS, "tool_run"],
+	[EPISODE_COLUMNS, "memory_episode"],
+	[USER_MODEL_COLUMNS, "user_model"],
+	[KNOWLEDGE_COLUMNS, "knowledge_entry"],
+	[VOICE_FEEL_COLUMNS, "voice_feel_adjustment"],
+	[EVIDENCE_COLUMNS, "fact_evidence"],
+])
+const MIRROR_SKIPPED_KEYS = new Set(["domiaId"])
+const reportedUnmirrored = new WeakMap<MirrorColumn[], Set<string>>()
+
+const warnUnmirrored = (
+	columns: MirrorColumn[],
+	source: Record<string, unknown>,
+): void => {
+	const known = new Set(columns.map(([name]) => name))
+	const reported = reportedUnmirrored.get(columns) ?? new Set<string>()
+	const fresh = Object.keys(source).filter(
+		(key) =>
+			!known.has(key) && !MIRROR_SKIPPED_KEYS.has(key) && !reported.has(key),
+	)
+	if (fresh.length === 0) return
+	for (const key of fresh) reported.add(key)
+	reportedUnmirrored.set(columns, reported)
+	ingestionLogger.warn(
+		"⚠️ /sync row carries columns the mirror does not store",
+		{
+			table: MIRROR_NAMES.get(columns) ?? "unknown",
+			columns: fresh,
+		},
+	)
+}
+
+const mirrorValues = <T>(
+	columns: MirrorColumn[],
+	domiaKey: string,
+	row: object,
+): T => {
+	const source = row as Record<string, unknown>
+	warnUnmirrored(columns, source)
+	const values: Record<string, unknown> = { sourceDomiaKey: domiaKey }
+	for (const [name, column] of columns) {
+		const incoming = source[name]
+		if (incoming === undefined && column.hasDefault) continue
+		values[name] = incoming ?? null
+	}
+	return values as T
+}
+
+const emptyCursor = (at: string | null, id: string | null) => ({
+	since: at ?? "",
+	id: id ?? "",
+})
 
 const dbAdapter = {
 	upsertRegistry: (
@@ -38,6 +130,7 @@ const dbAdapter = {
 				nodeId: domiaRegistry.nodeId,
 				localIp: domiaRegistry.localIp,
 				httpPort: domiaRegistry.httpPort,
+				httpScheme: domiaRegistry.httpScheme,
 			})
 			.from(domiaRegistry)
 			.where(
@@ -82,79 +175,86 @@ const dbAdapter = {
 			.get()
 		return row?.json ?? null
 	},
-	readCursor: (domiaKey: string): string => {
+	readCursors: (domiaKey: string): SyncCursors => {
 		const row = db
-			.select({ at: syncCursor.lastInteractionAt })
+			.select()
 			.from(syncCursor)
 			.where(eq(syncCursor.domiaKey, domiaKey))
 			.get()
-		return row?.at ?? ""
+		return {
+			interaction: row?.lastInteractionAt ?? "",
+			turn: emptyCursor(row?.lastTurnAt ?? null, row?.lastTurnId ?? null),
+			facts: emptyCursor(row?.lastFactsAt ?? null, row?.lastFactsId ?? null),
+			tool: emptyCursor(row?.lastToolAt ?? null, row?.lastToolId ?? null),
+			episode: emptyCursor(
+				row?.lastEpisodeAt ?? null,
+				row?.lastEpisodeId ?? null,
+			),
+			knowledge: emptyCursor(
+				row?.lastKnowledgeAt ?? null,
+				row?.lastKnowledgeId ?? null,
+			),
+			voiceFeel: emptyCursor(
+				row?.lastVoiceFeelAt ?? null,
+				row?.lastVoiceFeelId ?? null,
+			),
+			evidence: emptyCursor(
+				row?.lastEvidenceAt ?? null,
+				row?.lastEvidenceId ?? null,
+			),
+		}
 	},
-	readTurnCursor: (domiaKey: string): TurnCursor => {
+	readLastSyncedAt: (domiaKey: string): number | null => {
 		const row = db
-			.select({ at: syncCursor.lastTurnAt, id: syncCursor.lastTurnId })
+			.select({ at: syncCursor.lastSyncedAt })
 			.from(syncCursor)
 			.where(eq(syncCursor.domiaKey, domiaKey))
 			.get()
-		return { since: row?.at ?? "", id: row?.id ?? "" }
+		return row?.at ?? null
 	},
-	writeCursor: (domiaKey: string, lastInteractionAt: string) => {
-		const lastSyncedAt = Date.now()
+	writeCursors: (domiaKey: string, cursors: Partial<SyncCursors>) => {
+		const set: Partial<SyncCursorInsert> = { lastSyncedAt: Date.now() }
+		if (cursors.interaction !== undefined) {
+			set.lastInteractionAt = cursors.interaction
+		}
+		if (cursors.turn) {
+			set.lastTurnAt = cursors.turn.since
+			set.lastTurnId = cursors.turn.id
+		}
+		if (cursors.facts) {
+			set.lastFactsAt = cursors.facts.since
+			set.lastFactsId = cursors.facts.id
+		}
+		if (cursors.tool) {
+			set.lastToolAt = cursors.tool.since
+			set.lastToolId = cursors.tool.id
+		}
+		if (cursors.episode) {
+			set.lastEpisodeAt = cursors.episode.since
+			set.lastEpisodeId = cursors.episode.id
+		}
+		if (cursors.knowledge) {
+			set.lastKnowledgeAt = cursors.knowledge.since
+			set.lastKnowledgeId = cursors.knowledge.id
+		}
+		if (cursors.voiceFeel) {
+			set.lastVoiceFeelAt = cursors.voiceFeel.since
+			set.lastVoiceFeelId = cursors.voiceFeel.id
+		}
+		if (cursors.evidence) {
+			set.lastEvidenceAt = cursors.evidence.since
+			set.lastEvidenceId = cursors.evidence.id
+		}
 		db.insert(syncCursor)
-			.values({ domiaKey, lastInteractionAt, lastSyncedAt })
-			.onConflictDoUpdate({
-				target: syncCursor.domiaKey,
-				set: { lastInteractionAt, lastSyncedAt },
-			})
+			.values({ domiaKey, ...set })
+			.onConflictDoUpdate({ target: syncCursor.domiaKey, set })
 			.run()
-		db.update(domiaRegistry)
-			.set({ lastInteractionAt })
-			.where(eq(domiaRegistry.domiaKey, domiaKey))
-			.run()
-	},
-	readFactsCursor: (domiaKey: string): TurnCursor => {
-		const row = db
-			.select({ at: syncCursor.lastFactsAt, id: syncCursor.lastFactsId })
-			.from(syncCursor)
-			.where(eq(syncCursor.domiaKey, domiaKey))
-			.get()
-		return { since: row?.at ?? "", id: row?.id ?? "" }
-	},
-	writeFactsCursor: (domiaKey: string, cursor: TurnCursor) => {
-		db.insert(syncCursor)
-			.values({
-				domiaKey,
-				lastFactsAt: cursor.since,
-				lastFactsId: cursor.id,
-				lastSyncedAt: Date.now(),
-			})
-			.onConflictDoUpdate({
-				target: syncCursor.domiaKey,
-				set: {
-					lastFactsAt: cursor.since,
-					lastFactsId: cursor.id,
-					lastSyncedAt: Date.now(),
-				},
-			})
-			.run()
-	},
-	writeTurnCursor: (domiaKey: string, cursor: TurnCursor) => {
-		db.insert(syncCursor)
-			.values({
-				domiaKey,
-				lastTurnAt: cursor.since,
-				lastTurnId: cursor.id,
-				lastSyncedAt: Date.now(),
-			})
-			.onConflictDoUpdate({
-				target: syncCursor.domiaKey,
-				set: {
-					lastTurnAt: cursor.since,
-					lastTurnId: cursor.id,
-					lastSyncedAt: Date.now(),
-				},
-			})
-			.run()
+		if (cursors.interaction !== undefined) {
+			db.update(domiaRegistry)
+				.set({ lastInteractionAt: cursors.interaction })
+				.where(eq(domiaRegistry.domiaKey, domiaKey))
+				.run()
+		}
 	},
 	listMissingAudio: (
 		domiaKey: string,
@@ -217,16 +317,9 @@ const dbAdapter = {
 	mirrorSync: (domiaKey: string, data: SyncResponse) => {
 		db.transaction((tx) => {
 			for (const r of data.sessions) {
-				const values = {
-					id: r.id,
-					sourceDomiaKey: domiaKey,
-					sessionId: r.sessionId ?? null,
-					startedAt: r.startedAt ?? null,
-					lastUsedAt: r.lastUsedAt ?? null,
-					timeoutMs: r.timeoutMs ?? null,
-					createdAt: r.createdAt,
-					updatedAt: r.updatedAt,
-				}
+				const values = mirrorValues<
+					typeof interactionSessionTrace.$inferInsert
+				>(SESSION_COLUMNS, domiaKey, r)
 				tx.insert(interactionSessionTrace)
 					.values(values)
 					.onConflictDoUpdate({
@@ -236,136 +329,44 @@ const dbAdapter = {
 					.run()
 			}
 			for (const r of data.interactions) {
-				const values = {
-					id: r.id,
-					sourceDomiaKey: domiaKey,
-					interactionSessionTraceId: r.interactionSessionTraceId ?? null,
-					sessionId: r.sessionId ?? null,
-					inputType: r.inputType ?? null,
-					responseType: r.responseType ?? null,
-					isActive: r.isActive ?? null,
-					inputRaw: r.inputRaw ?? null,
-					inputAudioPath: r.inputAudioPath ?? null,
-					wakewordUsed: r.wakewordUsed ?? null,
-					sttResult: r.sttResult ?? null,
-					intentDecision: r.intentDecision ?? null,
-					intentMs: r.intentMs ?? null,
-					agentDecisionMs: r.agentDecisionMs ?? null,
-					agentToolMs: r.agentToolMs ?? null,
-					agentFinalizeMs: r.agentFinalizeMs ?? null,
-					skillProviderUsed: r.skillProviderUsed ?? null,
-					skillPrompt: r.skillPrompt ?? null,
-					skillResponse: r.skillResponse ?? null,
-					llmPrompt: r.llmPrompt ?? null,
-					llmResponse: r.llmResponse ?? null,
-					ttsEngineUsed: r.ttsEngineUsed ?? null,
-					ttsAudioPath: r.ttsAudioPath ?? null,
-					finalOutput: r.finalOutput ?? null,
-					emotionSnapshot: r.emotionSnapshot ?? null,
-					characterSnapshot: r.characterSnapshot ?? null,
-					userEmotionSnapshot: r.userEmotionSnapshot ?? null,
-					sttMs: r.sttMs ?? null,
-					sttQueueMs: r.sttQueueMs ?? null,
-					llmMs: r.llmMs ?? null,
-					llmQueueMs: r.llmQueueMs ?? null,
-					llmPromptTokens: r.llmPromptTokens ?? null,
-					llmCompletionTokens: r.llmCompletionTokens ?? null,
-					llmTokensPerSec: r.llmTokensPerSec ?? null,
-					llmTtftMs: r.llmTtftMs ?? null,
-					llmContextWindow: r.llmContextWindow ?? null,
-					llmFinishReason: r.llmFinishReason ?? null,
-					toolCallCount: r.toolCallCount ?? null,
-					toolErrorCount: r.toolErrorCount ?? null,
-					inputAudioMs: r.inputAudioMs ?? null,
-					ttsMs: r.ttsMs ?? null,
-					ttsQueueMs: r.ttsQueueMs ?? null,
-					ttfaMs: r.ttfaMs ?? null,
-					perceivedTtfaMs: r.perceivedTtfaMs ?? null,
-					llmFirstSentenceMs: r.llmFirstSentenceMs ?? null,
-					ttsFirstChunkMs: r.ttsFirstChunkMs ?? null,
-					rssMb: r.rssMb ?? null,
-					totalMs: r.totalMs ?? null,
-					sttExecutorKey: r.sttExecutorKey ?? null,
-					llmExecutorKey: r.llmExecutorKey ?? null,
-					ttsExecutorKey: r.ttsExecutorKey ?? null,
-					sttModelUsed: r.sttModelUsed ?? null,
-					llmModelUsed: r.llmModelUsed ?? null,
-					ttsVoiceUsed: r.ttsVoiceUsed ?? null,
-					wakeWordModelUsed: r.wakeWordModelUsed ?? null,
-					status: r.status ?? null,
-					errorStep: r.errorStep ?? null,
-					errorMessage: r.errorMessage ?? null,
-					satelliteId: r.satelliteId ?? null,
-					satelliteProtocol: r.satelliteProtocol ?? null,
-					domiaSnapshot: r.domiaSnapshot ?? null,
-					createdAt: r.createdAt,
-					updatedAt: r.updatedAt,
-				}
+				const values = mirrorValues<typeof interactionTrace.$inferInsert>(
+					TRACE_COLUMNS,
+					domiaKey,
+					r,
+				)
 				tx.insert(interactionTrace)
 					.values(values)
 					.onConflictDoUpdate({ target: interactionTrace.id, set: values })
 					.run()
 			}
 			for (const r of data.emotionEvents) {
-				const values = {
-					id: r.id,
-					sourceDomiaKey: domiaKey,
-					cause: r.cause ?? null,
-					delta: r.delta ?? null,
-					createdAt: r.createdAt,
-					updatedAt: r.updatedAt,
-				}
+				const values = mirrorValues<typeof emotionEvent.$inferInsert>(
+					EMOTION_EVENT_COLUMNS,
+					domiaKey,
+					r,
+				)
 				tx.insert(emotionEvent)
 					.values(values)
 					.onConflictDoUpdate({ target: emotionEvent.id, set: values })
 					.run()
 			}
 			for (const r of data.facts) {
-				const values = {
-					id: r.id,
-					sourceDomiaKey: domiaKey,
-					subject: r.subject ?? null,
-					relation: r.relation ?? null,
-					value: r.value ?? null,
-					valueKey: r.valueKey ?? null,
-					confidence: r.confidence ?? null,
-					kind: r.kind ?? null,
-					supersededAt: r.supersededAt ?? null,
-					sourceInteractionId: r.sourceInteractionId ?? null,
-					createdAt: r.createdAt,
-					updatedAt: r.updatedAt,
-				}
+				const values = mirrorValues<typeof memoryFact.$inferInsert>(
+					FACT_COLUMNS,
+					domiaKey,
+					r,
+				)
 				tx.insert(memoryFact)
 					.values(values)
-					.onConflictDoUpdate({
-						target: memoryFact.id,
-						set: {
-							subject: values.subject,
-							relation: values.relation,
-							value: values.value,
-							valueKey: values.valueKey,
-							confidence: values.confidence,
-							supersededAt: values.supersededAt,
-							sourceInteractionId: values.sourceInteractionId,
-							updatedAt: values.updatedAt,
-						},
-					})
+					.onConflictDoUpdate({ target: memoryFact.id, set: values })
 					.run()
 			}
 			for (const r of data.announcements) {
-				const values = {
-					id: r.id,
-					sourceDomiaKey: domiaKey,
-					broadcastId: r.broadcastId,
-					text: r.text ?? "",
-					kind: r.kind,
-					delivery: r.delivery,
-					target: r.target ?? null,
-					delivered: r.delivered ?? false,
-					audioPath: r.audioPath ?? null,
-					createdAt: r.createdAt,
-					updatedAt: r.updatedAt,
-				}
+				const values = mirrorValues<typeof announcement.$inferInsert>(
+					ANNOUNCEMENT_COLUMNS,
+					domiaKey,
+					r,
+				)
 				tx.insert(announcement)
 					.values(values)
 					.onConflictDoUpdate({ target: announcement.id, set: values })
@@ -392,6 +393,72 @@ const dbAdapter = {
 						target: [turnEvent.interactionId, turnEvent.seq],
 						set: values,
 					})
+					.run()
+			}
+			for (const r of data.toolRuns) {
+				const values = mirrorValues<typeof toolRun.$inferInsert>(
+					TOOL_RUN_COLUMNS,
+					domiaKey,
+					r,
+				)
+				tx.insert(toolRun)
+					.values(values)
+					.onConflictDoUpdate({ target: toolRun.id, set: values })
+					.run()
+			}
+			for (const r of data.memoryEpisodes) {
+				const values = mirrorValues<typeof memoryEpisode.$inferInsert>(
+					EPISODE_COLUMNS,
+					domiaKey,
+					r,
+				)
+				tx.insert(memoryEpisode)
+					.values(values)
+					.onConflictDoUpdate({ target: memoryEpisode.id, set: values })
+					.run()
+			}
+			for (const r of data.knowledgeEntries) {
+				const values = mirrorValues<typeof knowledgeEntry.$inferInsert>(
+					KNOWLEDGE_COLUMNS,
+					domiaKey,
+					r,
+				)
+				tx.insert(knowledgeEntry)
+					.values(values)
+					.onConflictDoUpdate({ target: knowledgeEntry.id, set: values })
+					.run()
+			}
+			for (const r of data.voiceFeelAdjustments) {
+				const values = mirrorValues<typeof voiceFeelAdjustment.$inferInsert>(
+					VOICE_FEEL_COLUMNS,
+					domiaKey,
+					r,
+				)
+				tx.insert(voiceFeelAdjustment)
+					.values(values)
+					.onConflictDoUpdate({ target: voiceFeelAdjustment.id, set: values })
+					.run()
+			}
+			for (const r of data.factEvidence) {
+				const values = mirrorValues<typeof factEvidence.$inferInsert>(
+					EVIDENCE_COLUMNS,
+					domiaKey,
+					r,
+				)
+				tx.insert(factEvidence)
+					.values(values)
+					.onConflictDoUpdate({ target: factEvidence.id, set: values })
+					.run()
+			}
+			if (data.userModel) {
+				const values = mirrorValues<typeof userModel.$inferInsert>(
+					USER_MODEL_COLUMNS,
+					domiaKey,
+					data.userModel,
+				)
+				tx.insert(userModel)
+					.values(values)
+					.onConflictDoUpdate({ target: userModel.sourceDomiaKey, set: values })
 					.run()
 			}
 		})

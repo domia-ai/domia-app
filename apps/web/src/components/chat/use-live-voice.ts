@@ -1,26 +1,59 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { m } from "@/paraglide/messages"
+import { errText } from "@/utils/service-errors"
+import { mintLiveVoiceTokenFn } from "@/server/live-voice"
 import type {
+	LivePlaybackFormat,
 	LiveVoiceState,
 	LiveVoiceStatus,
 	LiveVoiceTarget,
-	LivePlaybackFormat,
+	UseLiveVoiceReturn,
 } from "@/types/chat"
+import type { LiveVoiceDownMessage } from "@/types/live"
 
 const CAPTURE_SAMPLE_RATE = 16000
+const DEFAULT_PLAYBACK_SAMPLE_RATE = 24000
+const DEFAULT_PLAYBACK_CHANNELS = 1
 
-const wsUrlFor = (target: LiveVoiceTarget): string | null => {
-	if (!target.localIp || !target.httpPort) return null
-	const scheme = window.location.protocol === "https:" ? "wss" : "ws"
-	return `${scheme}://${target.localIp}:${target.httpPort}/satellite?live=1`
+export const liveVoiceStatusLabel = (status: LiveVoiceStatus): string => {
+	if (status === "connecting") return m.chat_live_status_connecting()
+	if (status === "ready" || status === "listening")
+		return m.chat_live_status_listening()
+	if (status === "thinking") return m.chat_live_status_thinking()
+	if (status === "speaking") return m.chat_live_status_speaking()
+	if (status === "error") return m.chat_live_status_error()
+	return m.chat_live_status_idle()
 }
 
-export const useLiveVoice = (target: LiveVoiceTarget) => {
-	const [state, setState] = useState<LiveVoiceState>({
-		status: "idle",
-		transcript: "",
-		reply: "",
-		error: null,
-	})
+const micErrorText = (err: unknown): string => {
+	if (!(err instanceof Error)) return m.chat_live_mic_failed()
+	if (err.name === "NotAllowedError" || err.name === "SecurityError")
+		return m.chat_live_mic_denied()
+	if (err.name === "NotFoundError" || err.name === "NotSupportedError")
+		return m.chat_live_unsupported()
+	return m.chat_live_mic_failed()
+}
+
+const parseDownMessage = (raw: string): LiveVoiceDownMessage | null => {
+	try {
+		const parsed: unknown = JSON.parse(raw)
+		if (typeof parsed !== "object" || parsed === null) return null
+		if (typeof (parsed as { type?: unknown }).type !== "string") return null
+		return parsed as LiveVoiceDownMessage
+	} catch {
+		return null
+	}
+}
+
+const idleState = (): LiveVoiceState => ({
+	status: "idle",
+	transcript: "",
+	reply: "",
+	error: null,
+})
+
+export const useLiveVoice = (target: LiveVoiceTarget): UseLiveVoiceReturn => {
+	const [state, setState] = useState<LiveVoiceState>(idleState)
 
 	const satelliteIdRef = useRef(`web-console-${crypto.randomUUID()}`)
 	const wsRef = useRef<WebSocket | null>(null)
@@ -30,39 +63,76 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 	const workletRef = useRef<AudioWorkletNode | null>(null)
 	const listeningRef = useRef(false)
 	const playHeadRef = useRef(0)
+	const pausedRef = useRef(false)
+	const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set())
+	const streamEndedRef = useRef(false)
+	const playedSentRef = useRef(false)
+	const interactionIdRef = useRef<string | null>(null)
 	const playFmtRef = useRef<LivePlaybackFormat>({
-		sampleRate: 24000,
-		channels: 1,
+		sampleRate: DEFAULT_PLAYBACK_SAMPLE_RATE,
+		channels: DEFAULT_PLAYBACK_CHANNELS,
 	})
 
 	const patch = useCallback((fields: Partial<LiveVoiceState>) => {
 		setState((prev) => ({ ...prev, ...fields }))
 	}, [])
 
-	const playFrame = useCallback((pcm: ArrayBuffer) => {
-		const ctx = playbackCtxRef.current
-		if (!ctx) return
-		const { sampleRate, channels } = playFmtRef.current
-		const int16 = new Int16Array(pcm)
-		const frames = Math.floor(int16.length / channels)
-		if (frames === 0) return
-		const buffer = ctx.createBuffer(channels, frames, sampleRate)
-		for (let ch = 0; ch < channels; ch++) {
-			const data = buffer.getChannelData(ch)
-			for (let i = 0; i < frames; i++) {
-				data[i] = int16[i * channels + ch] / 0x8000
-			}
+	const stopScheduled = useCallback(() => {
+		for (const source of sourcesRef.current) {
+			source.onended = null
+			source.stop()
+			source.disconnect()
 		}
-		const source = ctx.createBufferSource()
-		source.buffer = buffer
-		source.connect(ctx.destination)
-		const startAt = Math.max(ctx.currentTime, playHeadRef.current)
-		source.start(startAt)
-		playHeadRef.current = startAt + buffer.duration
+		sourcesRef.current.clear()
 	}, [])
+
+	const reportAudioPlayed = useCallback(() => {
+		if (pausedRef.current || playedSentRef.current) return
+		if (!streamEndedRef.current || sourcesRef.current.size > 0) return
+		const interactionId = interactionIdRef.current
+		const ws = wsRef.current
+		if (!interactionId || ws?.readyState !== WebSocket.OPEN) return
+		playedSentRef.current = true
+		ws.send(JSON.stringify({ type: "audio_played", interactionId }))
+	}, [])
+
+	const playFrame = useCallback(
+		(pcm: ArrayBuffer) => {
+			const ctx = playbackCtxRef.current
+			if (!ctx || pausedRef.current) return
+			const { sampleRate, channels } = playFmtRef.current
+			const int16 = new Int16Array(pcm)
+			const frames = Math.floor(int16.length / channels)
+			if (frames === 0) return
+			const buffer = ctx.createBuffer(channels, frames, sampleRate)
+			for (let ch = 0; ch < channels; ch++) {
+				const data = buffer.getChannelData(ch)
+				for (let i = 0; i < frames; i++) {
+					data[i] = int16[i * channels + ch] / 0x8000
+				}
+			}
+			const source = ctx.createBufferSource()
+			source.buffer = buffer
+			source.connect(ctx.destination)
+			source.onended = () => {
+				sourcesRef.current.delete(source)
+				reportAudioPlayed()
+			}
+			const startAt = Math.max(ctx.currentTime, playHeadRef.current)
+			sourcesRef.current.add(source)
+			source.start(startAt)
+			playHeadRef.current = startAt + buffer.duration
+		},
+		[reportAudioPlayed],
+	)
 
 	const teardown = useCallback(() => {
 		listeningRef.current = false
+		pausedRef.current = false
+		streamEndedRef.current = false
+		playedSentRef.current = false
+		interactionIdRef.current = null
+		stopScheduled()
 		wsRef.current?.close()
 		wsRef.current = null
 		workletRef.current?.disconnect()
@@ -73,16 +143,76 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 		captureCtxRef.current = null
 		void playbackCtxRef.current?.close()
 		playbackCtxRef.current = null
-	}, [])
+	}, [stopScheduled])
+
+	const handleMessage = useCallback(
+		(msg: LiveVoiceDownMessage) => {
+			if (msg.type === "ready") {
+				void captureCtxRef.current?.resume()
+				void playbackCtxRef.current?.resume()
+				listeningRef.current = true
+				patch({ status: "listening", transcript: "", reply: "" })
+			} else if (msg.type === "transcript") {
+				patch({ transcript: msg.text })
+			} else if (msg.type === "speech_stopped") {
+				listeningRef.current = false
+				patch({ status: "thinking" })
+			} else if (msg.type === "audio_stream_begin") {
+				playFmtRef.current = {
+					sampleRate: msg.sampleRate ?? DEFAULT_PLAYBACK_SAMPLE_RATE,
+					channels: msg.channels ?? DEFAULT_PLAYBACK_CHANNELS,
+				}
+				pausedRef.current = false
+				streamEndedRef.current = false
+				playedSentRef.current = false
+				interactionIdRef.current = msg.interactionId ?? null
+				playHeadRef.current = playbackCtxRef.current?.currentTime ?? 0
+				patch({ status: "speaking" })
+			} else if (msg.type === "audio_pause") {
+				pausedRef.current = true
+				stopScheduled()
+				playHeadRef.current = playbackCtxRef.current?.currentTime ?? 0
+			} else if (msg.type === "audio_resume") {
+				pausedRef.current = false
+				playHeadRef.current = playbackCtxRef.current?.currentTime ?? 0
+			} else if (msg.type === "audio_stream_end") {
+				streamEndedRef.current = true
+				listeningRef.current = true
+				reportAudioPlayed()
+				patch({ status: "listening" })
+			} else if (msg.type === "reply_done") {
+				interactionIdRef.current ??= msg.interactionId ?? null
+				reportAudioPlayed()
+				patch({ reply: msg.reply })
+			} else {
+				patch({ status: "error", error: msg.message })
+			}
+		},
+		[patch, reportAudioPlayed, stopScheduled],
+	)
 
 	const connect = useCallback(async () => {
-		const url = wsUrlFor(target)
-		if (!url) {
-			patch({ status: "error", error: "Domia address unknown" })
+		patch({ status: "connecting", error: null, transcript: "", reply: "" })
+		const granted = await mintLiveVoiceTokenFn({
+			data: {
+				domiaKey: target.domiaKey,
+				satelliteId: satelliteIdRef.current,
+			},
+		})
+		if (!granted.ok) {
+			patch({ status: "error", error: errText(granted.error) })
 			return
 		}
-		patch({ status: "connecting", error: null, transcript: "", reply: "" })
+		const grant = granted.data
+		if (!grant) {
+			patch({ status: "error", error: m.chat_live_token_failed() })
+			return
+		}
 		try {
+			if (!navigator.mediaDevices?.getUserMedia) {
+				patch({ status: "error", error: m.chat_live_unsupported() })
+				return
+			}
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
@@ -114,7 +244,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 
 			playbackCtxRef.current = new AudioContext()
 
-			const ws = new WebSocket(url)
+			const ws = new WebSocket(grant.wsUrl)
 			ws.binaryType = "arraybuffer"
 			wsRef.current = ws
 
@@ -122,63 +252,38 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 				ws.send(
 					JSON.stringify({
 						type: "hello",
-						satelliteId: satelliteIdRef.current,
-						domiaKey: target.domiaKey,
+						satelliteId: grant.satelliteId,
+						domiaKey: grant.domiaKey,
+						token: grant.token,
 						sampleRate: CAPTURE_SAMPLE_RATE,
-						channels: 1,
+						channels: DEFAULT_PLAYBACK_CHANNELS,
 					}),
 				)
 			}
-			ws.onmessage = (event) => {
+			ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
 				if (event.data instanceof ArrayBuffer) {
 					playFrame(event.data)
 					return
 				}
-				const msg = JSON.parse(String(event.data))
-				if (msg.type === "ready") {
-					void captureCtxRef.current?.resume()
-					void playbackCtxRef.current?.resume()
-					listeningRef.current = true
-					patch({ status: "listening", transcript: "", reply: "" })
-				} else if (msg.type === "transcript") {
-					patch({ transcript: msg.text })
-				} else if (msg.type === "speech_stopped") {
-					listeningRef.current = false
-					patch({ status: "thinking" })
-				} else if (msg.type === "audio_stream_begin") {
-					playFmtRef.current = {
-						sampleRate: msg.sampleRate ?? 24000,
-						channels: msg.channels ?? 1,
-					}
-					playHeadRef.current = playbackCtxRef.current?.currentTime ?? 0
-					patch({ status: "speaking" })
-				} else if (msg.type === "audio_stream_end") {
-					listeningRef.current = true
-					patch({ status: "listening" })
-				} else if (msg.type === "reply_done") {
-					patch({ reply: msg.reply })
-				} else if (msg.type === "error") {
-					patch({ status: "error", error: msg.message })
-				}
+				const msg = parseDownMessage(String(event.data))
+				if (msg) handleMessage(msg)
 			}
-			ws.onerror = () => patch({ status: "error", error: "connection error" })
+			ws.onerror = () =>
+				patch({ status: "error", error: m.chat_live_status_error() })
 			ws.onclose = () => {
 				if (wsRef.current !== ws) return
 				teardown()
-				patch({ status: "error", error: "connection lost" })
+				patch({ status: "error", error: m.chat_live_status_error() })
 			}
 		} catch (err) {
 			teardown()
-			patch({
-				status: "error",
-				error: err instanceof Error ? err.message : "mic/connection failed",
-			})
+			patch({ status: "error", error: micErrorText(err) })
 		}
-	}, [target, patch, playFrame, teardown])
+	}, [target.domiaKey, patch, playFrame, handleMessage, teardown])
 
 	const disconnect = useCallback(() => {
 		teardown()
-		setState({ status: "idle", transcript: "", reply: "", error: null })
+		setState(idleState())
 	}, [teardown])
 
 	useEffect(() => () => teardown(), [teardown])
@@ -189,7 +294,7 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 		if (prevTargetSig.current === targetSig) return
 		prevTargetSig.current = targetSig
 		teardown()
-		setState({ status: "idle", transcript: "", reply: "", error: null })
+		setState(idleState())
 	}, [targetSig, teardown])
 
 	const connected =
@@ -198,16 +303,4 @@ export const useLiveVoice = (target: LiveVoiceTarget) => {
 		state.status !== "error"
 
 	return { state, connect, disconnect, connected }
-}
-
-export type UseLiveVoiceReturn = ReturnType<typeof useLiveVoice>
-
-export const liveVoiceStatusLabel: Record<LiveVoiceStatus, string> = {
-	idle: "Off",
-	connecting: "Connecting…",
-	ready: "Listening…",
-	listening: "Listening…",
-	thinking: "Thinking…",
-	speaking: "Speaking…",
-	error: "Error",
 }

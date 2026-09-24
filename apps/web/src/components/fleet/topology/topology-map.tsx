@@ -1,34 +1,23 @@
 import { m } from "@/paraglide/messages"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { Workflow } from "lucide-react"
+import { Workflow, WifiOff } from "lucide-react"
 import { TopologyNode } from "./topology-node"
 import { computeLayout } from "./layout"
+import { AsyncBoundary } from "@/components/ui/async-boundary"
+import { useActionQuery } from "@/hooks/use-query-state"
 import { fleetGraphQueryOptions } from "@/server/fleet"
-import { livePresenceQueryOptions } from "@/server/live"
 import { cn } from "@/lib/utils"
+import type { TopologyGraphProps } from "@/types/fleet"
 import type { PresenceStatus } from "@/types/rooms"
 
 const pct = (value: number, total: number) => `${(value / total) * 100}%`
 
-export function FleetTopology() {
+function TopologyGraph({ graph }: TopologyGraphProps) {
 	const navigate = useNavigate()
-	const { data, isLoading, isError } = useQuery(fleetGraphQueryOptions())
-	const presence = useQuery(livePresenceQueryOptions())
 	const [hovered, setHovered] = useState<string | null>(null)
 
-	if (isLoading)
-		return <p className="text-muted-foreground text-sm">{m.nodes_loading()}</p>
-	if (isError || !data?.ok)
-		return (
-			<p className="text-destructive text-sm">
-				{(data && !data.ok && data.error) || "Could not load topology."}
-			</p>
-		)
-
-	const graph = data.data
-	if (!graph || graph.nodes.length === 0)
+	if (graph.nodes.length === 0)
 		return (
 			<div className="text-muted-foreground flex flex-col items-center gap-2 py-16 text-center text-sm">
 				<Workflow className="size-8 opacity-40" />
@@ -37,27 +26,18 @@ export function FleetTopology() {
 		)
 
 	const layout = computeLayout(graph)
-
-	const statusByKey = new Map<string, PresenceStatus>()
-	if (presence.data?.ok)
-		for (const node of presence.data.data ?? [])
-			for (const entry of node.entries)
-				statusByKey.set(entry.domiaKey, entry.status)
-
-	const activeNodes = new Set<string>()
-	for (const node of graph.nodes)
-		if (
-			node.identities.some(
-				(id) => (statusByKey.get(id.domiaKey) ?? "idle") !== "idle",
-			)
-		)
-			activeNodes.add(node.nodeId)
-
-	const statusOf = (domiaKey: string): PresenceStatus =>
-		statusByKey.get(domiaKey) ?? "idle"
+	const activeNodes = new Set(
+		graph.nodes.filter((node) => node.active === true).map((n) => n.nodeId),
+	)
 
 	return (
-		<>
+		<div className="flex flex-col gap-2">
+			{graph.presence === "unavailable" ? (
+				<span className="bg-muted text-muted-foreground inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs">
+					<WifiOff className="size-3.5" />
+					{m.topology_presence_unavailable()}
+				</span>
+			) : null}
 			<div className="overflow-x-auto">
 				<div
 					className="bg-muted/20 relative min-w-[900px] rounded-xl border"
@@ -134,6 +114,9 @@ export function FleetTopology() {
 					{layout.nodes.map((ln) => {
 						const node = graph.nodes.find((n) => n.nodeId === ln.nodeId)
 						if (!node) return null
+						const statusOf = (domiaKey: string): PresenceStatus | null =>
+							node.identities.find((i) => i.domiaKey === domiaKey)?.status ??
+							null
 						return (
 							<div
 								key={ln.nodeId}
@@ -159,6 +142,24 @@ export function FleetTopology() {
 					})}
 				</div>
 			</div>
-		</>
+		</div>
+	)
+}
+
+export function FleetTopology() {
+	const { state } = useActionQuery({
+		...fleetGraphQueryOptions(),
+		errorMessage: m.topology_load_error,
+	})
+
+	return (
+		<AsyncBoundary
+			state={state}
+			skeleton={
+				<p className="text-muted-foreground text-sm">{m.nodes_loading()}</p>
+			}
+		>
+			{(graph) => (graph ? <TopologyGraph graph={graph} /> : null)}
+		</AsyncBoundary>
 	)
 }

@@ -1,6 +1,5 @@
 import { m } from "@/paraglide/messages"
 import { useMemo, useState } from "react"
-import type { MeshDomiaRow } from "@/types/fleet"
 import { accentFor } from "@/utils/accent"
 import { initials } from "@/utils/initials"
 import { isOnline } from "@/utils/presence"
@@ -10,7 +9,7 @@ import {
 	isPresetAvatar,
 	presetSrc,
 } from "@/constants/avatars"
-import type { MeshEdge } from "@/types"
+import type { MeshMapNode, MeshMapProps } from "@/types/fleet"
 
 const avatarSrc = (
 	domiaKey: string,
@@ -22,13 +21,6 @@ const avatarSrc = (
 			? customAvatarSrc(domiaKey)
 			: null
 
-type MeshNode = {
-	row: MeshDomiaRow
-	x: number
-	y: number
-	isHub: boolean
-}
-
 const W = 560
 const H = 440
 const CX = W / 2
@@ -37,27 +29,16 @@ const CY = H / 2
 export function MeshMap({
 	rows,
 	edges,
+	hubKey,
 	selectedKey,
 	onSelect,
-}: {
-	rows: MeshDomiaRow[]
-	edges: MeshEdge[]
-	selectedKey?: string
-	onSelect?: (key: string) => void
-}) {
+}: MeshMapProps) {
 	const [hovered, setHovered] = useState<string | null>(null)
 
-	const nodes = useMemo<MeshNode[]>(() => {
-		const inbound: Record<string, number> = {}
-		for (const edge of edges)
-			inbound[edge.target] = (inbound[edge.target] ?? 0) + 1
-		const hubKey =
-			Object.entries(inbound).sort((a, b) => b[1] - a[1])[0]?.[0] ??
-			rows[0]?.domiaKey
-
+	const nodes = useMemo<MeshMapNode[]>(() => {
 		const spokes = rows.filter((row) => row.domiaKey !== hubKey)
 		const radius = Math.min(W, H) / 2 - 80
-		const out: MeshNode[] = []
+		const out: MeshMapNode[] = []
 		const hub = rows.find((row) => row.domiaKey === hubKey)
 		if (hub) out.push({ row: hub, x: CX, y: CY, isHub: edges.length > 0 })
 		spokes.forEach((row, i) => {
@@ -70,7 +51,7 @@ export function MeshMap({
 			})
 		})
 		return out
-	}, [rows, edges])
+	}, [rows, edges.length, hubKey])
 
 	const pos = (key: string) => nodes.find((node) => node.row.domiaKey === key)
 

@@ -4,12 +4,19 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ConfigWorkspace } from "@/components/domia/config/config-workspace"
 import { KnowledgeManager } from "@/components/domia/knowledge-manager"
+import { MindTransferCard } from "@/components/domia/mind-transfer-card"
+import { DangerZone } from "@/components/domia/danger-zone"
 import { RestartButton } from "@/components/domia/restart-button"
 import { configQueryOptions } from "@/server/config"
 import { getDomiaFn } from "@/server/domia"
 import { isOnline } from "@/utils/presence"
+import { configDraftKey } from "@/lib/config-apply"
 import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
+import type { JsonValue } from "@/types/config"
+
+const numberField = (value: JsonValue | undefined): number | undefined =>
+	typeof value === "number" && Number.isFinite(value) ? value : undefined
 
 export const Route = createFileRoute("/_dashboard/domias/$key_/config")({
 	loader: async ({ params }) => {
@@ -101,14 +108,34 @@ function ConfigPage() {
 						</p>
 					)}
 					<ConfigWorkspace
+						key={configDraftKey(result.data, result.applyState ?? null)}
 						domiaKey={domia.domiaKey}
 						domiaName={domia.name}
 						config={result.data}
 						online={online}
 						readOnly={result.source === "snapshot"}
+						applyState={result.applyState ?? null}
 					/>
 					<div className="border-border border-t pt-6">
-						<KnowledgeManager domiaKey={domia.domiaKey} online={online} />
+						<KnowledgeManager
+							domiaKey={domia.domiaKey}
+							online={online}
+							maxChars={numberField(result.data.domia.knowledgeMaxChars)}
+						/>
+					</div>
+					<div className="border-border border-t pt-6">
+						<MindTransferCard
+							domiaKey={domia.domiaKey}
+							domiaName={domia.name}
+							online={online}
+						/>
+					</div>
+					<div className="border-border border-t pt-6">
+						<DangerZone
+							domiaKey={domia.domiaKey}
+							domiaName={domia.name}
+							online={online}
+						/>
 					</div>
 				</>
 			) : null}

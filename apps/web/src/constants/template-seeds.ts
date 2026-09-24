@@ -3,6 +3,7 @@ import fullHub from "./system-templates/full-hub.json"
 import thinClient from "./system-templates/thin-client.json"
 import homeAssistant from "./system-templates/home-assistant.json"
 import jetson from "./system-templates/jetson.json"
+import jetsonNemo from "./system-templates/jetson-nemo.json"
 import snappy from "./system-templates/snappy.json"
 import balanced from "./system-templates/balanced.json"
 import rich from "./system-templates/rich.json"
@@ -49,6 +50,13 @@ export const SYSTEM_TEMPLATES: {
 		description:
 			"Full local pipeline tuned for the NVIDIA Jetson Orin Nano — a small 3B model that fits the 8 GB unified memory, with the LLM on the GPU and STT/TTS on CPU. A starting point: the exact 3B model and quantization are still to be confirmed against on-device benchmarks. Pull the model in Ollama first.",
 		config: jetson as unknown as ConfigSnapshot,
+	},
+	{
+		id: "system:jetson-nemo",
+		name: "Jetson Orin Nano (NeMo hearing)",
+		description:
+			"The Jetson pipeline with hearing moved off the CPU — STT runs against a local NeMo-Speech server (nemotron-3.5-asr-streaming-0.6b) instead of an in-process sherpa model, and the LLM stays on llama.cpp. The most accurate Jetson starting point, but it needs two servers running before it works: start NeMo-Speech with `make nemo-serve` (the URL must end in /v1) and llama-server with `make llm-server`.",
+		config: jetsonNemo as unknown as ConfigSnapshot,
 	},
 	{
 		id: "system:snappy",

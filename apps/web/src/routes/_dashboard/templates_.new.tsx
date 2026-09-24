@@ -24,8 +24,9 @@ function NewTemplatePage() {
 
 	const isDomiaClone = choice?.startsWith("d:") ?? false
 	const isTemplateClone = choice?.startsWith("t:") ?? false
-	const domiaKey = isDomiaClone ? choice!.slice(2) : ""
-	const templateId = isTemplateClone ? choice!.slice(2) : ""
+	const choiceValue = choice?.slice(2) ?? ""
+	const domiaKey = isDomiaClone ? choiceValue : ""
+	const templateId = isTemplateClone ? choiceValue : ""
 
 	const targetsQuery = useQuery(domiaTargetsQueryOptions())
 	const templatesQuery = useQuery(templatesQueryOptions())

@@ -3,13 +3,20 @@ import { m } from "@/paraglide/messages"
 import { validateField } from "@/utils/config-validation"
 import { coerceFieldValue, fieldValueToJson } from "@/utils/config-values"
 import {
+	delegationToBundle,
+	delegationValid,
+	normalizeDelegations,
+} from "@/utils/config"
+import {
 	normalizeSkillProviders,
 	skillProviderToBundle,
 	skillProviderToSnapshot,
 	skillProviderValid,
 } from "@/utils/skill-providers"
 import type {
+	CapabilityDelegation,
 	ConfigDraft,
+	ConfigDraftApi,
 	ConfigSectionDef,
 	ConfigSnapshot,
 	DraftImpact,
@@ -20,6 +27,7 @@ import type {
 } from "@/types/config"
 
 const SKILL_SECTION_ID = "skills"
+const CAPABILITIES_SECTION_ID = "capabilities"
 
 const editableOf = (sections: ConfigSectionDef[]): ConfigSectionDef[] =>
 	sections.filter((s) => s.kind === "fields")
@@ -52,7 +60,7 @@ const equal = (a: FieldValue, b: FieldValue): boolean => {
 export function useConfigDraft(
 	config: ConfigSnapshot,
 	sections: ConfigSectionDef[],
-) {
+): ConfigDraftApi {
 	const editable = useMemo(() => editableOf(sections), [sections])
 	const [baseline, setBaseline] = useState<ConfigDraft>(() =>
 		buildBaseline(config, editable),
@@ -65,6 +73,12 @@ export function useConfigDraft(
 	)
 	const [skillProviders, setSkillProviders] = useState<SkillProviderDraft[]>(
 		() => normalizeSkillProviders(config.skillProviders),
+	)
+	const [delegationBaseline, setDelegationBaseline] = useState<
+		CapabilityDelegation[]
+	>(() => normalizeDelegations(config.delegations))
+	const [delegations, setDelegations] = useState<CapabilityDelegation[]>(() =>
+		normalizeDelegations(config.delegations),
 	)
 
 	const sourceKey = (sectionId: string): string =>
@@ -99,6 +113,11 @@ export function useConfigDraft(
 		[skillProviders, skillBaseline],
 	)
 
+	const delegationsChanged = useMemo(
+		() => JSON.stringify(delegations) !== JSON.stringify(delegationBaseline),
+		[delegations, delegationBaseline],
+	)
+
 	const impact = useMemo((): DraftImpact => {
 		const changedSections = editable
 			.map((s) => {
@@ -108,6 +127,20 @@ export function useConfigDraft(
 				return { section: s.id, label: s.label(), changed }
 			})
 			.filter((s) => s.changed.length > 0)
+		if (delegationsChanged) {
+			const existing = changedSections.find(
+				(s) => s.section === CAPABILITIES_SECTION_ID,
+			)
+			if (existing) existing.changed = [...existing.changed, "delegations"]
+			else
+				changedSections.push({
+					section: CAPABILITIES_SECTION_ID,
+					label:
+						editable.find((s) => s.id === CAPABILITIES_SECTION_ID)?.label() ??
+						m.config_section_capabilities(),
+					changed: ["delegations"],
+				})
+		}
 		if (skillChanged)
 			changedSections.push({
 				section: SKILL_SECTION_ID,
@@ -118,7 +151,7 @@ export function useConfigDraft(
 			totalChanged: changedSections.reduce((n, s) => n + s.changed.length, 0),
 			sections: changedSections,
 		}
-	}, [baseline, draft, editable, skillChanged])
+	}, [baseline, draft, editable, skillChanged, delegationsChanged])
 
 	const errors = useMemo((): Record<string, Record<string, string>> => {
 		const map: Record<string, Record<string, string>> = {}
@@ -133,7 +166,9 @@ export function useConfigDraft(
 	}, [draft, editable])
 
 	const skillValid = skillProviders.every(skillProviderValid)
-	const isValid = Object.keys(errors).length === 0 && skillValid
+	const delegationsValid = delegations.every(delegationValid)
+	const isValid =
+		Object.keys(errors).length === 0 && skillValid && delegationsValid
 
 	const fieldError = (sectionId: string, key: string): string | null =>
 		errors[sectionId]?.[key] ?? null
@@ -155,6 +190,8 @@ export function useConfigDraft(
 		}
 		if (skillChanged)
 			bundle.skillProviders = skillProviders.map(skillProviderToBundle)
+		if (delegationsChanged)
+			bundle.delegations = delegations.map(delegationToBundle)
 		return bundle
 	}
 
@@ -175,16 +212,19 @@ export function useConfigDraft(
 			byKey[key] = merged
 		}
 		byKey.skillProviders = skillProviders.map(skillProviderToSnapshot)
+		byKey.delegations = normalizeDelegations(delegations)
 		return byKey as unknown as ConfigSnapshot
 	}
 
 	const reset = () => {
 		setDraft(baseline)
 		setSkillProviders(skillBaseline)
+		setDelegations(delegationBaseline)
 	}
 	const commit = () => {
 		setBaseline(draft)
 		setSkillBaseline(skillProviders)
+		setDelegationBaseline(delegations)
 	}
 
 	return {
@@ -203,7 +243,8 @@ export function useConfigDraft(
 		skillProviders,
 		setSkillProviders,
 		skillChanged,
+		delegations,
+		setDelegations,
+		delegationsChanged,
 	}
 }
-
-export type ConfigDraftApi = ReturnType<typeof useConfigDraft>

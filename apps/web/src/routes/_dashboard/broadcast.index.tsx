@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { PageHeader } from "@/components/shell/page-header"
 import { BroadcastView } from "@/components/broadcast/broadcast-view"
-import { livePresenceQueryOptions } from "@/server/live"
+import { broadcastTargetsQueryOptions } from "@/server/broadcast"
 import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/broadcast/")({
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_dashboard/broadcast/")({
 		meta: [{ title: m.meta_title({ page: m.nav_broadcast() }) }],
 	}),
 	loader: ({ context }) =>
-		context.queryClient.ensureQueryData(livePresenceQueryOptions()),
+		context.queryClient.ensureQueryData(broadcastTargetsQueryOptions()),
 	component: BroadcastPage,
 })
 

@@ -1,7 +1,6 @@
 import { m } from "@/paraglide/messages"
 import type { EmotionState } from "@/types"
-
-export type EmotionKey = keyof EmotionState
+import type { EmotionKey } from "@/types/emotions"
 
 export const EMOTION_KEYS: EmotionKey[] = [
 	"joy",

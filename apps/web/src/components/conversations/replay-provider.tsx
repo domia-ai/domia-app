@@ -1,3 +1,4 @@
+import { noop } from "@/lib/utils"
 import {
 	createContext,
 	useContext,
@@ -21,16 +22,16 @@ const DEFAULT_STATE: ReplayState = {
 }
 
 const NOOP_CONTROLLER: ReplayController = {
-	registerTrack: () => {},
+	registerTrack: noop,
 	getTrack: () => null,
-	emitReady: () => {},
-	emitFinish: () => {},
-	emitProgress: () => {},
-	setSink: () => {},
+	emitReady: noop,
+	emitFinish: noop,
+	emitProgress: noop,
+	setSink: noop,
 }
 
 const ReplayStateContext = createContext<ReplayState>(DEFAULT_STATE)
-const ReplaySetContext = createContext<(state: ReplayState) => void>(() => {})
+const ReplaySetContext = createContext<(state: ReplayState) => void>(noop)
 const ReplayControllerContext = createContext<ReplayController>(NOOP_CONTROLLER)
 
 export function ReplayProvider({ children }: { children: ReactNode }) {

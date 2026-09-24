@@ -1,9 +1,12 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { BookOpen, Loader2, Plus, Trash2, Pencil, X } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { cn } from "@/lib/utils"
+import { useActionMutation } from "@/hooks/use-action-mutation"
+import { useActionQuery } from "@/hooks/use-query-state"
+import { AsyncBoundary } from "@/components/ui/async-boundary"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,34 +17,33 @@ import {
 	saveKnowledgeFn,
 	deleteKnowledgeFn,
 } from "@/server/knowledge"
-import type { KnowledgeEntry } from "@/types/knowledge"
+import type { KnowledgeManagerProps } from "@/types/domia"
+import type { KnowledgeDraft, KnowledgeEntry } from "@/types/knowledge"
 
-type Draft = {
-	id?: string
-	title: string
-	content: string
-	priority: number
-	isActive: boolean
+const EMPTY: KnowledgeDraft = {
+	title: "",
+	content: "",
+	priority: 0,
+	isActive: true,
 }
-
-const EMPTY: Draft = { title: "", content: "", priority: 0, isActive: true }
 
 export function KnowledgeManager({
 	domiaKey,
 	online,
-}: {
-	domiaKey: string
-	online: boolean
-}) {
+	maxChars,
+}: KnowledgeManagerProps) {
 	const qc = useQueryClient()
-	const query = useQuery(knowledgeQueryOptions(domiaKey))
-	const [draft, setDraft] = useState<Draft | null>(null)
+	const { state } = useActionQuery({
+		...knowledgeQueryOptions(domiaKey),
+		errorMessage: m.err_request_failed,
+	})
+	const [draft, setDraft] = useState<KnowledgeDraft | null>(null)
 
 	const invalidate = () =>
 		qc.invalidateQueries({ queryKey: ["knowledge", domiaKey] })
 
-	const save = useMutation({
-		mutationFn: (d: Draft) =>
+	const save = useActionMutation({
+		mutationFn: (d: KnowledgeDraft) =>
 			saveKnowledgeFn({
 				data: {
 					domiaKey,
@@ -54,28 +56,24 @@ export function KnowledgeManager({
 					},
 				},
 			}),
-		onSuccess: (res) => {
-			if (res.ok) {
-				toast.success(m.toast_knowledge_saved())
-				setDraft(null)
-				void invalidate()
-			} else toast.error(errText(res.error))
+		failureTitle: m.err_save_entry,
+		onDone: () => {
+			toast.success(m.toast_knowledge_saved())
+			setDraft(null)
+			void invalidate()
 		},
-		onError: () => toast.error(m.err_save_entry()),
 	})
 
-	const remove = useMutation({
+	const remove = useActionMutation({
 		mutationFn: (id: string) => deleteKnowledgeFn({ data: { domiaKey, id } }),
-		onSuccess: (res) => {
-			if (res.ok) {
-				toast.success(m.toast_entry_deleted())
-				void invalidate()
-			} else toast.error(errText(res.error))
+		failureTitle: m.err_delete_entry,
+		onDone: () => {
+			toast.success(m.toast_entry_deleted())
+			void invalidate()
 		},
-		onError: () => toast.error(m.err_delete_entry()),
 	})
 
-	const toDraft = (e: KnowledgeEntry): Draft => ({
+	const toDraft = (e: KnowledgeEntry): KnowledgeDraft => ({
 		id: e.id,
 		title: e.title,
 		content: e.content,
@@ -83,12 +81,8 @@ export function KnowledgeManager({
 		isActive: e.isActive,
 	})
 
-	const entries = (query.data?.ok ? query.data.data : []) ?? []
-	const loadError = query.isError
-		? m.err_request_failed()
-		: query.data && !query.data.ok
-			? errText(query.data.error)
-			: null
+	const overLimit =
+		maxChars !== undefined && (draft?.content.length ?? 0) > maxChars
 
 	return (
 		<div className="space-y-4">
@@ -128,6 +122,25 @@ export function KnowledgeManager({
 							placeholder={m.domia_kb_content_placeholder()}
 							onChange={(e) => setDraft({ ...draft, content: e.target.value })}
 						/>
+						<div className="flex items-center justify-between gap-2">
+							{overLimit && maxChars !== undefined ? (
+								<p className="text-destructive text-xs">
+									{m.err_max_length({ max: maxChars })}
+								</p>
+							) : (
+								<span />
+							)}
+							<span
+								className={cn(
+									"font-mono text-[11px] tabular-nums",
+									overLimit ? "text-destructive" : "text-muted-foreground",
+								)}
+							>
+								{maxChars === undefined
+									? draft.content.length
+									: `${draft.content.length} / ${maxChars}`}
+							</span>
+						</div>
 					</div>
 					<div className="flex items-center gap-6">
 						<div className="flex items-center gap-2">
@@ -159,7 +172,10 @@ export function KnowledgeManager({
 						<Button
 							size="sm"
 							disabled={
-								!draft.title.trim() || !draft.content.trim() || save.isPending
+								!draft.title.trim() ||
+								!draft.content.trim() ||
+								overLimit ||
+								save.isPending
 							}
 							onClick={() => save.mutate(draft)}
 						>
@@ -172,60 +188,65 @@ export function KnowledgeManager({
 				</div>
 			) : null}
 
-			{query.isLoading ? (
-				<div className="text-muted-foreground flex items-center gap-2 py-8 text-sm">
-					<Loader2 className="size-4 animate-spin" /> {m.domia_kb_loading()}
-				</div>
-			) : loadError ? (
-				<p className="text-destructive py-6 text-sm">
-					{m.domia_kb_load_error({ error: loadError })}
-				</p>
-			) : entries.length === 0 && !draft ? (
-				<p className="text-muted-foreground border-border rounded-lg border border-dashed py-8 text-center text-sm">
-					{m.domia_kb_empty()}
-				</p>
-			) : (
-				<ul className="space-y-2">
-					{entries.map((e) => (
-						<li
-							key={e.id}
-							className="border-border flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5"
-						>
-							<div className="min-w-0">
-								<div className="flex items-center gap-2">
-									<span className="text-sm font-medium">{e.title}</span>
-									{!e.isActive ? (
-										<span className="text-muted-foreground text-[11px]">
-											{m.domia_kb_inactive()}
-										</span>
-									) : null}
-								</div>
-								<p className="text-muted-foreground truncate text-sm">
-									{e.content}
-								</p>
-							</div>
-							<div className="flex shrink-0 items-center gap-1">
-								<Button
-									variant="ghost"
-									size="icon"
-									disabled={!online}
-									onClick={() => setDraft(toDraft(e))}
+			<AsyncBoundary
+				state={state}
+				skeleton={
+					<div className="text-muted-foreground flex items-center gap-2 py-8 text-sm">
+						<Loader2 className="size-4 animate-spin" /> {m.domia_kb_loading()}
+					</div>
+				}
+			>
+				{(entries) =>
+					!entries || entries.length === 0 ? (
+						draft ? null : (
+							<p className="text-muted-foreground border-border rounded-lg border border-dashed py-8 text-center text-sm">
+								{m.domia_kb_empty()}
+							</p>
+						)
+					) : (
+						<ul className="space-y-2">
+							{entries.map((e) => (
+								<li
+									key={e.id}
+									className="border-border flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5"
 								>
-									<Pencil className="size-3.5" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									disabled={!online || remove.isPending}
-									onClick={() => remove.mutate(e.id)}
-								>
-									<Trash2 className="text-destructive size-3.5" />
-								</Button>
-							</div>
-						</li>
-					))}
-				</ul>
-			)}
+									<div className="min-w-0">
+										<div className="flex items-center gap-2">
+											<span className="text-sm font-medium">{e.title}</span>
+											{!e.isActive ? (
+												<span className="text-muted-foreground text-[11px]">
+													{m.domia_kb_inactive()}
+												</span>
+											) : null}
+										</div>
+										<p className="text-muted-foreground truncate text-sm">
+											{e.content}
+										</p>
+									</div>
+									<div className="flex shrink-0 items-center gap-1">
+										<Button
+											variant="ghost"
+											size="icon"
+											disabled={!online}
+											onClick={() => setDraft(toDraft(e))}
+										>
+											<Pencil className="size-3.5" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="icon"
+											disabled={!online || remove.isPending}
+											onClick={() => remove.mutate(e.id)}
+										>
+											<Trash2 className="text-destructive size-3.5" />
+										</Button>
+									</div>
+								</li>
+							))}
+						</ul>
+					)
+				}
+			</AsyncBoundary>
 		</div>
 	)
 }

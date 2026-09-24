@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { BookmarkPlus } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -45,7 +45,7 @@ export function SaveTemplateDialog({
 	const [name, setName] = useState(template?.name ?? "")
 	const [description, setDescription] = useState(template?.description ?? "")
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: () =>
 			template
 				? updateConfigTemplateFn({
@@ -63,16 +63,13 @@ export function SaveTemplateDialog({
 							config,
 						},
 					}),
-	})
-
-	const onSave = async () => {
-		if (!name.trim()) return
-		const result = await mutation.mutateAsync()
-		if (result.ok && result.data) {
+		failureTitle: m.toast_template_save_failed,
+		onDone: (data) => {
+			const saved = data?.name ?? name.trim()
 			toast.success(
 				template
-					? m.toast_template_updated({ name: result.data.name })
-					: m.toast_template_saved({ name: result.data.name }),
+					? m.toast_template_updated({ name: saved })
+					: m.toast_template_saved({ name: saved }),
 				{ description: m.toast_template_saved_desc() },
 			)
 			queryClient.invalidateQueries({ queryKey: ["templates"] })
@@ -80,11 +77,12 @@ export function SaveTemplateDialog({
 			setDescription("")
 			setOpen(false)
 			onSaved?.()
-		} else {
-			toast.error(m.toast_template_save_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
+		},
+	})
+
+	const onSave = () => {
+		if (!name.trim()) return
+		mutation.mutate(undefined)
 	}
 
 	return (

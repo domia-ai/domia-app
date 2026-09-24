@@ -18,8 +18,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	type ChartConfig,
 } from "@/components/ui/chart"
+import type { ChartConfig } from "@/types/ui"
 import { Badge } from "@/components/ui/badge"
 import { MeshMap } from "@/components/domia/mesh-map"
 import { StatCard } from "@/components/domia/stat-card"
@@ -50,7 +50,8 @@ export function OverviewView() {
 		refetchInterval: liveRefreshMs,
 	})
 
-	const { rows, edges, stats, performance, recent, telemetry } = data
+	const { rows, edges, hubDomiaKey, stats, performance, recent, telemetry } =
+		data
 	const [selectedKey, setSelectedKey] = useState(rows[0]?.domiaKey ?? "")
 	const selected =
 		rows.find((r) => r.domiaKey === selectedKey) ?? rows[0] ?? null
@@ -146,6 +147,7 @@ export function OverviewView() {
 						<MeshMap
 							rows={rows}
 							edges={edges}
+							hubKey={hubDomiaKey}
 							selectedKey={selectedKey}
 							onSelect={setSelectedKey}
 						/>

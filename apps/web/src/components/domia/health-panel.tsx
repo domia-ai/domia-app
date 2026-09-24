@@ -4,6 +4,7 @@ import { m } from "@/paraglide/messages"
 import { errText } from "@/utils/service-errors"
 import { Badge } from "@/components/ui/badge"
 import { configHealthQueryOptions } from "@/server/config"
+import { llmSlotDisplayLabel } from "@/lib/config-apply"
 import type { ConfigHealthEntry } from "@/types/config"
 
 const STATUS = {
@@ -43,6 +44,33 @@ function HealthRow({ entry }: { entry: ConfigHealthEntry }) {
 				)}
 			</div>
 			<Icon className={`mt-0.5 size-4 shrink-0 ${className}`} />
+		</div>
+	)
+}
+
+export function LlmSlotsCard({ slots }: { slots: Record<string, number> }) {
+	const rows = Object.entries(slots)
+	if (rows.length === 0) return null
+	return (
+		<div className="space-y-2 rounded-lg border px-3 py-2.5">
+			<div className="space-y-0.5">
+				<p className="text-sm font-medium">{m.health_llm_slots()}</p>
+				<p className="text-muted-foreground text-xs">
+					{m.health_llm_slots_hint()}
+				</p>
+			</div>
+			<dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1">
+				{rows.map(([key, value]) => (
+					<div key={key} className="contents">
+						<dt className="text-muted-foreground text-xs">
+							{llmSlotDisplayLabel(key)}
+						</dt>
+						<dd className="text-right font-mono text-xs tabular-nums">
+							{value}
+						</dd>
+					</div>
+				))}
+			</dl>
 		</div>
 	)
 }
@@ -109,6 +137,7 @@ export function HealthPanel({
 					<HealthRow key={entry.stage} entry={entry} />
 				))}
 			</div>
+			{health.llmSlots && <LlmSlotsCard slots={health.llmSlots} />}
 		</div>
 	)
 }

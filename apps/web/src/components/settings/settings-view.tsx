@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { StatusPill } from "@/components/domia/status"
+import { MeshRotationCard } from "./mesh-rotation-card"
 import { useConsolePrefs } from "@/components/providers/console-prefs"
 import { getSettingsOverviewFn } from "@/server/settings"
 import { relativeTime, relativeTimeMs, formatBytes } from "@/utils/format"
@@ -157,6 +158,8 @@ export function SettingsView() {
 					)}
 				</CardContent>
 			</Card>
+
+			<MeshRotationCard />
 
 			<Card>
 				<CardHeader>

@@ -1,6 +1,7 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import {
 	ArrowLeft,
+	ListOrdered,
 	MessageSquareText,
 	SlidersHorizontal,
 	WandSparkles,
@@ -17,7 +18,12 @@ import {
 } from "@/components/domia/detail-sections"
 import { AvatarPicker } from "@/components/domia/avatar-picker"
 import { PerformanceCard } from "@/components/domia/performance-card"
+import { LatencyPanel } from "@/components/domia/latency-panel"
 import { RestartButton } from "@/components/domia/restart-button"
+import { RenameIdentity } from "@/components/domia/rename-identity"
+import { VoiceFeelCard } from "@/components/domia/voice-feel-card"
+import { AgendaPanel } from "@/components/domia/agenda-panel"
+import { PendingConfirmationsCard } from "@/components/domia/pending-confirmations-card"
 import { DomiaSatellites } from "@/components/satellites/domia-satellites"
 import { RoleBadge } from "@/components/fleet/columns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -83,6 +89,11 @@ function DomiaDetailPage() {
 						<h1 className="text-2xl font-semibold tracking-tight">
 							{domia.name}
 						</h1>
+						<RenameIdentity
+							domiaKey={domia.domiaKey}
+							domiaName={domia.name}
+							online={online}
+						/>
 						<div className="flex items-center gap-1.5">
 							<span
 								className={cn(
@@ -136,6 +147,19 @@ function DomiaDetailPage() {
 						<SlidersHorizontal className="size-4" />
 						{m.sat_configure()}
 					</Button>
+					<Button
+						variant="outline"
+						nativeButton={false}
+						render={
+							<Link
+								to="/domias/$key/routines"
+								params={{ key: domia.domiaKey }}
+							/>
+						}
+					>
+						<ListOrdered className="size-4" />
+						{m.nav_routines()}
+					</Button>
 					<RestartButton
 						domiaKey={domia.domiaKey}
 						domiaName={domia.name}
@@ -154,6 +178,8 @@ function DomiaDetailPage() {
 			<div className="grid gap-5 lg:grid-cols-3">
 				<div className="space-y-5 lg:col-span-2">
 					<PerformanceCard data={performance} />
+					<LatencyPanel domiaKey={domia.domiaKey} online={online} />
+					<VoiceFeelCard domiaKey={domia.domiaKey} online={online} />
 					{config.characterProfile && (
 						<PersonaCard profile={config.characterProfile} />
 					)}
@@ -174,11 +200,16 @@ function DomiaDetailPage() {
 					)}
 					{config.runtimeCapabilities && (
 						<CapabilitiesCard
+							domiaKey={domia.domiaKey}
 							capabilities={config.runtimeCapabilities}
 							delegations={config.capabilityDelegations}
 						/>
 					)}
 					<SkillsCard servers={config.skillProviders} />
+
+					<AgendaPanel domiaKey={domia.domiaKey} online={online} />
+
+					<PendingConfirmationsCard domiaKey={domia.domiaKey} online={online} />
 
 					<DomiaSatellites domia={domia} />
 

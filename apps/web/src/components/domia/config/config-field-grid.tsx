@@ -7,8 +7,11 @@ import {
 } from "@/components/ui/collapsible"
 import { ConfigFieldRow } from "./config-field"
 import { cn } from "@/lib/utils"
-import type { ConfigDraftApi } from "@/hooks/use-config-draft"
-import type { ConfigField, ConfigSectionDef } from "@/types/config"
+import type {
+	ConfigDraftApi,
+	ConfigField,
+	ConfigSectionDef,
+} from "@/types/config"
 
 const fullWidth = (kind: string): boolean => kind === "tags" || kind === "json"
 

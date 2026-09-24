@@ -9,10 +9,51 @@ import type {
 	DomiaSnapshot,
 	NodeInteraction,
 	NodeAnnouncement,
+	SyncCursors,
+	SyncStreamDescriptor,
 } from "@/types"
 
 const SYNC_LIMIT = env.DOMIA_APP_SYNC_PAGE_SIZE
 const MAX_PAGES = env.DOMIA_APP_SYNC_MAX_PAGES
+const SLOW_STREAM_SWEEP_MS = env.DOMIA_APP_SLOW_STREAM_SWEEP_MS
+
+const KEYSET_STREAMS: readonly SyncStreamDescriptor[] = [
+	{
+		stream: "turn",
+		rows: (d) => d.turnEvents.length,
+		next: (d) => d.nextTurnCursor,
+	},
+	{
+		stream: "facts",
+		rows: (d) => d.facts.length,
+		next: (d) => d.nextFactsCursor,
+	},
+	{
+		stream: "tool",
+		rows: (d) => d.toolRuns.length,
+		next: (d) => d.nextToolCursor,
+	},
+	{
+		stream: "episode",
+		rows: (d) => d.memoryEpisodes.length,
+		next: (d) => d.nextEpisodeCursor,
+	},
+	{
+		stream: "knowledge",
+		rows: (d) => d.knowledgeEntries.length,
+		next: (d) => d.nextKnowledgeCursor,
+	},
+	{
+		stream: "voiceFeel",
+		rows: (d) => d.voiceFeelAdjustments.length,
+		next: (d) => d.nextVoiceFeelCursor,
+	},
+	{
+		stream: "evidence",
+		rows: (d) => d.factEvidence.length,
+		next: (d) => d.nextEvidenceCursor,
+	},
+]
 const AUDIO_DIR = resolve(env.DOMIA_APP_AUDIO_DIR)
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/
 const WAV_HEADER_BYTES = 44
@@ -109,34 +150,30 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 	if (!domiaKey || inFlight.has(domiaKey)) return
 	inFlight.add(domiaKey)
 	try {
-		let cursor = dbAdapter.readCursor(domiaKey)
-		let turnCursor = dbAdapter.readTurnCursor(domiaKey)
-		let factsCursor = dbAdapter.readFactsCursor(domiaKey)
+		let cursors = dbAdapter.readCursors(domiaKey)
 		await retryMissingAudio(snapshot)
 		const marker = snapshot.lastInteractionAt
 		const turnMarker = snapshot.lastTurnAt
-		const interactionsCaughtUp = !marker || marker <= cursor
-		const turnsCaughtUp = !turnMarker || turnMarker <= turnCursor.since
-		if (interactionsCaughtUp && turnsCaughtUp) return
+		const interactionsCaughtUp = !marker || marker <= cursors.interaction
+		const turnsCaughtUp = !turnMarker || turnMarker <= cursors.turn.since
+		const lastSyncedAt = dbAdapter.readLastSyncedAt(domiaKey)
+		const sweepDue =
+			!lastSyncedAt || Date.now() - lastSyncedAt >= SLOW_STREAM_SWEEP_MS
+		if (interactionsCaughtUp && turnsCaughtUp && !sweepDue) return
 		let total = 0
 
 		for (let page = 0; page < MAX_PAGES; page++) {
-			const data = await fetchSync(
-				snapshot,
-				cursor,
-				turnCursor,
-				factsCursor,
-				SYNC_LIMIT,
-			)
+			const data = await fetchSync(snapshot, cursors, SYNC_LIMIT)
 			if (!data) break
 
-			const hasData =
-				data.interactions.length > 0 ||
-				data.emotionEvents.length > 0 ||
-				data.facts.length > 0 ||
-				data.sessions.length > 0 ||
-				data.announcements.length > 0 ||
-				data.turnEvents.length > 0
+			const counts = [
+				data.interactions.length,
+				data.sessions.length,
+				data.emotionEvents.length,
+				data.announcements.length,
+				...KEYSET_STREAMS.map((s) => s.rows(data)),
+			]
+			const hasData = counts.some((n) => n > 0) || Boolean(data.userModel)
 			if (hasData) {
 				dbAdapter.mirrorSync(domiaKey, data)
 				await archiveAudios(snapshot, data.interactions)
@@ -144,47 +181,37 @@ export const ingestFrom = async (snapshot: DomiaSnapshot): Promise<void> => {
 				total += data.interactions.length
 			}
 
-			const pageFull =
-				data.interactions.length >= SYNC_LIMIT ||
-				data.sessions.length >= SYNC_LIMIT ||
-				data.emotionEvents.length >= SYNC_LIMIT ||
-				data.facts.length >= SYNC_LIMIT ||
-				data.announcements.length >= SYNC_LIMIT ||
-				data.turnEvents.length >= SYNC_LIMIT
+			const pageFull = counts.some((n) => n >= SYNC_LIMIT)
 
-			const interactionAdvanced =
-				!!data.nextCursor && data.nextCursor !== cursor
-			const turnAdvanced =
-				!!data.nextTurnCursor &&
-				(data.nextTurnCursor.since !== turnCursor.since ||
-					data.nextTurnCursor.id !== turnCursor.id)
-			const factsAdvanced =
-				!!data.nextFactsCursor &&
-				(data.nextFactsCursor.since !== factsCursor.since ||
-					data.nextFactsCursor.id !== factsCursor.id)
-
-			if (interactionAdvanced) {
-				cursor = data.nextCursor
-				dbAdapter.writeCursor(domiaKey, cursor)
+			const advanced: Partial<SyncCursors> = {}
+			if (data.nextCursor && data.nextCursor !== cursors.interaction) {
+				advanced.interaction = data.nextCursor
 			}
-			if (turnAdvanced && data.nextTurnCursor) {
-				turnCursor = data.nextTurnCursor
-				dbAdapter.writeTurnCursor(domiaKey, turnCursor)
-			}
-			if (factsAdvanced && data.nextFactsCursor) {
-				factsCursor = data.nextFactsCursor
-				dbAdapter.writeFactsCursor(domiaKey, factsCursor)
+			for (const descriptor of KEYSET_STREAMS) {
+				const next = descriptor.next(data)
+				const current = cursors[descriptor.stream]
+				if (!next) continue
+				if (next.since === current.since && next.id === current.id) continue
+				advanced[descriptor.stream] = next
 			}
 
-			if (!interactionAdvanced && !turnAdvanced && !factsAdvanced && pageFull) {
+			const anyAdvanced = Object.keys(advanced).length > 0
+			if (anyAdvanced) {
+				cursors = { ...cursors, ...advanced }
+				dbAdapter.writeCursors(domiaKey, advanced)
+			}
+
+			if (!anyAdvanced && pageFull) {
 				ingestionLogger.warn(
-					`sync cursor stalled for ${domiaKey} at "${cursor}" with a full page — aborting this run`,
+					`sync cursor stalled for ${domiaKey} at "${cursors.interaction}" with a full page — aborting this run`,
 				)
 				break
 			}
 
 			if (!pageFull) break
 		}
+
+		if (sweepDue) dbAdapter.writeCursors(domiaKey, {})
 
 		if (total) {
 			ingestionLogger.debug(`synced ${total} interaction(s) from ${domiaKey}`)

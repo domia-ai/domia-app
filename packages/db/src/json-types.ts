@@ -6,7 +6,24 @@ export type JsonValue =
 	| JsonValue[]
 	| { [key: string]: JsonValue }
 
-export type ToolRunStatus = "ok" | "failed" | "timeout" | "cancelled"
+export type VoiceFeelFeatures = {
+	turns: number
+	earlyBargeInRate: number
+	lateBargeInRate: number
+	cutOffRate: number
+	perceivedTtfaP50: number
+	eouDelayP50: number
+	noSpeechRate: number
+}
+
+export type ToolRunStatus =
+	| "dispatched"
+	| "ok"
+	| "failed"
+	| "timeout"
+	| "cancelled"
+	| "denied"
+	| "lost"
 
 export type ToolResultErrorCode =
 	| "error"

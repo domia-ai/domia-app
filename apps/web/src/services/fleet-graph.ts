@@ -1,6 +1,7 @@
 import { getMeshTopology } from "@/services/mesh"
 import { getFleetTelemetry } from "@/services/fleet"
 import { listNodes } from "@/services/nodes"
+import { presenceForNodes } from "@/services/live"
 import type { ActionResult } from "@/types"
 import type {
 	FleetGraph,
@@ -8,6 +9,7 @@ import type {
 	FleetGraphNode,
 } from "@/types/fleet"
 import type { NodeIdentitySummary, NodeSummary } from "@/types/nodes"
+import type { PresenceStatus } from "@/types/rooms"
 
 export const getFleetGraph = async (): Promise<ActionResult<FleetGraph>> => {
 	try {
@@ -18,6 +20,7 @@ export const getFleetGraph = async (): Promise<ActionResult<FleetGraph>> => {
 		])
 		if (!topo.ok) return topo
 		const topology = topo.data ?? { nodes: [], edges: [] }
+		const presence = await presenceForNodes(nodes)
 
 		const nodeById = new Map<string, NodeSummary>(
 			nodes.map((n) => [n.nodeId, n]),
@@ -41,19 +44,31 @@ export const getFleetGraph = async (): Promise<ActionResult<FleetGraph>> => {
 					online: meta?.online ?? false,
 					count: tel?.count ?? 0,
 					ttfaP50: tel?.ttfaP50 ?? null,
+					status: presence.statusByKey[id.domiaKey] ?? null,
 				}
 			})
+			const known = identities
+				.map((id) => id.status)
+				.filter((status): status is PresenceStatus => status !== null)
 			return {
 				nodeId: node.nodeId,
 				name: node.nodeName,
 				localIp: node$?.localIp ?? "",
 				httpPort: node$?.httpPort ?? 0,
 				online: node$?.online ?? false,
+				active: known.length > 0 ? known.some((s) => s !== "idle") : null,
 				identities,
 			}
 		})
 
-		return { ok: true, data: { nodes: graphNodes, edges: topology.edges } }
+		return {
+			ok: true,
+			data: {
+				nodes: graphNodes,
+				edges: topology.edges,
+				presence: presence.status,
+			},
+		}
 	} catch (err) {
 		return {
 			ok: false,

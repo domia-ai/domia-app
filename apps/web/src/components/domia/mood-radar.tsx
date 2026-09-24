@@ -10,8 +10,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	type ChartConfig,
 } from "@/components/ui/chart"
+import type { ChartConfig } from "@/types/ui"
 import type { EmotionState, MoodRadarProps } from "@/types"
 
 const AXES: { key: keyof EmotionState; label: () => string }[] = [

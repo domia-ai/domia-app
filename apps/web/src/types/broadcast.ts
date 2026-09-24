@@ -1,7 +1,20 @@
 import type { LucideIcon } from "lucide-react"
-import type { DomiaTarget } from "@/types/fleet"
+import type { DomiaTarget, PresenceAvailability } from "@/types/fleet"
+import type { LiveNode } from "@/types/live"
 
 export type AnnounceDelivery = "original" | "domia-voice"
+
+export type BroadcastTargets = {
+	targets: DomiaTarget[]
+	intercomNodes: LiveNode[]
+	presence: PresenceAvailability
+	total: number
+}
+
+export type BroadcastPanelsProps = {
+	data: BroadcastTargets
+	initialTarget?: string
+}
 
 export type RecentBroadcastTarget = {
 	domiaKey: string

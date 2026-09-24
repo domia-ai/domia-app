@@ -1,7 +1,9 @@
 import { env } from "@/config"
+import { createNodeRequestError } from "@/utils/service-errors"
 import type {
 	NodeChatBody,
 	NodeChatResponse,
+	NodeInteractionResult,
 	NodeVoiceBody,
 	NodeVoiceResponse,
 } from "@/types/conversations"
@@ -34,6 +36,9 @@ import type {
 	RemoveIdentityResult,
 	CreateIdentityBody,
 	IdentitiesResult,
+	NodeConfigApplyResult,
+	NodeConfigSection,
+	NodeConfigSnapshot,
 	NodeHealth,
 	RestartResult,
 } from "@/types/nodes"
@@ -49,16 +54,81 @@ import type {
 	LivekitTokenGrant,
 	DiscoverSatellitesResult,
 	ListSatellitesResult,
+	SatelliteSettingsInput,
+	SetSatelliteSettingsResult,
 } from "@/types/satellites"
+import { skillsStatusPayloadSchema } from "@/schemas/skills"
+import { proactivityStatusSchema } from "@/schemas/proactivity"
+import { toolRunsResultSchema } from "@/schemas/tool-runs"
+import {
+	confirmationsResultSchema,
+	settleConfirmationResultSchema,
+} from "@/schemas/confirmations"
+import type { ToolRunsResult } from "@/types/tool-runs"
 import type {
-	SkillsStatusResult,
+	ConfirmationDecision,
+	ConfirmationsResult,
+	SettleConfirmationResult,
+} from "@/types/confirmations"
+import { nodeLatencyStatsResultSchema } from "@/schemas/latency"
+import type {
+	SkillsStatusPayload,
 	DiscoverSkillProvidersResult,
+	SkillDescriptorSchemaResult,
 } from "@/types/skills"
+import type { NodeLatencyStats } from "@/types/latency"
+import type {
+	CancelScheduleResult,
+	CancelSatelliteTimerResult,
+	CreateScheduleInput,
+	CreateScheduleResult,
+	ProactiveScheduleStatus,
+	ProactivityStatus,
+	SatelliteTimersResult,
+	ScheduleListResult,
+	StartSatelliteTimerBody,
+	StartSatelliteTimerResult,
+} from "@/types/proactivity"
+import type {
+	DeleteRoutineResult,
+	FastPathTryResult,
+	RoutineInput,
+	RoutinesResult,
+	SaveRoutineResult,
+} from "@/types/routines"
+import type {
+	DeleteIdentityDataResult,
+	MeshRotateAction,
+	MeshRotateResult,
+	ResetConversationResult,
+} from "@/types/mesh-admin"
+import {
+	mindExportResultSchema,
+	mindImportResultSchema,
+} from "@/schemas/mind-transfer"
+import type {
+	MindBundle,
+	MindImportBody,
+	MindImportReport,
+	MindSection,
+} from "@/types/mind-transfer"
 import type { BenchRunBody, BenchRunResult } from "@/types/bench"
+import type { LiveVoiceTokenInput, SatelliteTokenGrant } from "@/types/live"
+import type {
+	VoiceFeelMutationResult,
+	VoiceFeelSnapshot,
+} from "@/types/voice-feel"
 
 export const meshHeaders = (): Record<string, string> => ({
 	authorization: `Bearer ${env.DOMIA_MESH_SECRET}`,
 })
+
+const requestError = async (res: Response, path: string) =>
+	createNodeRequestError({
+		status: res.status,
+		path,
+		text: await res.text(),
+	})
 
 const withKey = (path: string, domiaKey?: string): string =>
 	domiaKey
@@ -74,9 +144,7 @@ const get = async <T>(
 		headers: meshHeaders(),
 		signal: AbortSignal.timeout(timeoutMs),
 	})
-	if (!res.ok) {
-		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
-	}
+	if (!res.ok) throw await requestError(res, path)
 	return res.json() as Promise<T>
 }
 
@@ -91,9 +159,7 @@ const post = async <T>(
 		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
-	if (!res.ok) {
-		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
-	}
+	if (!res.ok) throw await requestError(res, path)
 	return res.json() as Promise<T>
 }
 
@@ -103,9 +169,7 @@ const del = async <T>(base: string, path: string): Promise<T> => {
 		headers: meshHeaders(),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
-	if (!res.ok) {
-		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
-	}
+	if (!res.ok) throw await requestError(res, path)
 	return res.json() as Promise<T>
 }
 
@@ -120,9 +184,7 @@ const patch = async <T>(
 		body: JSON.stringify(body),
 		signal: AbortSignal.timeout(env.DOMIA_NODE_TIMEOUT_MS),
 	})
-	if (!res.ok) {
-		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
-	}
+	if (!res.ok) throw await requestError(res, path)
 	return res.json() as Promise<T>
 }
 
@@ -197,8 +259,8 @@ export const nodeInstallModel = (
 	domiaKey?: string,
 ) => post<ModelJobResult>(base, withKey("/models/install", domiaKey), spec)
 
-export const nodeGetModelJob = (base: string, id: string, domiaKey?: string) =>
-	get<ModelJobResult>(base, withKey(`/models/jobs/${id}`, domiaKey))
+export const nodeGetModelJob = (base: string, id: string) =>
+	get<ModelJobResult>(base, `/models/jobs/${encodeURIComponent(id)}`)
 
 export const nodeListIdentities = (base: string, timeoutMs?: number) =>
 	get<IdentitiesResult>(base, "/identities", timeoutMs)
@@ -209,11 +271,14 @@ export const nodeCreateIdentity = (base: string, body: CreateIdentityBody) =>
 export const nodeRemoveIdentity = (base: string, domiaKey: string) =>
 	del<RemoveIdentityResult>(base, `/identities/${encodeURIComponent(domiaKey)}`)
 
-export const nodeGetSkills = (
+export const nodeGetSkills = async (
 	base: string,
 	domiaKey: string,
 	timeoutMs?: number,
-) => get<SkillsStatusResult>(base, withKey("/skills", domiaKey), timeoutMs)
+): Promise<SkillsStatusPayload> =>
+	skillsStatusPayloadSchema.parse(
+		await get<unknown>(base, withKey("/skills", domiaKey), timeoutMs),
+	)
 
 export const nodeDiscoverSkillProviders = (base: string) =>
 	get<DiscoverSkillProvidersResult>(base, "/skills/discover")
@@ -256,6 +321,11 @@ export const nodeGetLivekitToken = (
 			domiaKey,
 		),
 	)
+
+export const nodeMintSatelliteToken = (
+	base: string,
+	body: LiveVoiceTokenInput,
+) => post<SatelliteTokenGrant>(base, "/satellite/token", body)
 
 export const nodeSetSatelliteWakeWords = (
 	base: string,
@@ -340,8 +410,41 @@ export const nodeRunBench = (
 	body: BenchRunBody,
 ) => post<BenchRunResult>(base, withKey("/bench/run", domiaKey), body)
 
+export const nodeGetVoiceFeel = (base: string, domiaKey: string) =>
+	get<VoiceFeelSnapshot>(base, withKey("/voice-feel", domiaKey))
+
+export const nodeApplyVoiceFeel = (
+	base: string,
+	domiaKey: string,
+	id: string,
+) =>
+	post<VoiceFeelMutationResult>(
+		base,
+		withKey(`/voice-feel/apply/${encodeURIComponent(id)}`, domiaKey),
+		{},
+	)
+
+export const nodeRevertVoiceFeel = (
+	base: string,
+	domiaKey: string,
+	id: string,
+) =>
+	post<VoiceFeelMutationResult>(
+		base,
+		withKey(`/voice-feel/revert/${encodeURIComponent(id)}`, domiaKey),
+		{},
+	)
+
 export const nodeGetConfigSchema = (base: string, timeoutMs?: number) =>
 	get<ConfigSchema>(base, "/config/schema", timeoutMs)
+
+export const nodeGetNodeConfig = (base: string, timeoutMs?: number) =>
+	get<NodeConfigSnapshot>(base, "/node/config", timeoutMs)
+
+export const nodeUpdateNodeConfig = (
+	base: string,
+	node: Partial<NodeConfigSection>,
+) => post<NodeConfigApplyResult>(base, "/node/config", { version: 1, node })
 
 const getProbe = async <T>(
 	base: string,
@@ -354,14 +457,233 @@ const getProbe = async <T>(
 		signal: AbortSignal.timeout(timeoutMs),
 	})
 	if (res.status === 401) throw new Error("Node rejected the mesh secret")
-	if (!res.ok) {
-		throw new Error(`${path} failed (${res.status}): ${await res.text()}`)
-	}
+	if (!res.ok) throw await requestError(res, path)
 	return res.json() as Promise<T>
 }
+
+export const nodeGetInteraction = (
+	base: string,
+	domiaKey: string,
+	interactionId: string,
+) =>
+	get<NodeInteractionResult>(
+		base,
+		withKey(`/interactions/${encodeURIComponent(interactionId)}`, domiaKey),
+	)
+
+export const nodeGetLatencyStats = async (
+	base: string,
+	domiaKey: string,
+	timeoutMs?: number,
+): Promise<NodeLatencyStats> =>
+	nodeLatencyStatsResultSchema.parse(
+		await get<unknown>(base, withKey("/stats/latency", domiaKey), timeoutMs),
+	).stats
+
+export const nodeGetDescriptorSchema = (base: string, timeoutMs?: number) =>
+	get<SkillDescriptorSchemaResult>(base, "/skills/descriptor-schema", timeoutMs)
+
+export const nodeGetRoutines = (base: string, domiaKey: string) =>
+	get<RoutinesResult>(base, withKey("/routines", domiaKey))
+
+export const nodeSaveRoutine = (
+	base: string,
+	domiaKey: string,
+	body: RoutineInput,
+) => post<SaveRoutineResult>(base, withKey("/routines", domiaKey), body)
+
+export const nodeDeleteRoutine = (base: string, domiaKey: string, id: string) =>
+	del<DeleteRoutineResult>(
+		base,
+		withKey(`/routines/${encodeURIComponent(id)}`, domiaKey),
+	)
+
+export const nodeTryFastPath = (base: string, domiaKey: string, text: string) =>
+	post<FastPathTryResult>(base, withKey("/skills/fast-path/try", domiaKey), {
+		text,
+	})
+
+export const nodeGetProactivityStatus = async (
+	base: string,
+	domiaKey: string,
+	timeoutMs?: number,
+): Promise<ProactivityStatus> =>
+	proactivityStatusSchema.parse(
+		await get<unknown>(
+			base,
+			withKey("/proactivity/status", domiaKey),
+			timeoutMs,
+		),
+	)
+
+export const nodeGetProactivitySchedule = (
+	base: string,
+	domiaKey: string,
+	statuses?: readonly ProactiveScheduleStatus[],
+) =>
+	get<ScheduleListResult>(
+		base,
+		withKey(
+			statuses?.length
+				? `/proactivity/schedule?status=${encodeURIComponent(statuses.join(","))}`
+				: "/proactivity/schedule",
+			domiaKey,
+		),
+	)
+
+export const nodeCreateProactivityItem = (
+	base: string,
+	domiaKey: string,
+	body: CreateScheduleInput,
+) =>
+	post<CreateScheduleResult>(
+		base,
+		withKey("/proactivity/schedule", domiaKey),
+		body,
+	)
+
+export const nodeCancelProactivityItem = (
+	base: string,
+	domiaKey: string,
+	id: string,
+) =>
+	del<CancelScheduleResult>(
+		base,
+		withKey(`/proactivity/schedule/${encodeURIComponent(id)}`, domiaKey),
+	)
+
+export const nodeListSatelliteTimers = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+) =>
+	get<SatelliteTimersResult>(
+		base,
+		withKey(`/satellites/${encodeURIComponent(satelliteId)}/timers`, domiaKey),
+	)
+
+export const nodeStartSatelliteTimer = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	body: StartSatelliteTimerBody,
+) =>
+	post<StartSatelliteTimerResult>(
+		base,
+		withKey(`/satellites/${encodeURIComponent(satelliteId)}/timers`, domiaKey),
+		body,
+	)
+
+export const nodeCancelSatelliteTimer = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	timerId: string,
+) =>
+	del<CancelSatelliteTimerResult>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/timers/${encodeURIComponent(timerId)}`,
+			domiaKey,
+		),
+	)
+
+export const nodeSetSatelliteSettings = (
+	base: string,
+	domiaKey: string,
+	satelliteId: string,
+	body: SatelliteSettingsInput,
+) =>
+	patch<SetSatelliteSettingsResult>(
+		base,
+		withKey(
+			`/satellites/${encodeURIComponent(satelliteId)}/settings`,
+			domiaKey,
+		),
+		body,
+	)
+
+export const nodeRotateMesh = (base: string, action: MeshRotateAction) =>
+	post<MeshRotateResult>(base, "/mesh/rotate", { action })
+
+export const nodeDeleteIdentityData = (base: string, domiaKey: string) =>
+	del<DeleteIdentityDataResult>(base, withKey("/identity-data", domiaKey))
+
+export const nodeResetConversation = (base: string, domiaKey: string) =>
+	post<ResetConversationResult>(
+		base,
+		withKey("/admin/reset-conversation", domiaKey),
+		{},
+	)
 
 export const nodeProbeHealth = (base: string, timeoutMs: number) =>
 	getProbe<NodeHealth>(base, "/health", timeoutMs, {})
 
 export const nodeProbeIdentities = (base: string, timeoutMs: number) =>
 	getProbe<IdentitiesResult>(base, "/identities", timeoutMs, meshHeaders())
+
+export const nodeGetToolRuns = async (
+	base: string,
+	domiaKey: string,
+	interactionId: string,
+	timeoutMs?: number,
+): Promise<ToolRunsResult> =>
+	toolRunsResultSchema.parse(
+		await get<unknown>(
+			base,
+			withKey(
+				`/tool-runs?interactionId=${encodeURIComponent(interactionId)}`,
+				domiaKey,
+			),
+			timeoutMs,
+		),
+	) as ToolRunsResult
+
+export const nodeGetConfirmations = async (
+	base: string,
+	domiaKey: string,
+	timeoutMs?: number,
+): Promise<ConfirmationsResult> =>
+	confirmationsResultSchema.parse(
+		await get<unknown>(base, withKey("/confirmations", domiaKey), timeoutMs),
+	) as ConfirmationsResult
+
+export const nodeSettleConfirmation = async (
+	base: string,
+	domiaKey: string,
+	scope: string,
+	decision: ConfirmationDecision,
+): Promise<SettleConfirmationResult> =>
+	settleConfirmationResultSchema.parse(
+		await post<unknown>(
+			base,
+			withKey(`/confirmations/${encodeURIComponent(scope)}/settle`, domiaKey),
+			{ decision },
+		),
+	) as SettleConfirmationResult
+
+export const nodeExportMind = async (
+	base: string,
+	domiaKey: string,
+	sections?: MindSection[],
+): Promise<MindBundle> =>
+	mindExportResultSchema.parse(
+		await get<unknown>(
+			base,
+			withKey(
+				sections?.length
+					? `/mind/export?sections=${encodeURIComponent(sections.join(","))}`
+					: "/mind/export",
+				domiaKey,
+			),
+		),
+	).bundle
+
+export const nodeImportMind = async (
+	base: string,
+	domiaKey: string,
+	body: MindImportBody,
+): Promise<MindImportReport> =>
+	mindImportResultSchema.parse(
+		await post<unknown>(base, withKey("/mind/import", domiaKey), body),
+	).report

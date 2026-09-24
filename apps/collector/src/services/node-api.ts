@@ -4,25 +4,53 @@ import { meshHeaders, withRetry } from "@/utils"
 import type {
 	AudioKind,
 	DomiaSnapshot,
+	SyncCursors,
+	SyncKeysetStream,
 	SyncResponse,
-	TurnCursor,
 } from "@/types"
+
+const CURSOR_PARAMS: Record<SyncKeysetStream, { since: string; id: string }> = {
+	turn: { since: "turnSince", id: "turnId" },
+	facts: { since: "factsSince", id: "factsId" },
+	tool: { since: "toolSince", id: "toolId" },
+	episode: { since: "episodeSince", id: "episodeId" },
+	knowledge: { since: "knowledgeSince", id: "knowledgeId" },
+	voiceFeel: { since: "voiceFeelSince", id: "voiceFeelId" },
+	evidence: { since: "evidenceSince", id: "evidenceId" },
+}
 
 const baseUrl = (snapshot: DomiaSnapshot): string | null => {
 	if (!snapshot.localIp || !snapshot.httpPort) return null
-	return `http://${snapshot.localIp}:${snapshot.httpPort}`
+	const scheme = snapshot.httpScheme ?? "http"
+	return `${scheme}://${snapshot.localIp}:${snapshot.httpPort}`
+}
+
+const syncQuery = (
+	snapshot: DomiaSnapshot,
+	cursors: SyncCursors,
+	limit: number,
+): string => {
+	const params = new URLSearchParams({
+		since: cursors.interaction,
+		limit: String(limit),
+		domiaKey: snapshot.domiaKey,
+	})
+	for (const [stream, names] of Object.entries(CURSOR_PARAMS)) {
+		const cursor = cursors[stream as SyncKeysetStream]
+		params.set(names.since, cursor.since)
+		params.set(names.id, cursor.id)
+	}
+	return params.toString()
 }
 
 export const fetchSync = async (
 	snapshot: DomiaSnapshot,
-	since: string,
-	turnCursor: TurnCursor,
-	factsCursor: TurnCursor,
+	cursors: SyncCursors,
 	limit: number,
 ): Promise<SyncResponse | null> => {
 	const base = baseUrl(snapshot)
 	if (!base) return null
-	const url = `${base}/sync?since=${encodeURIComponent(since)}&turnSince=${encodeURIComponent(turnCursor.since)}&turnId=${encodeURIComponent(turnCursor.id)}&factsSince=${encodeURIComponent(factsCursor.since)}&factsId=${encodeURIComponent(factsCursor.id)}&limit=${limit}&domiaKey=${encodeURIComponent(snapshot.domiaKey)}`
+	const url = `${base}/sync?${syncQuery(snapshot, cursors, limit)}`
 	return withRetry(async () => {
 		const res = await fetch(url, {
 			headers: meshHeaders(),

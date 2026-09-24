@@ -9,6 +9,7 @@ import {
 	Type,
 	Wrench,
 } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { Badge } from "@/components/ui/badge"
 import { formatMs } from "@/utils/format"
 import { buildLatency } from "@/utils/latency"
@@ -21,36 +22,49 @@ import type {
 	DomiaSnapshot,
 	InteractionDetail,
 	PipelineStep,
+	TraceDetailProps,
 } from "@/types/conversations"
 
-const LLM_CHIP_BUILDERS: Array<
-	(t: InteractionDetail["trace"]) => string | null
-> = [
-	(t) =>
-		t.llmTokensPerSec != null ? `${t.llmTokensPerSec.toFixed(1)} tok/s` : null,
-	(t) =>
-		t.llmPromptTokens != null || t.llmCompletionTokens != null
-			? `${t.llmPromptTokens ?? 0}+${t.llmCompletionTokens ?? 0} tok`
-			: null,
-	(t) =>
-		t.llmContextWindow && t.llmPromptTokens != null
-			? `ctx ${Math.round((t.llmPromptTokens / t.llmContextWindow) * 100)}%`
-			: null,
-	(t) => (t.llmTtftMs != null ? `ttft ${t.llmTtftMs}ms` : null),
-	(t) => t.llmFinishReason ?? null,
-	(t) =>
-		t.toolCallCount != null
-			? `${t.toolCallCount} tool${t.toolCallCount === 1 ? "" : "s"}${
-					t.toolErrorCount ? ` · ${t.toolErrorCount} err` : ""
-				}`
-			: null,
-	(t) =>
-		t.inputAudioMs != null
-			? `heard ${(t.inputAudioMs / 1000).toFixed(1)}s`
-			: null,
-]
+const toolsChip = (count: number, errors: number | null): string => {
+	const tools =
+		count === 1 ? m.conv_chip_tools_one() : m.conv_chip_tools_other({ count })
+	return errors
+		? `${tools} · ${m.conv_chip_tool_errors({ count: errors })}`
+		: tools
+}
 
-export function TraceDetail({ detail }: { detail: InteractionDetail }) {
+const LLM_CHIP_BUILDERS: ((t: InteractionDetail["trace"]) => string | null)[] =
+	[
+		(t) =>
+			t.llmTokensPerSec != null
+				? m.conv_chip_tokens_per_sec({ value: t.llmTokensPerSec.toFixed(1) })
+				: null,
+		(t) =>
+			t.llmPromptTokens != null || t.llmCompletionTokens != null
+				? m.conv_chip_tokens({
+						prompt: t.llmPromptTokens ?? 0,
+						completion: t.llmCompletionTokens ?? 0,
+					})
+				: null,
+		(t) =>
+			t.llmContextWindow && t.llmPromptTokens != null
+				? m.conv_chip_context({
+						percent: Math.round((t.llmPromptTokens / t.llmContextWindow) * 100),
+					})
+				: null,
+		(t) => (t.llmTtftMs != null ? m.conv_chip_ttft({ ms: t.llmTtftMs }) : null),
+		(t) => t.llmFinishReason ?? null,
+		(t) =>
+			t.toolCallCount != null
+				? toolsChip(t.toolCallCount, t.toolErrorCount)
+				: null,
+		(t) =>
+			t.inputAudioMs != null
+				? m.conv_chip_heard({ seconds: (t.inputAudioMs / 1000).toFixed(1) })
+				: null,
+	]
+
+export function TraceDetail({ detail }: TraceDetailProps) {
 	const { trace, inputAudio, ttsAudio } = detail
 	const isVoice = trace.inputType === "VOICE"
 	const skillTotalMs = skillTraceTotalMs(trace.skillResponse)

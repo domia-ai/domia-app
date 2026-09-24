@@ -1,3 +1,4 @@
+import { noop } from "@/lib/utils"
 import { createContext, useContext, useEffect, useState } from "react"
 import { LIVE_REFRESH_MS } from "@/constants/conversations"
 import type { ConsolePrefs } from "@/types/settings"
@@ -6,7 +7,7 @@ const STORAGE_KEY = "domia-console-prefs"
 
 const ConsolePrefsContext = createContext<ConsolePrefs>({
 	liveRefreshMs: LIVE_REFRESH_MS,
-	setLiveRefreshMs: () => {},
+	setLiveRefreshMs: noop,
 })
 
 const readStored = (): number | null => {

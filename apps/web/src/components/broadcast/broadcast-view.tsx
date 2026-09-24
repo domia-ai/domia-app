@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Megaphone, Radio, Mic, Type, Check, Clock, X } from "lucide-react"
 import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,16 +13,25 @@ import {
 } from "@/components/ui/select"
 import { AnnounceControl } from "@/components/live/announce-control"
 import { IntercomControl } from "@/components/live/intercom-control"
-import { domiaTargetsQueryOptions } from "@/server/fleet"
-import { livePresenceQueryOptions } from "@/server/live"
+import { AsyncBoundary } from "@/components/ui/async-boundary"
+import { useActionQuery, useDataQuery } from "@/hooks/use-query-state"
+import { broadcastTargetsQueryOptions } from "@/server/broadcast"
 import { recentAnnouncementsQueryOptions } from "@/server/announcements"
 import { relativeTime } from "@/utils/format"
 import { cn } from "@/lib/utils"
 import type {
 	RecentBroadcast,
 	RecentBroadcastsProps,
+	BroadcastPanelsProps,
 	BroadcastViewProps,
 } from "@/types/broadcast"
+
+const announceAudioSrc = (entry: RecentBroadcast): string => {
+	const domiaKey = entry.targets[0]?.domiaKey
+	return domiaKey
+		? `/api/node-audio?domia=${encodeURIComponent(domiaKey)}&id=${encodeURIComponent(entry.audioId ?? "")}&kind=announce`
+		: `/api/audio/${entry.audioId}?kind=announce`
+}
 
 function statusOf(entry: RecentBroadcast) {
 	if (entry.total > 0 && entry.delivered === entry.total)
@@ -103,7 +112,7 @@ function RecentBroadcasts({ list }: RecentBroadcastsProps) {
 						{entry.audioId ? (
 							<audio
 								controls
-								src={`/api/audio/${entry.audioId}?kind=announce`}
+								src={announceAudioSrc(entry)}
 								className="h-8 w-full"
 							/>
 						) : null}
@@ -123,22 +132,15 @@ function RecentBroadcasts({ list }: RecentBroadcastsProps) {
 	)
 }
 
-export function BroadcastView({ initialTarget }: BroadcastViewProps) {
-	const domias = useQuery(domiaTargetsQueryOptions())
-	const presence = useQuery(livePresenceQueryOptions())
-	const announcements = useQuery(recentAnnouncementsQueryOptions())
+function BroadcastPanels({ data, initialTarget }: BroadcastPanelsProps) {
+	const { state: recentState } = useDataQuery({
+		...recentAnnouncementsQueryOptions(),
+		errorMessage: m.broadcast_recent_error,
+	})
 	const qc = useQueryClient()
 	const [intercomNode, setIntercomNode] = useState("")
 
-	if (domias.isLoading)
-		return <p className="text-muted-foreground text-sm">{m.cmd_loading()}</p>
-	if (domias.isError || !domias.data)
-		return (
-			<p className="text-destructive text-sm">{m.broadcast_load_error()}</p>
-		)
-
-	const allDomias = domias.data
-	if (allDomias.length === 0)
+	if (data.total === 0)
 		return (
 			<div className="text-muted-foreground flex flex-col items-center gap-2 py-16 text-center text-sm">
 				<Megaphone className="size-8 opacity-40" />
@@ -146,29 +148,15 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 			</div>
 		)
 
-	const nodes = presence.data?.ok ? (presence.data.data ?? []) : []
-	const broadcastableKeys = new Set(
-		nodes
-			.flatMap((n) => n.rooms)
-			.filter((r) => r.canBroadcast)
-			.map((r) => r.domiaKey),
-	)
-	const broadcastTargets =
-		presence.data?.ok === true
-			? allDomias.filter((d) => broadcastableKeys.has(d.domiaKey))
-			: allDomias
-	const intercomCandidates = nodes.filter(
-		(n) => n.rooms.filter((r) => r.canIntercom).length > 1,
-	)
-	const activeNode = intercomNode || intercomCandidates[0]?.nodeId || ""
-	const intercomTarget = intercomCandidates.find((n) => n.nodeId === activeNode)
+	const { targets, intercomNodes, presence } = data
+	const unavailable = presence === "unavailable"
+	const activeNode = intercomNode || intercomNodes[0]?.nodeId || ""
+	const intercomTarget = intercomNodes.find((n) => n.nodeId === activeNode)
 	const nameOfNode = (id: string) =>
-		nodes.find((n) => n.nodeId === id)?.nodeName ?? id
+		intercomNodes.find((n) => n.nodeId === id)?.nodeName ?? id
 
 	const onSent = () =>
 		void qc.invalidateQueries({ queryKey: ["recent-announcements"] })
-
-	const recent = announcements.data ?? []
 
 	return (
 		<Tabs defaultValue="broadcast" className="gap-6">
@@ -192,13 +180,24 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 							<p className="text-muted-foreground text-sm">
 								{m.broadcast_to_mesh_desc()}
 							</p>
+							{unavailable ? null : (
+								<p className="text-muted-foreground text-xs font-medium uppercase">
+									{m.broadcast_targets_count({ count: targets.length })}
+								</p>
+							)}
 						</CardHeader>
 						<CardContent>
-							<AnnounceControl
-								domias={broadcastTargets}
-								onSent={onSent}
-								initialTarget={initialTarget}
-							/>
+							{unavailable ? (
+								<p className="text-muted-foreground py-10 text-center text-sm">
+									{m.broadcast_presence_unavailable()}
+								</p>
+							) : (
+								<AnnounceControl
+									domias={targets}
+									onSent={onSent}
+									initialTarget={initialTarget}
+								/>
+							)}
 						</CardContent>
 					</Card>
 
@@ -209,13 +208,16 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							{announcements.isError ? (
-								<p className="text-destructive py-10 text-center text-sm">
-									{m.broadcast_recent_error()}
-								</p>
-							) : (
-								<RecentBroadcasts list={recent} />
-							)}
+							<AsyncBoundary
+								state={recentState}
+								skeleton={
+									<p className="text-muted-foreground py-10 text-center text-sm">
+										{m.cmd_loading()}
+									</p>
+								}
+							>
+								{(list) => <RecentBroadcasts list={list} />}
+							</AsyncBoundary>
 						</CardContent>
 					</Card>
 				</div>
@@ -233,7 +235,11 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 						</p>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{intercomCandidates.length === 0 ? (
+						{unavailable ? (
+							<p className="text-muted-foreground py-6 text-center text-sm">
+								{m.broadcast_presence_unavailable()}
+							</p>
+						) : intercomNodes.length === 0 ? (
 							<p className="text-muted-foreground py-6 text-center text-sm">
 								{m.broadcast_intercom_needs()}
 							</p>
@@ -253,7 +259,7 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 											</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
-											{intercomCandidates.map((n) => (
+											{intercomNodes.map((n) => (
 												<SelectItem key={n.nodeId} value={n.nodeId}>
 													{n.nodeName}
 												</SelectItem>
@@ -274,5 +280,27 @@ export function BroadcastView({ initialTarget }: BroadcastViewProps) {
 				</Card>
 			</TabsContent>
 		</Tabs>
+	)
+}
+
+export function BroadcastView({ initialTarget }: BroadcastViewProps) {
+	const { state } = useActionQuery({
+		...broadcastTargetsQueryOptions(),
+		errorMessage: m.broadcast_load_error,
+	})
+
+	return (
+		<AsyncBoundary
+			state={state}
+			skeleton={
+				<p className="text-muted-foreground text-sm">{m.cmd_loading()}</p>
+			}
+		>
+			{(data) =>
+				data ? (
+					<BroadcastPanels data={data} initialTarget={initialTarget} />
+				) : null
+			}
+		</AsyncBoundary>
 	)
 }

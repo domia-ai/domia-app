@@ -27,23 +27,15 @@ import {
 import { cn } from "@/lib/utils"
 import { formatMaybeJson, formatMs } from "@/utils/format"
 import { humanizeDomiaKey } from "@/utils/journey"
-import type { ToolRunStatus, TurnEventRow } from "@/types/conversations"
-
-type EventGroup =
-	| "start"
-	| "stt"
-	| "intent"
-	| "llm"
-	| "tool"
-	| "tts"
-	| "playback"
-	| "terminal"
-	| "error"
-	| "speculation"
+import type {
+	ToolRunStatus,
+	TurnEventGroup,
+	TurnEventRow,
+} from "@/types/conversations"
 
 const EVENT_META: Record<
 	string,
-	{ icon: LucideIcon; group: EventGroup; label: () => string }
+	{ icon: LucideIcon; group: TurnEventGroup; label: () => string }
 > = {
 	"turn.started": {
 		icon: Play,
@@ -119,9 +111,9 @@ const EVENT_META: Record<
 	},
 }
 
-const FALLBACK_META = { icon: Radio, group: "start" as EventGroup }
+const FALLBACK_META = { icon: Radio, group: "start" as TurnEventGroup }
 
-const GROUP_DOT: Record<EventGroup, string> = {
+const GROUP_DOT: Record<TurnEventGroup, string> = {
 	start: "bg-muted text-muted-foreground",
 	stt: "bg-chart-1/15 text-chart-1",
 	intent: "bg-chart-4/15 text-chart-4",
@@ -138,10 +130,13 @@ const STATUS_VARIANT: Record<
 	ToolRunStatus,
 	"secondary" | "destructive" | "outline"
 > = {
+	dispatched: "outline",
 	ok: "secondary",
 	failed: "destructive",
 	timeout: "destructive",
 	cancelled: "outline",
+	denied: "outline",
+	lost: "destructive",
 }
 
 const asObj = (p: unknown): Record<string, unknown> =>
@@ -266,17 +261,16 @@ export function TurnTimeline({
 			</div>
 		)
 
-	const sorted = [...events].sort((a, b) => a.seq - b.seq)
 	const t0 =
-		sorted.find((e) => e.type === "turn.started")?.ts ?? sorted[0]?.ts ?? 0
+		events.find((e) => e.type === "turn.started")?.ts ?? events[0]?.ts ?? 0
 
 	return (
 		<ol className="space-y-0">
-			{sorted.map((event, i) => {
+			{events.map((event, i) => {
 				const meta = EVENT_META[event.type]
 				const Icon = meta?.icon ?? FALLBACK_META.icon
 				const group = meta?.group ?? FALLBACK_META.group
-				const isLast = i === sorted.length - 1
+				const isLast = i === events.length - 1
 				const delegated =
 					event.executorDomiaKey && event.executorDomiaKey !== originKey
 				const payloadText = formatMaybeJson(event.payload)

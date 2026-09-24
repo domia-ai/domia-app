@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query"
 import {
 	Activity,
 	CheckCircle2,
@@ -8,6 +7,7 @@ import {
 } from "lucide-react"
 import { m } from "@/paraglide/messages"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +19,7 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import { runBenchFn } from "@/server/bench"
+import { LlmSlotsCard } from "@/components/domia/health-panel"
 import type { BenchRunResult, BenchTurnRow, BenchVerdict } from "@/types/bench"
 
 const STAGE_LABEL: Record<string, () => string> = {
@@ -129,6 +130,9 @@ function BenchResult({ result }: { result: BenchRunResult }) {
 					</TableBody>
 				</Table>
 			</div>
+			{result.health.llmSlots && (
+				<LlmSlotsCard slots={result.health.llmSlots} />
+			)}
 			{result.rows.some((r) => r.status !== "ok") && (
 				<ul className="text-muted-foreground space-y-0.5 text-xs">
 					{result.rows
@@ -153,8 +157,9 @@ export function BenchHealthPanel({
 	domiaKey: string
 	online: boolean
 }) {
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: () => runBenchFn({ data: { domiaKey } }),
+		failureTitle: m.bench_failed,
 	})
 	const result = mutation.data
 
@@ -169,7 +174,7 @@ export function BenchHealthPanel({
 					variant="outline"
 					size="sm"
 					disabled={!online || mutation.isPending}
-					onClick={() => mutation.mutate()}
+					onClick={() => mutation.mutate(undefined)}
 				>
 					{mutation.isPending ? (
 						<Loader2 className="size-4 animate-spin" />

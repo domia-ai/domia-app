@@ -26,6 +26,7 @@ export function RowActions({ row }: RowActionsProps) {
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 	const [pending, start] = useTransition()
+	const sessionTraceId = row.interactionSessionTraceId
 
 	const quickGrade = (rating: "up" | "down") =>
 		start(async () => {
@@ -72,19 +73,19 @@ export function RowActions({ row }: RowActionsProps) {
 					<ExternalLink className="size-3.5" />
 					{m.conv_open()}
 				</DropdownMenuItem>
-				{row.interactionSessionTraceId && (
+				{sessionTraceId ? (
 					<DropdownMenuItem
 						onClick={() =>
 							navigate({
 								to: "/conversations/session/$id",
-								params: { id: row.interactionSessionTraceId! },
+								params: { id: sessionTraceId },
 							})
 						}
 					>
 						<Layers className="size-3.5" />
 						{m.conv_open_session()}
 					</DropdownMenuItem>
-				)}
+				) : null}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem disabled={pending} onClick={() => quickGrade("up")}>
 					<ThumbsUp className="size-3.5" />

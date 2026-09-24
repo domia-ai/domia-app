@@ -10,6 +10,14 @@ export type KnowledgeEntry = {
 	updatedAt: string
 }
 
+export type KnowledgeDraft = {
+	id?: string
+	title: string
+	content: string
+	priority: number
+	isActive: boolean
+}
+
 export type KnowledgeInput = {
 	id?: string
 	title: string

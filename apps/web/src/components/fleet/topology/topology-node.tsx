@@ -1,8 +1,9 @@
 import { Crown, Server } from "lucide-react"
+import { m } from "@/paraglide/messages"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { StatusDot } from "@/components/domia/status"
 import { cn } from "@/lib/utils"
-import type { FleetGraphIdentity, FleetGraphNode } from "@/types/fleet"
+import type { FleetGraphIdentity, TopologyNodeProps } from "@/types/fleet"
 import type { PresenceStatus } from "@/types/rooms"
 
 const STATUS_COLOR: Record<PresenceStatus, string> = {
@@ -12,19 +13,22 @@ const STATUS_COLOR: Record<PresenceStatus, string> = {
 	speaking: "bg-emerald-500",
 }
 
+const UNKNOWN_STATUS_CLASS = "border-muted-foreground/40 border bg-transparent"
+
+const ACTIVE_RING: Record<PresenceStatus, string> = {
+	idle: "",
+	listening: "ring-sky-500",
+	thinking: "ring-amber-500",
+	speaking: "ring-emerald-500",
+}
+
 export function TopologyNode({
 	node,
 	statusOf,
 	onSelectNode,
 	onSelectIdentity,
 	onHover,
-}: {
-	node: FleetGraphNode
-	statusOf: (domiaKey: string) => PresenceStatus
-	onSelectNode: (nodeId: string) => void
-	onSelectIdentity: (domiaKey: string) => void
-	onHover: (nodeId: string | null) => void
-}) {
+}: TopologyNodeProps) {
 	return (
 		<div
 			onMouseEnter={() => onHover(node.nodeId)}
@@ -48,7 +52,7 @@ export function TopologyNode({
 			<div className="mt-2 space-y-0.5">
 				{node.identities.map((id: FleetGraphIdentity) => {
 					const status = statusOf(id.domiaKey)
-					const active = status !== "idle"
+					const active = status !== null && status !== "idle"
 					return (
 						<button
 							type="button"
@@ -67,11 +71,7 @@ export function TopologyNode({
 									<span
 										className={cn(
 											"animate-domia-pulse absolute -inset-0.5 rounded-full ring-2",
-											status === "speaking"
-												? "ring-emerald-500"
-												: status === "thinking"
-													? "ring-amber-500"
-													: "ring-sky-500",
+											ACTIVE_RING[status],
 										)}
 									/>
 								) : null}
@@ -83,9 +83,10 @@ export function TopologyNode({
 								<Crown className="size-3 shrink-0 text-amber-500" />
 							) : null}
 							<span
+								title={status === null ? m.topo_presence_unknown() : undefined}
 								className={cn(
 									"size-1.5 shrink-0 rounded-full",
-									STATUS_COLOR[status],
+									status === null ? UNKNOWN_STATUS_CLASS : STATUS_COLOR[status],
 								)}
 							/>
 						</button>

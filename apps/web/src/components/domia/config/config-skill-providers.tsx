@@ -1,3 +1,4 @@
+import { Fragment } from "react"
 import { Plus, Trash2, Server, ChevronDown, FilePlus2 } from "lucide-react"
 import type { DiscoveredSkillProvider } from "@/types/skills"
 import {
@@ -8,11 +9,26 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SKILL_PRESETS } from "@/constants/skill-presets"
+import {
+	DEFAULT_SKILL_TRUST_TIER,
+	DESCRIPTOR_DEFAULT_LIMITS,
+	SKILL_ADVANCED_CONFIG_JSON_SAMPLE,
+	SKILL_ADVANCED_CONFIG_KEYS,
+	SKILL_HEADERS_JSON_SAMPLE,
+	SKILL_TRANSPORT_OPTIONS,
+	SKILL_TRUST_TIER_META,
+	SKILL_TRUST_TIER_VALUES,
+} from "@/constants/skills"
+import { useActionQuery } from "@/hooks/use-query-state"
+import {
+	descriptorSchemaQueryOptions,
+	skillsStatusQueryOptions,
+} from "@/server/skills"
+import { toDescriptorLimits } from "@/schemas/descriptor"
 import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import {
 	Collapsible,
@@ -27,9 +43,23 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { ConfigSkillDescriptor } from "./config-skill-descriptor"
+import { ToolChecklist } from "./config-fast-path"
 import { SkillProviderDiscovery } from "./config-skill-discovery"
-import type { ConfigDraftApi } from "@/hooks/use-config-draft"
-import type { SkillProviderDraft } from "@/types/config"
+import { DescriptorField } from "./descriptor-fields"
+import type {
+	ConfigSkillProvidersProps,
+	ServerDescriptorPanelProps,
+	SkillProviderDraft,
+} from "@/types/config"
+import type {
+	DescriptorLimitsView,
+	SkillDescriptorSchemaInfo,
+	SkillToolOptions,
+	SkillToolOptionsStatus,
+	SkillTrustTier,
+	SkillsStatusResult,
+} from "@/types/skills"
+import { isBuiltinSkillProvider } from "@/utils/skill-providers"
 
 const SKILL_PROTOCOLS: {
 	value: SkillProviderDraft["protocol"]
@@ -52,22 +82,50 @@ const EMPTY_SERVER: SkillProviderDraft = {
 	headers: "",
 	whitelist: [],
 	config: "",
+	trustTier: DEFAULT_SKILL_TRUST_TIER,
 }
 
-function Field({
-	label,
-	hint,
-	children,
-}: {
-	label: string
-	hint?: string
-	children: React.ReactNode
-}) {
+const presetHint = (kind?: string): (() => string) | undefined =>
+	kind
+		? SKILL_PRESETS.find((p) => p.draft.descriptor?.kind === kind)?.hintKey
+		: undefined
+
+const advancedKeys = (kind?: string): string[] => [
+	...SKILL_ADVANCED_CONFIG_KEYS["*"],
+	...(kind ? (SKILL_ADVANCED_CONFIG_KEYS[kind] ?? []) : []),
+]
+
+function ServerDescriptorPanel({
+	descriptor,
+	hash,
+}: ServerDescriptorPanelProps) {
+	if (!descriptor) return null
 	return (
-		<div className="space-y-1.5">
-			<Label className="text-xs">{label}</Label>
-			{children}
-			{hint && <p className="text-muted-foreground text-[11px]">{hint}</p>}
+		<div className="mt-4 space-y-2 border-t pt-4">
+			<div className="space-y-0.5">
+				<p className="text-xs font-semibold tracking-wide uppercase opacity-70">
+					{m.skills_server_descriptor()}
+				</p>
+				<p className="text-muted-foreground text-[11px]">
+					{m.skills_server_descriptor_hint()}
+				</p>
+				{hash && (
+					<code className="text-muted-foreground font-mono text-[11px]">
+						{hash}
+					</code>
+				)}
+			</div>
+			<Collapsible>
+				<CollapsibleTrigger className="text-muted-foreground hover:text-foreground group flex items-center gap-1.5 text-xs outline-none">
+					<ChevronDown className="size-3.5 transition-transform group-data-[panel-open]:rotate-180" />
+					{m.skills_server_descriptor()}
+				</CollapsibleTrigger>
+				<CollapsibleContent className="pt-2">
+					<pre className="bg-muted max-h-72 overflow-auto rounded-md p-2 font-mono text-[11px]">
+						{JSON.stringify(descriptor, null, 2)}
+					</pre>
+				</CollapsibleContent>
+			</Collapsible>
 		</div>
 	)
 }
@@ -75,11 +133,45 @@ function Field({
 export function ConfigSkillProviders({
 	draft,
 	domiaKey,
-}: {
-	draft: ConfigDraftApi
-	domiaKey: string
-}) {
+}: ConfigSkillProvidersProps) {
 	const servers = draft.skillProviders
+	const enabled = domiaKey !== ""
+	const { state: skillsState } = useActionQuery<SkillsStatusResult, string[]>({
+		...skillsStatusQueryOptions(domiaKey),
+		enabled,
+	})
+	const { state: schemaState } = useActionQuery<
+		SkillDescriptorSchemaInfo,
+		string[]
+	>({
+		...descriptorSchemaQueryOptions(domiaKey),
+		enabled,
+	})
+
+	const toolsStatus: SkillToolOptionsStatus = !enabled
+		? "ready"
+		: skillsState.status === "loading"
+			? "loading"
+			: skillsState.status === "error"
+				? "error"
+				: "ready"
+	const statuses =
+		skillsState.status === "ready" ? (skillsState.data?.providers ?? []) : []
+	const toolsFor = (server: SkillProviderDraft): SkillToolOptions => ({
+		status: toolsStatus,
+		tools: statuses.find((p) => p.id === server.id)?.tools ?? [],
+		message: skillsState.status === "error" ? skillsState.message : null,
+	})
+
+	const info = schemaState.status === "ready" ? schemaState.data : undefined
+	const limits: DescriptorLimitsView = {
+		limits: info ? toDescriptorLimits(info.limits) : DESCRIPTOR_DEFAULT_LIMITS,
+		fromNode: enabled && schemaState.status !== "error",
+		resourceUri: info?.resourceUri ?? null,
+		stripped: info?.stripped ?? [],
+		rejected: info?.rejected ?? [],
+	}
+
 	const addDiscovered = (found: DiscoveredSkillProvider) => {
 		const preset = SKILL_PRESETS.find((p) => p.id === found.kind)?.draft ?? {}
 		add({
@@ -109,194 +201,279 @@ export function ConfigSkillProviders({
 				</div>
 			)}
 
-			{servers.map((server, index) => (
-				<Card key={index} className="space-y-3 p-4">
-					<div className="flex items-center justify-between gap-2">
-						<span className="truncate text-sm font-medium">
-							{server.name.trim() || m.config_skill_new_provider()}
-						</span>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="text-muted-foreground hover:text-destructive -my-1 h-7 px-2"
-							onClick={() => remove(index)}
-						>
-							<Trash2 className="size-3.5" />
-						</Button>
-					</div>
+			{servers.map((server, index) => {
+				const builtin = isBuiltinSkillProvider(server)
+				const hint = builtin ? undefined : presetHint(server.descriptor?.kind)
+				return (
+					<Card key={index} className="space-y-3 p-4">
+						<div className="flex items-center justify-between gap-2">
+							<span className="truncate text-sm font-medium">
+								{server.name.trim() || m.config_skill_new_provider()}
+							</span>
+							{!builtin && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="text-muted-foreground hover:text-destructive -my-1 h-7 px-2"
+									onClick={() => remove(index)}
+								>
+									<Trash2 className="size-3.5" />
+								</Button>
+							)}
+						</div>
 
-					<div className="grid gap-3 sm:grid-cols-[1fr_8rem_9rem]">
-						<Field label={m.config_skill_name()}>
-							<Input
-								value={server.name}
-								onChange={(e) => update(index, { name: e.target.value })}
-								placeholder="home-assistant"
-							/>
-						</Field>
-						<Field label={m.config_skill_protocol()}>
-							<Select
-								value={server.protocol}
-								onValueChange={(v) =>
-									update(index, {
-										protocol: v as SkillProviderDraft["protocol"],
-									})
+						{builtin && (
+							<p className="text-muted-foreground text-xs">
+								{m.config_skill_builtin_hint()}
+							</p>
+						)}
+
+						<div
+							className={
+								builtin
+									? "grid gap-3"
+									: "grid gap-3 sm:grid-cols-[1fr_8rem_9rem]"
+							}
+						>
+							<DescriptorField
+								label={
+									builtin
+										? m.config_skill_builtin_name()
+										: m.config_skill_name()
 								}
 							>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									{SKILL_PROTOCOLS.map((p) => (
-										<SelectItem
-											key={p.value}
-											value={p.value}
-											disabled={!p.available}
-										>
-											{p.label()}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</Field>
-						{server.protocol === "mcp" && (
-							<Field label={m.config_skill_transport()}>
+								<Input
+									value={server.name}
+									onChange={(e) => update(index, { name: e.target.value })}
+									placeholder={m.desc_provider_name_placeholder()}
+									disabled={builtin}
+								/>
+							</DescriptorField>
+							{!builtin && (
+								<DescriptorField label={m.config_skill_protocol()}>
+									<Select
+										value={server.protocol}
+										onValueChange={(v) =>
+											update(index, {
+												protocol: v as SkillProviderDraft["protocol"],
+											})
+										}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{SKILL_PROTOCOLS.map((p) => (
+												<SelectItem
+													key={p.value}
+													value={p.value}
+													disabled={!p.available}
+												>
+													{p.label()}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</DescriptorField>
+							)}
+							{server.protocol === "mcp" && (
+								<DescriptorField label={m.config_skill_transport()}>
+									<Select
+										value={server.type}
+										onValueChange={(v) => {
+											const option = SKILL_TRANSPORT_OPTIONS.find(
+												(o) => o.value === v,
+											)
+											if (option) update(index, { type: option.value })
+										}}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{SKILL_TRANSPORT_OPTIONS.map((option) => (
+												<SelectItem key={option.value} value={option.value}>
+													{option.label()}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</DescriptorField>
+							)}
+						</div>
+
+						{!builtin && (
+							<DescriptorField
+								label={m.config_skill_endpoint_url()}
+								hint={
+									server.type === "stdio"
+										? m.desc_provider_stdio_hint()
+										: undefined
+								}
+							>
+								<Input
+									value={server.url}
+									onChange={(e) => update(index, { url: e.target.value })}
+									placeholder={m.desc_endpoint_url_placeholder()}
+								/>
+							</DescriptorField>
+						)}
+
+						{!builtin && (
+							<div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+								<DescriptorField label={m.config_skill_auth()}>
+									<Select
+										value={server.authKind}
+										onValueChange={(v) =>
+											update(index, {
+												authKind: v as SkillProviderDraft["authKind"],
+											})
+										}
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="none">
+												{m.config_skill_auth_none()}
+											</SelectItem>
+											<SelectItem value="bearer">
+												{m.config_skill_auth_bearer()}
+											</SelectItem>
+											<SelectItem value="headers">
+												{m.config_skill_auth_headers()}
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</DescriptorField>
+								{server.authKind === "bearer" && (
+									<DescriptorField
+										label={m.config_skill_token()}
+										hint={m.config_skill_token_hint()}
+									>
+										<Input
+											type="password"
+											value={server.token}
+											onChange={(e) => update(index, { token: e.target.value })}
+											placeholder={m.config_secret_placeholder()}
+											autoComplete="off"
+										/>
+									</DescriptorField>
+								)}
+								{server.authKind === "headers" && (
+									<DescriptorField
+										label={m.config_skill_headers()}
+										hint={m.config_skill_headers_hint()}
+									>
+										<Textarea
+											value={server.headers}
+											onChange={(e) =>
+												update(index, { headers: e.target.value })
+											}
+											placeholder={SKILL_HEADERS_JSON_SAMPLE}
+											rows={2}
+											className="font-mono text-xs"
+											spellCheck={false}
+											autoComplete="off"
+										/>
+									</DescriptorField>
+								)}
+							</div>
+						)}
+
+						<ToolChecklist
+							label={m.config_skill_allowlist()}
+							hint={m.config_skill_allowlist_hint()}
+							note={
+								server.whitelist.length > 0
+									? m.fastpath_tools_filtered_note()
+									: undefined
+							}
+							value={server.whitelist}
+							onChange={(whitelist) => update(index, { whitelist })}
+							options={toolsFor(server)}
+							placeholder={m.desc_allowlist_placeholder()}
+						/>
+
+						{!builtin && (
+							<DescriptorField
+								label={m.config_skill_trust_tier()}
+								hint={SKILL_TRUST_TIER_META[server.trustTier].help()}
+							>
 								<Select
-									value={server.type}
+									value={server.trustTier}
 									onValueChange={(v) =>
-										update(index, { type: v === "sse" ? "sse" : "http" })
+										update(index, { trustTier: v as SkillTrustTier })
 									}
 								>
-									<SelectTrigger>
+									<SelectTrigger className="sm:w-48">
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="http">Streamable HTTP</SelectItem>
-										<SelectItem value="sse">SSE</SelectItem>
+										{SKILL_TRUST_TIER_VALUES.map((tier) => (
+											<SelectItem key={tier} value={tier}>
+												{SKILL_TRUST_TIER_META[tier].label()}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
-							</Field>
+							</DescriptorField>
 						)}
-					</div>
 
-					<Field label={m.config_skill_endpoint_url()}>
-						<Input
-							value={server.url}
-							onChange={(e) => update(index, { url: e.target.value })}
-							placeholder="http://homeassistant.local:8123/api/mcp"
-						/>
-					</Field>
-
-					<div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
-						<Field label={m.config_skill_auth()}>
-							<Select
-								value={server.authKind}
-								onValueChange={(v) =>
-									update(index, {
-										authKind: v as SkillProviderDraft["authKind"],
-									})
-								}
-							>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="none">
-										{m.config_skill_auth_none()}
-									</SelectItem>
-									<SelectItem value="bearer">
-										{m.config_skill_auth_bearer()}
-									</SelectItem>
-									<SelectItem value="headers">
-										{m.config_skill_auth_headers()}
-									</SelectItem>
-								</SelectContent>
-							</Select>
-						</Field>
-						{server.authKind === "bearer" && (
-							<Field
-								label={m.config_skill_token()}
-								hint={m.config_skill_token_hint()}
-							>
-								<Input
-									type="password"
-									value={server.token}
-									onChange={(e) => update(index, { token: e.target.value })}
-									placeholder={m.config_secret_placeholder()}
-									autoComplete="off"
-								/>
-							</Field>
-						)}
-						{server.authKind === "headers" && (
-							<Field
-								label={m.config_skill_headers()}
-								hint={m.config_skill_headers_hint()}
-							>
-								<Textarea
-									value={server.headers}
-									onChange={(e) => update(index, { headers: e.target.value })}
-									placeholder={'{ "X-API-Key": "…" }'}
-									rows={2}
-									className="font-mono text-xs"
-									spellCheck={false}
-									autoComplete="off"
-								/>
-							</Field>
-						)}
-					</div>
-
-					<Field
-						label={m.config_skill_allowlist()}
-						hint={m.config_skill_allowlist_hint()}
-					>
-						<Input
-							value={server.whitelist.join(", ")}
-							onChange={(e) =>
-								update(index, {
-									whitelist: e.target.value
-										.split(",")
-										.map((t) => t.trim())
-										.filter(Boolean),
-								})
-							}
-							placeholder="HassTurnOn, HassTurnOff, GetLiveContext"
-						/>
-					</Field>
-
-					<Collapsible>
-						<CollapsibleTrigger className="text-muted-foreground hover:text-foreground group flex items-center gap-1.5 text-xs outline-none">
-							<ChevronDown className="size-3.5 transition-transform group-data-[panel-open]:rotate-180" />
-							{m.config_skill_advanced()}
-						</CollapsibleTrigger>
-						<CollapsibleContent className="pt-2">
-							<Textarea
-								value={server.config}
-								onChange={(e) => update(index, { config: e.target.value })}
-								placeholder={'{ "toolParamAllow": { "*": ["name"] } }'}
-								rows={3}
-								className="font-mono text-xs"
-								spellCheck={false}
-							/>
-							<p className="text-muted-foreground mt-1.5 text-[11px]">
-								{m.config_skill_advanced_hint_a()} <code>toolParamAllow</code>{" "}
-								{m.config_skill_advanced_hint_b()} <code>name</code>
-								{m.config_skill_advanced_hint_c()}
-							</p>
-							<div className="mt-4 border-t pt-4">
-								{server.descriptor?.kind === "home-assistant" && (
-									<p className="text-muted-foreground mb-3 text-[11px]">
-										{m.config_skill_preset_hint()}
-									</p>
+						<Collapsible>
+							<CollapsibleTrigger className="text-muted-foreground hover:text-foreground group flex items-center gap-1.5 text-xs outline-none">
+								<ChevronDown className="size-3.5 transition-transform group-data-[panel-open]:rotate-180" />
+								{m.config_skill_advanced()}
+							</CollapsibleTrigger>
+							<CollapsibleContent className="pt-2">
+								{!builtin && (
+									<>
+										<Textarea
+											value={server.config}
+											onChange={(e) =>
+												update(index, { config: e.target.value })
+											}
+											placeholder={SKILL_ADVANCED_CONFIG_JSON_SAMPLE}
+											rows={3}
+											className="font-mono text-xs"
+											spellCheck={false}
+										/>
+										<p className="text-muted-foreground mt-1.5 text-[11px]">
+											{m.config_skill_advanced_hint()}{" "}
+											{advancedKeys(server.descriptor?.kind).map((key, i) => (
+												<Fragment key={key}>
+													{i > 0 && ", "}
+													<code>{key}</code>
+												</Fragment>
+											))}
+											{m.config_skill_advanced_hint_end()}
+										</p>
+									</>
 								)}
-								<ConfigSkillDescriptor
-									value={server.descriptor}
-									onChange={(descriptor) => update(index, { descriptor })}
-								/>
-							</div>
-						</CollapsibleContent>
-					</Collapsible>
-				</Card>
-			))}
+								<div className={builtin ? undefined : "mt-4 border-t pt-4"}>
+									{hint && (
+										<p className="text-muted-foreground mb-3 text-[11px]">
+											{hint()}
+										</p>
+									)}
+									<ConfigSkillDescriptor
+										value={server.descriptor}
+										onChange={(descriptor) => update(index, { descriptor })}
+										options={toolsFor(server)}
+										limits={limits}
+										kindLocked={builtin}
+									/>
+									<ServerDescriptorPanel
+										descriptor={server.serverDescriptor}
+										hash={server.serverDescriptorHash}
+									/>
+								</div>
+							</CollapsibleContent>
+						</Collapsible>
+					</Card>
+				)
+			})}
 
 			<DropdownMenu>
 				<DropdownMenuTrigger

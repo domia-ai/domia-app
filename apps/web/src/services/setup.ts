@@ -10,6 +10,7 @@ import {
 	normalizeSkillProviders,
 	skillProviderToBundle,
 } from "@/utils/skill-providers"
+import { DEFAULT_SKILL_TRUST_TIER } from "@/constants/skills"
 import { CAPABILITY_KEYS } from "@/constants/capabilities"
 import { SKILL_PRESETS } from "@/constants/skill-presets"
 import {
@@ -130,6 +131,7 @@ const homeAssistantDraft = (
 		headers: "",
 		whitelist: preset.whitelist ?? [],
 		config: preset.config ?? "",
+		trustTier: preset.trustTier ?? DEFAULT_SKILL_TRUST_TIER,
 		descriptor: preset.descriptor ?? {
 			version: 1,
 			kind: HOME_ASSISTANT_PROVIDER_NAME,
@@ -148,7 +150,11 @@ export const pairHomeAssistant = async (
 	const previous = existing.find(
 		(p) => p.name === next.name || p.url === next.url,
 	)
-	if (previous) next.id = previous.id
+	if (previous) {
+		next.id = previous.id
+		next.trustTier = previous.trustTier
+		next.config = previous.config || next.config
+	}
 	const others = existing.filter((p) => p !== previous)
 	return importConfig({
 		domiaKey: input.domiaKey,

@@ -3,22 +3,30 @@ import { domiaRegistry } from "@domia-app/db"
 import { db } from "@/db"
 import { env } from "@/config"
 import { isOnline } from "@/utils/presence"
+import { nodeFailure } from "@/utils/service-errors"
 import { configSnapshotToStoredJson } from "@/utils/config"
 import { resolveNodeBase } from "@/services/fleet"
+import { asHttpScheme, nodeBaseUrl } from "@/utils/node-base"
 import {
-	nodeListIdentities,
 	nodeCreateIdentity,
 	nodeRemoveIdentity,
 	nodeGetConfig,
+	nodeGetNodeConfig,
+	nodeUpdateNodeConfig,
 	nodeProbeHealth,
 	nodeProbeIdentities,
 } from "@/lib/node-client"
 import type { ActionResult } from "@/types"
 import type {
 	AddNodeResult,
+	CreatedIdentity,
+	CreateIdentityInput,
 	IdentityRole,
+	NodeConfigApplyResult,
+	NodeConfigSnapshot,
+	NodeConfigUpdateInput,
 	NodeDetail,
-	NodeIdentity,
+	NodeEndpoint,
 	NodeIdentitySummary,
 	NodeProbeInput,
 	NodeProbeResult,
@@ -40,6 +48,7 @@ const buildNodes = async (): Promise<NodeSummary[]> => {
 			nodeId: domiaRegistry.nodeId,
 			localIp: domiaRegistry.localIp,
 			httpPort: domiaRegistry.httpPort,
+			httpScheme: domiaRegistry.httpScheme,
 			isActive: domiaRegistry.isActive,
 			isHosted: domiaRegistry.isHosted,
 			isPrincipal: domiaRegistry.isPrincipal,
@@ -47,15 +56,22 @@ const buildNodes = async (): Promise<NodeSummary[]> => {
 		})
 		.from(domiaRegistry)
 
-	const groups = new Map<string, NodeIdentitySummary[]>()
-	const addr = new Map<string, { localIp: string; httpPort: number }>()
+	const groups = new Map<
+		string,
+		{ endpoint: NodeEndpoint; identities: NodeIdentitySummary[] }
+	>()
 	for (const r of rows) {
 		if (!r.isActive) continue
 		if (!r.localIp || !r.httpPort) continue
 		const nodeId = r.nodeId ?? nodeIdOf(r.localIp, r.httpPort)
-		addr.set(nodeId, { localIp: r.localIp, httpPort: r.httpPort })
-		const list = groups.get(nodeId) ?? []
-		list.push({
+		const endpoint: NodeEndpoint = {
+			localIp: r.localIp,
+			httpPort: r.httpPort,
+			httpScheme: asHttpScheme(r.httpScheme),
+		}
+		const group = groups.get(nodeId) ?? { endpoint, identities: [] }
+		group.endpoint = endpoint
+		group.identities.push({
 			domiaKey: r.domiaKey,
 			name: r.name,
 			avatarId: r.avatarId,
@@ -65,18 +81,18 @@ const buildNodes = async (): Promise<NodeSummary[]> => {
 			online: isOnline(r.lastSeenAt),
 			lastSeenAt: r.lastSeenAt,
 		})
-		groups.set(nodeId, list)
+		groups.set(nodeId, group)
 	}
 
-	return [...groups.entries()].map(([nodeId, identities]) => {
-		const { localIp, httpPort } = addr.get(nodeId)!
+	return [...groups.entries()].map(([nodeId, { endpoint, identities }]) => {
 		const hosted = identities.filter((i) => i.isHosted)
 		const peers = identities.filter((i) => !i.isHosted)
 		const principal = identities.find((i) => i.isPrincipal)
 		return {
 			nodeId,
-			localIp,
-			httpPort,
+			localIp: endpoint.localIp,
+			httpPort: endpoint.httpPort,
+			httpScheme: endpoint.httpScheme,
 			online: identities.some((i) => i.online),
 			hostedCount: hosted.length,
 			peerCount: peers.length,
@@ -98,30 +114,16 @@ export const getNode = async (nodeId: string): Promise<NodeDetail | null> => {
 	}
 }
 
-export const listIdentities = async (
-	anchorDomiaKey: string,
-): Promise<ActionResult<NodeIdentity[]>> => {
-	const base = await resolveNodeBase(anchorDomiaKey)
-	if (!base.ok) return base
-	try {
-		const { identities } = await nodeListIdentities(base.data)
-		return { ok: true, data: identities }
-	} catch (err) {
-		return {
-			ok: false,
-			error: err instanceof Error ? err.message : "Could not list identities",
-		}
-	}
-}
-
-export const createIdentity = async (input: {
-	anchorDomiaKey: string
-	name: string
-}): Promise<ActionResult<NodeIdentity>> => {
+export const createIdentity = async (
+	input: CreateIdentityInput,
+): Promise<ActionResult<CreatedIdentity>> => {
 	const base = await resolveNodeBase(input.anchorDomiaKey)
 	if (!base.ok) return base
 	try {
-		const result = await nodeCreateIdentity(base.data, { name: input.name })
+		const result = await nodeCreateIdentity(base.data, {
+			name: input.name,
+			...(input.domiaKey ? { domiaKey: input.domiaKey } : {}),
+		})
 		return {
 			ok: true,
 			data: {
@@ -130,6 +132,7 @@ export const createIdentity = async (input: {
 				isHosted: true,
 				isPrincipal: false,
 				role: "hosted",
+				restored: result.restored === true,
 			},
 		}
 	} catch (err) {
@@ -157,6 +160,30 @@ export const removeIdentity = async (input: {
 	}
 }
 
+export const getNodeConfig = async (
+	anchorDomiaKey: string,
+): Promise<ActionResult<NodeConfigSnapshot>> => {
+	const base = await resolveNodeBase(anchorDomiaKey)
+	if (!base.ok) return base
+	try {
+		return { ok: true, data: await nodeGetNodeConfig(base.data) }
+	} catch (err) {
+		return nodeFailure(err, "Could not read the node config")
+	}
+}
+
+export const updateNodeConfig = async (
+	input: NodeConfigUpdateInput,
+): Promise<ActionResult<NodeConfigApplyResult>> => {
+	const base = await resolveNodeBase(input.anchorDomiaKey)
+	if (!base.ok) return base
+	try {
+		return { ok: true, data: await nodeUpdateNodeConfig(base.data, input.node) }
+	} catch (err) {
+		return nodeFailure(err, "Could not apply the node config")
+	}
+}
+
 const probeErrorMessage = (err: unknown): string => {
 	if (err instanceof Error) {
 		if (err.name === "TimeoutError" || err.name === "AbortError")
@@ -167,13 +194,16 @@ const probeErrorMessage = (err: unknown): string => {
 	return "Node unreachable"
 }
 
-const baseOf = (input: NodeProbeInput): string =>
-	`http://${input.host.trim()}:${input.port}`
+const endpointOf = (input: NodeProbeInput): NodeEndpoint => ({
+	localIp: input.host.trim(),
+	httpPort: input.port,
+	httpScheme: input.scheme,
+})
 
 export const probeNode = async (
 	input: NodeProbeInput,
 ): Promise<ActionResult<NodeProbeResult>> => {
-	const base = baseOf(input)
+	const base = nodeBaseUrl(endpointOf(input))
 	const timeoutMs = env.DOMIA_NODE_PROBE_TIMEOUT_MS
 	try {
 		const health = await nodeProbeHealth(base, timeoutMs)
@@ -182,7 +212,13 @@ export const probeNode = async (
 			return { ok: false, error: "Node reported no identities" }
 		return {
 			ok: true,
-			data: { host: input.host.trim(), port: input.port, health, identities },
+			data: {
+				host: input.host.trim(),
+				port: input.port,
+				scheme: input.scheme,
+				health,
+				identities,
+			},
 		}
 	} catch (err) {
 		return { ok: false, error: probeErrorMessage(err) }
@@ -195,7 +231,7 @@ export const addNodeByAddress = async (
 	const probe = await probeNode(input)
 	if (!probe.ok) return probe
 	if (!probe.data) return { ok: false, error: "Node probe returned no data" }
-	const { host, port } = probe.data
+	const { host, port, scheme } = probe.data
 	const hosted = probe.data.identities.filter((i) => i.isHosted)
 	if (hosted.length === 0)
 		return { ok: false, error: "Node reported no identities" }
@@ -215,7 +251,11 @@ export const addNodeByAddress = async (
 		.where(eq(domiaRegistry.nodeId, nodeId))
 	const stale = onNode.filter((r) => !hostedKeys.includes(r.domiaKey))
 
-	const base = `http://${host}:${port}`
+	const base = nodeBaseUrl({
+		localIp: host,
+		httpPort: port,
+		httpScheme: scheme,
+	})
 	const configByKey = new Map<string, string>()
 	for (const identity of hosted) {
 		try {
@@ -242,6 +282,7 @@ export const addNodeByAddress = async (
 				isActive: true,
 				localIp: host,
 				httpPort: port,
+				httpScheme: scheme,
 				isHosted: identity.isHosted,
 				isPrincipal: identity.isPrincipal,
 				lastSeenAt: now,

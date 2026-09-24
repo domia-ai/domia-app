@@ -6,13 +6,9 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { cn } from "@/lib/utils"
 import { formatMaybeJson, formatMs } from "@/utils/format"
-import type {
-	ToolResultErrorCode,
-	ToolRunStatus,
-	ToolTraceEntry,
-} from "@/types/conversations"
+import { StatusChip } from "./tool-status"
+import type { ToolResultErrorCode, ToolTraceEntry } from "@/types/conversations"
 
 const KNOWN_KINDS = new Set([
 	"result",
@@ -26,26 +22,6 @@ const isKnownEntry = (e: unknown): e is ToolTraceEntry =>
 	typeof e === "object" &&
 	KNOWN_KINDS.has((e as { kind?: unknown }).kind as string)
 
-const STATUS_STYLE: Record<
-	ToolRunStatus,
-	{ variant: "secondary" | "destructive" | "outline"; className: string }
-> = {
-	ok: { variant: "secondary", className: "text-success" },
-	failed: { variant: "destructive", className: "" },
-	timeout: {
-		variant: "outline",
-		className: "border-amber-400/60 text-amber-600 dark:text-amber-400",
-	},
-	cancelled: { variant: "outline", className: "text-muted-foreground" },
-}
-
-const STATUS_LABEL: Record<ToolRunStatus, () => string> = {
-	ok: m.conv_tool_status_ok,
-	failed: m.conv_tool_status_failed,
-	timeout: m.conv_tool_status_timeout,
-	cancelled: m.conv_tool_status_cancelled,
-}
-
 const ERROR_LABEL: Record<ToolResultErrorCode, () => string> = {
 	error: m.conv_tool_error_error,
 	blocked: m.conv_tool_error_blocked,
@@ -53,7 +29,7 @@ const ERROR_LABEL: Record<ToolResultErrorCode, () => string> = {
 	timeout: m.conv_tool_error_timeout,
 }
 
-export const parseToolEntries = (value: unknown): ToolTraceEntry[] =>
+const parseToolEntries = (value: unknown): ToolTraceEntry[] =>
 	(Array.isArray(value) ? value : []).filter(isKnownEntry)
 
 export const skillTraceTotalMs = (value: unknown): number | undefined => {
@@ -67,18 +43,6 @@ export const skillTraceTotalMs = (value: unknown): number | undefined => {
 			)
 		: 0
 	return legacy || undefined
-}
-
-function StatusChip({ status }: { status: ToolRunStatus }) {
-	const style = STATUS_STYLE[status]
-	return (
-		<Badge
-			variant={style.variant}
-			className={cn("text-[10px]", style.className)}
-		>
-			{STATUS_LABEL[status]()}
-		</Badge>
-	)
 }
 
 function ArgsInspector({

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { TemplateCard } from "@/components/templates/template-card"
 import { templatesQueryOptions } from "@/server/templates"
 import { domiaTargetsQueryOptions } from "@/server/fleet"
+import { useDataQuery } from "@/hooks/use-query-state"
 import { m } from "@/paraglide/messages"
 
 export const Route = createFileRoute("/_dashboard/templates")({
@@ -23,10 +24,13 @@ export const Route = createFileRoute("/_dashboard/templates")({
 
 function TemplatesPage() {
 	const templatesQuery = useQuery(templatesQueryOptions())
-	const targetsQuery = useQuery(domiaTargetsQueryOptions())
+	const { state: targetsState } = useDataQuery({
+		...domiaTargetsQueryOptions(),
+		errorMessage: m.templates_targets_error,
+	})
 
 	const templates = templatesQuery.data ?? []
-	const targets = targetsQuery.data ?? []
+	const targets = targetsState.status === "ready" ? targetsState.data : []
 
 	return (
 		<div className="space-y-6">
@@ -40,6 +44,10 @@ function TemplatesPage() {
 					</Button>
 				}
 			/>
+
+			{targetsState.status === "error" ? (
+				<p className="text-destructive text-sm">{targetsState.message}</p>
+			) : null}
 
 			{templatesQuery.isLoading ? (
 				<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

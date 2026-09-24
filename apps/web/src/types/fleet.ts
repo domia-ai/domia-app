@@ -2,6 +2,8 @@ import type { DomiaRegistryRow } from "@domia-app/db"
 import type { DomiaConfig } from "@/types"
 import type { MeshEdge, OverviewStats } from "@/types"
 import type { FlowKey } from "@/types/conversations"
+import type { LiveNode } from "@/types/live"
+import type { PresenceStatus } from "@/types/rooms"
 import type { MeshEdge as MeshTopologyEdge } from "@/types/mesh"
 import type {
 	LatencySummary,
@@ -9,6 +11,36 @@ import type {
 	TimeBucketRow,
 	WaterfallData,
 } from "@/types/analytics"
+
+export type OverviewLeanRow = {
+	id: string
+	sourceDomiaKey: string
+	inputType: string | null
+	responseType: string | null
+	sttMs: number | null
+	llmMs: number | null
+	ttsMs: number | null
+	ttfaMs: number | null
+	totalMs: number | null
+	llmExecutorKey: string | null
+	llmResponse: string | null
+	sttResult: string | null
+	inputRaw: string | null
+	createdAt: string
+}
+
+export type FleetTelemetryRow = {
+	sourceDomiaKey: string
+	inputType: string | null
+	responseType: string | null
+	sttMs: number | null
+	llmMs: number | null
+	ttfaMs: number | null
+	sttExecutorKey: string | null
+	llmExecutorKey: string | null
+	ttsExecutorKey: string | null
+	createdAt: string
+}
 
 export type DomiaRole = "hub" | "thin" | "standalone"
 
@@ -25,6 +57,14 @@ export type MeshDomiaRow = DomiaRegistryRow & { config: DomiaConfig }
 
 export type FleetRow = MeshDomiaRow & { telemetry: FleetTelemetry | null }
 
+export type PresenceAvailability = "ok" | "unavailable"
+
+export type FleetPresence = {
+	nodes: LiveNode[]
+	statusByKey: Record<string, PresenceStatus>
+	status: PresenceAvailability
+}
+
 export type FleetGraphIdentity = {
 	domiaKey: string
 	name: string
@@ -35,6 +75,7 @@ export type FleetGraphIdentity = {
 	online: boolean
 	count: number
 	ttfaP50: number | null
+	status: PresenceStatus | null
 }
 
 export type FleetGraphNode = {
@@ -43,12 +84,29 @@ export type FleetGraphNode = {
 	localIp: string
 	httpPort: number
 	online: boolean
+	active: boolean | null
 	identities: FleetGraphIdentity[]
 }
 
 export type FleetGraph = {
 	nodes: FleetGraphNode[]
 	edges: MeshTopologyEdge[]
+	presence: PresenceAvailability
+}
+
+export type MeshMapNode = {
+	row: MeshDomiaRow
+	x: number
+	y: number
+	isHub: boolean
+}
+
+export type MeshMapProps = {
+	rows: MeshDomiaRow[]
+	edges: MeshEdge[]
+	hubKey: string | null
+	selectedKey?: string
+	onSelect?: (key: string) => void
 }
 
 export type DomiaRecentRow = {
@@ -109,6 +167,7 @@ export type OverviewPerformance = {
 export type OverviewData = {
 	rows: MeshDomiaRow[]
 	edges: MeshEdge[]
+	hubDomiaKey: string | null
 	stats: OverviewStats
 	performance: OverviewPerformance
 	recent: RecentInteraction[]
@@ -135,4 +194,16 @@ export type DomiaTarget = {
 	name: string
 	online: boolean
 	isHosted: boolean
+}
+
+export type TopologyGraphProps = {
+	graph: FleetGraph
+}
+
+export type TopologyNodeProps = {
+	node: FleetGraphNode
+	statusOf: (domiaKey: string) => PresenceStatus | null
+	onSelectNode: (nodeId: string) => void
+	onSelectIdentity: (domiaKey: string) => void
+	onHover: (nodeId: string | null) => void
 }

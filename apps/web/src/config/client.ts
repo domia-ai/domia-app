@@ -8,5 +8,3 @@ const clientEnvSchema = z.object({
 })
 
 export const clientEnv = clientEnvSchema.parse(import.meta.env)
-
-export type ClientEnv = z.infer<typeof clientEnvSchema>

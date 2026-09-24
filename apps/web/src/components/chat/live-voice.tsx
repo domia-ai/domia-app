@@ -4,17 +4,9 @@ import { Button } from "@/components/ui/button"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { cn } from "@/lib/utils"
 import { useLiveVoice, liveVoiceStatusLabel } from "./use-live-voice"
-import type { LiveVoiceTarget } from "@/types/chat"
+import type { LiveVoiceProps } from "@/types/chat"
 
-export function LiveVoice({
-	target,
-	domiaName,
-	disabled,
-}: {
-	target: LiveVoiceTarget
-	domiaName: string
-	disabled?: boolean
-}) {
+export function LiveVoice({ target, domiaName, disabled }: LiveVoiceProps) {
 	const { state, connect, disconnect, connected } = useLiveVoice(target)
 	const reachable = Boolean(target.localIp && target.httpPort)
 
@@ -32,7 +24,7 @@ export function LiveVoice({
 					) : (
 						<Radio className="size-4" />
 					)}
-					{m.chat_go_live()}
+					{m.chat_live_start()}
 				</Button>
 				{state.status === "error" && state.error ? (
 					<span className="text-destructive text-xs">{state.error}</span>
@@ -74,10 +66,10 @@ export function LiveVoice({
 
 			<div className="flex flex-col items-center gap-1 text-center">
 				<span className="text-sm font-medium">
-					{liveVoiceStatusLabel[phase]}
+					{liveVoiceStatusLabel(phase)}
 				</span>
 				<span className="text-muted-foreground text-xs">
-					Live with {domiaName} · just talk, hands-free
+					{m.chat_live_with({ name: domiaName })}
 				</span>
 			</div>
 
@@ -94,7 +86,7 @@ export function LiveVoice({
 			</div>
 
 			<Button variant="destructive" size="sm" onClick={disconnect}>
-				<PhoneOff className="size-4" /> End conversation
+				<PhoneOff className="size-4" /> {m.chat_live_stop()}
 			</Button>
 		</div>
 	)

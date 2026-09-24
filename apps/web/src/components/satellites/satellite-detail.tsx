@@ -19,6 +19,8 @@ import { Separator } from "@/components/ui/separator"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { cn } from "@/lib/utils"
 import { relativeTimeMs } from "@/utils/format"
+import { SatelliteSettings } from "./satellite-settings"
+import { SatelliteTimers } from "./satellite-timers"
 import {
 	StatusIndicator,
 	ProtocolBadge,
@@ -296,6 +298,10 @@ export function SatelliteDetail({
 					</ul>
 				</div>
 			) : null}
+
+			<SatelliteSettings key={s.id} satellite={s} />
+
+			<SatelliteTimers key={s.id} satellite={s} />
 		</div>
 	)
 }

@@ -1,4 +1,54 @@
 import { m } from "@/paraglide/messages"
+import type { ActionResult } from "@/types"
+import type { NodeRequestError, NodeRequestErrorBody } from "@/types/async"
+
+const NODE_REQUEST_ERROR = Symbol.for("domia-app.node-request-error")
+
+export const MESH_ROTATE_FORBIDDEN = "Mesh rotation forbidden"
+
+const parseErrorBody = (text: string): NodeRequestErrorBody | null => {
+	try {
+		const parsed: unknown = JSON.parse(text)
+		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+			return null
+		const { error } = parsed as Record<string, unknown>
+		return typeof error === "string" ? { error } : {}
+	} catch {
+		return null
+	}
+}
+
+export const createNodeRequestError = ({
+	status,
+	path,
+	text,
+}: {
+	status: number
+	path: string
+	text: string
+}): NodeRequestError => {
+	const error = new Error(`${path} failed (${status}): ${text}`)
+	return Object.assign(error, {
+		status,
+		path,
+		body: parseErrorBody(text),
+		[NODE_REQUEST_ERROR]: true,
+	})
+}
+
+export const isNodeRequestError = (value: unknown): value is NodeRequestError =>
+	value instanceof Error && Reflect.get(value, NODE_REQUEST_ERROR) === true
+
+export const nodeFailure = (
+	err: unknown,
+	fallback: string,
+): ActionResult<never> => {
+	if (isNodeRequestError(err) && err.body?.error)
+		return { ok: false, error: err.body.error }
+	if (err instanceof Error && err.message)
+		return { ok: false, error: err.message }
+	return { ok: false, error: fallback }
+}
 
 const KNOWN_ERRORS: Record<string, () => string> = {
 	"Empty response": m.err_empty_response,
@@ -27,7 +77,6 @@ const KNOWN_ERRORS: Record<string, () => string> = {
 	"Could not load models": m.err_load_models,
 	"Could not start install": m.err_start_install,
 	"Could not read job status": m.err_job_status,
-	"Could not list identities": m.err_list_identities,
 	"Could not create identity": m.err_create_identity,
 	"Could not remove identity": m.err_remove_identity,
 	"Announce failed": m.err_announce_failed,
@@ -65,6 +114,12 @@ const KNOWN_ERRORS: Record<string, () => string> = {
 	"Node probe returned no data": m.err_node_probe_no_data,
 	"Health check failed": m.err_health_check_failed,
 	"Could not load configuration": m.err_load_configuration,
+	"Could not load tuning": m.err_load_tuning,
+	"Could not apply the suggestion": m.err_apply_suggestion,
+	"Could not undo the suggestion": m.err_undo_suggestion,
+	"Could not read the node config": m.err_read_node_config,
+	"Could not apply the node config": m.err_apply_node_config,
+	[MESH_ROTATE_FORBIDDEN]: m.err_mesh_rotate_forbidden,
 }
 
 export const errText = (error: string | null | undefined): string => {

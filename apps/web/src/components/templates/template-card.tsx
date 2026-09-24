@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter } from "@tanstack/react-router"
 import { Lock, Pencil, Sparkles, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -28,23 +28,15 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 	const router = useRouter()
 	const [targetKey, setTargetKey] = useState(targets[0]?.domiaKey ?? "")
 
-	const applyMutation = useMutation({
+	const applyMutation = useActionMutation({
 		mutationFn: () =>
 			applyConfigTemplateFn({
 				data: { templateId: template.id, domiaKey: targetKey },
 			}),
-	})
-
-	const deleteMutation = useMutation({
-		mutationFn: () => deleteTemplateFn({ data: template.id }),
-	})
-
-	const onApply = async () => {
-		if (!targetKey) return
-		const target = targets.find((t) => t.domiaKey === targetKey)
-		const name = target?.name ?? targetKey
-		const result = await applyMutation.mutateAsync()
-		if (result.ok && result.data) {
+		failureTitle: m.toast_template_apply_failed,
+		onDone: () => {
+			const name =
+				targets.find((t) => t.domiaKey === targetKey)?.name ?? targetKey
 			toast.success(
 				m.toast_template_applied({ template: template.name, name }),
 				{
@@ -53,23 +45,21 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 			)
 			queryClient.invalidateQueries({ queryKey: ["fleet"] })
 			void router.invalidate()
-		} else {
-			toast.error(m.toast_template_apply_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
-	}
+		},
+	})
 
-	const onDelete = async () => {
-		const result = await deleteMutation.mutateAsync()
-		if (result.ok) {
+	const deleteMutation = useActionMutation({
+		mutationFn: () => deleteTemplateFn({ data: template.id }),
+		failureTitle: m.toast_template_delete_failed,
+		onDone: () => {
 			toast.success(m.toast_template_deleted({ name: template.name }))
 			queryClient.invalidateQueries({ queryKey: ["templates"] })
-		} else {
-			toast.error(m.toast_template_delete_failed(), {
-				description: errText(result.error),
-			})
-		}
+		},
+	})
+
+	const onApply = () => {
+		if (!targetKey) return
+		applyMutation.mutate(undefined)
 	}
 
 	const badges = [
@@ -112,7 +102,7 @@ export function TemplateCard({ template, targets }: TemplateCardProps) {
 							size="icon-sm"
 							aria-label={m.aria_delete()}
 							disabled={deleteMutation.isPending || isDemoMode()}
-							onClick={onDelete}
+							onClick={() => deleteMutation.mutate(undefined)}
 						>
 							<Trash2 className="size-4" />
 						</Button>

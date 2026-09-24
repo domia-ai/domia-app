@@ -3,6 +3,7 @@ import { interactionTrace } from "@domia-app/db"
 import { db } from "@/db"
 import { getNodeEndpoint } from "@/services/fleet"
 import { nodeChat, nodeVoice, parseInteractionId } from "@/lib/node-client"
+import { nodeBaseUrl } from "@/utils/node-base"
 import type { ActionResult } from "@/types"
 import type {
 	ChatExchangeResult,
@@ -17,7 +18,7 @@ export const sendMessage = async (
 		const endpoint = await getNodeEndpoint(input.targetDomiaKey)
 		if (!endpoint)
 			return { ok: false, error: "This Domia has no reachable address" }
-		const base = `http://${endpoint.localIp}:${endpoint.httpPort}`
+		const base = nodeBaseUrl(endpoint)
 
 		if (input.kind === "voice") {
 			if (!input.audioBase64) return { ok: false, error: "No audio to send" }
@@ -43,6 +44,7 @@ export const sendMessage = async (
 			text: input.text,
 			speak: input.speak,
 			domiaKey: input.targetDomiaKey,
+			satelliteId: input.satelliteId,
 		})
 		return {
 			ok: true,

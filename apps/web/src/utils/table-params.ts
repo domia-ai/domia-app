@@ -1,10 +1,13 @@
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/constants/table"
-import type { SortState, TableFilters, TableParams } from "@/types/table"
-
-type Getter = (key: string) => string | undefined
+import type {
+	SortState,
+	TableFilters,
+	TableParamGetter,
+	TableParams,
+} from "@/types/table"
 
 export const parseTableParams = (
-	get: Getter,
+	get: TableParamGetter,
 	filterKeys: string[] = [],
 ): TableParams => {
 	const rawPage = parseInt(get("page") ?? "1", 10)

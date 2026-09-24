@@ -1,12 +1,4 @@
-import type { LatencySummary } from "@/types/analytics"
-
-export type LatencyFields = {
-	sttMs: number | null
-	llmMs: number | null
-	ttfaMs: number | null
-	llmExecutorKey: string | null
-	sourceDomiaKey: string
-}
+import type { LatencyFields, LatencySummary } from "@/types/analytics"
 
 export const percentile = (sorted: number[], p: number): number | null => {
 	if (sorted.length === 0) return null

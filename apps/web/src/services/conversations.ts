@@ -5,6 +5,7 @@ import {
 	desc,
 	eq,
 	getTableColumns,
+	inArray,
 	isNotNull,
 	ne,
 } from "drizzle-orm"
@@ -12,15 +13,18 @@ import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import {
 	audioAsset,
 	domiaRegistry,
+	factEvidence,
 	interactionLabel,
 	interactionSessionTrace,
 	interactionTrace,
 	memoryFact,
+	toolRun,
 } from "@domia-app/db"
 import { db } from "@/db"
 import { buildOrderBy, buildSearchWhere } from "@/utils/table-builders"
 import { buildConversationFilters } from "@/utils/conversation-filters"
 import { deriveFlow } from "@/utils/flow"
+import { groupToolRuns } from "@/services/tool-runs"
 import { CONVERSATION_EXPORT_MAX } from "@/constants/conversations"
 import type { FilterFacetOption, Paginated, TableParams } from "@/types/table"
 import type {
@@ -119,10 +123,36 @@ export const getInteraction = async (
 		.from(audioAsset)
 		.where(eq(audioAsset.interactionId, id))
 
-	const memoryFacts = await db
+	const facts = await db
 		.select()
 		.from(memoryFact)
 		.where(eq(memoryFact.sourceInteractionId, id))
+
+	const evidenceTotals = facts.length
+		? await db
+				.select({ factId: factEvidence.factId, total: count() })
+				.from(factEvidence)
+				.where(
+					inArray(
+						factEvidence.factId,
+						facts.map((fact) => fact.id),
+					),
+				)
+				.groupBy(factEvidence.factId)
+		: []
+	const evidenceByFact = new Map(
+		evidenceTotals.map((row) => [row.factId, row.total]),
+	)
+	const memoryFacts = facts.map((fact) => ({
+		...fact,
+		evidenceCount: evidenceByFact.get(fact.id) ?? 0,
+	}))
+
+	const toolRuns = await db
+		.select()
+		.from(toolRun)
+		.where(eq(toolRun.interactionId, id))
+		.orderBy(asc(toolRun.createdAt))
 
 	let adjacent: InteractionDetail["adjacent"] = null
 	if (trace.interactionSessionTraceId) {
@@ -154,6 +184,26 @@ export const getInteraction = async (
 		inputAudio: audios.find((a) => a.kind === "input") ?? null,
 		ttsAudio: audios.find((a) => a.kind === "tts") ?? null,
 		memoryFacts,
+		toolRuns: groupToolRuns(
+			toolRuns.map((run) => ({
+				id: run.id,
+				interactionId: run.interactionId,
+				tool: run.tool,
+				providerSlug: run.providerSlug,
+				routineSlug: run.routineSlug,
+				stepIndex: run.stepIndex,
+				argsHash: run.argsHash,
+				riskClass: run.riskClass,
+				policyDecision: run.policyDecision,
+				policySource: run.policySource,
+				confirmationId: run.confirmationId,
+				status: run.status,
+				durationMs: run.durationMs,
+				spokenAt: run.spokenAt,
+				settledAt: run.settledAt,
+				createdAt: run.createdAt,
+			})),
+		),
 		adjacent,
 	}
 }
@@ -258,16 +308,15 @@ const distinctOptions = async (
 		.map((v) => ({ label: v, value: v }))
 }
 
-export const getSnapshotFacetOptions =
-	async (): Promise<SnapshotFacetOptions> => {
-		const [llmModel, sttModel, ttsEngine, ttsVoice] = await Promise.all([
-			distinctOptions(interactionTrace.llmModelUsed),
-			distinctOptions(interactionTrace.sttModelUsed),
-			distinctOptions(interactionTrace.ttsEngineUsed),
-			distinctOptions(interactionTrace.ttsVoiceUsed),
-		])
-		return { llmModel, sttModel, ttsEngine, ttsVoice }
-	}
+const getSnapshotFacetOptions = async (): Promise<SnapshotFacetOptions> => {
+	const [llmModel, sttModel, ttsEngine, ttsVoice] = await Promise.all([
+		distinctOptions(interactionTrace.llmModelUsed),
+		distinctOptions(interactionTrace.sttModelUsed),
+		distinctOptions(interactionTrace.ttsEngineUsed),
+		distinctOptions(interactionTrace.ttsVoiceUsed),
+	])
+	return { llmModel, sttModel, ttsEngine, ttsVoice }
+}
 
 export const getConversationFacets = async (): Promise<ConversationFacets> => {
 	const [snapshot, domias] = await Promise.all([

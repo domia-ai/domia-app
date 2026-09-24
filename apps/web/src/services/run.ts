@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 import { getInteraction } from "@/services/conversations"
 import { getNodeEndpoint } from "@/services/fleet"
 import { nodeChat, nodeVoice, parseInteractionId } from "@/lib/node-client"
+import { nodeBaseUrl } from "@/utils/node-base"
 import type { ActionResult } from "@/types"
 import type {
 	RunInteractionInput,
@@ -18,7 +19,7 @@ export const runInteraction = async (
 		const endpoint = await getNodeEndpoint(input.targetDomiaKey)
 		if (!endpoint)
 			return { ok: false, error: "Target node has no reachable address" }
-		const base = `http://${endpoint.localIp}:${endpoint.httpPort}`
+		const base = nodeBaseUrl(endpoint)
 		const { trace, inputAudio } = detail
 
 		if (input.mode === "voice") {
@@ -58,6 +59,7 @@ export const runInteraction = async (
 			text,
 			speak,
 			domiaKey: input.targetDomiaKey,
+			satelliteId: input.satelliteId,
 		})
 		return {
 			ok: true,

@@ -10,6 +10,7 @@ import {
 	setSatelliteNumber,
 	setSatelliteFollowUp,
 	setSatelliteVolume,
+	setSatelliteSettings,
 	testSatelliteSpeaker,
 } from "@/services/satellites"
 import {
@@ -21,6 +22,7 @@ import {
 	setSatelliteNumberInputSchema,
 	setSatelliteFollowUpInputSchema,
 	setSatelliteVolumeInputSchema,
+	setSatelliteSettingsInputSchema,
 	testSatelliteSpeakerInputSchema,
 } from "@/schemas/server"
 import { assertWritable } from "@/lib/demo"
@@ -74,6 +76,13 @@ export const setSatelliteVolumeFn = createServerFn({ method: "POST" })
 	.handler(({ data }) => {
 		assertWritable()
 		return setSatelliteVolume(data)
+	})
+
+export const setSatelliteSettingsFn = createServerFn({ method: "POST" })
+	.validator(setSatelliteSettingsInputSchema)
+	.handler(({ data }) => {
+		assertWritable()
+		return setSatelliteSettings(data)
 	})
 
 export const testSatelliteSpeakerFn = createServerFn({ method: "POST" })

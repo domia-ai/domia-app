@@ -4,6 +4,11 @@ import { FIELD_META, HIDDEN_FIELDS, SECTION_META } from "@/constants/config"
 import { buildConfigSections, humanizeKey } from "@/utils/config-schema"
 import type { ConfigSchema, ConfigSchemaField } from "@/types/config"
 
+const must = <T>(value: T | undefined, what: string): T => {
+	assert.ok(value !== undefined, `${what} must exist`)
+	return value
+}
+
 const field = (
 	key: string,
 	extra: Partial<ConfigSchemaField> = {},
@@ -68,7 +73,10 @@ assert.ok(
 	!source.sections.some((s) => s.id === "emotion"),
 	"live schema must not carry an emotion section",
 )
-const domiaSchema = source.sections.find((s) => s.id === "domia")!
+const domiaSchema = must(
+	source.sections.find((s) => s.id === "domia"),
+	"domia schema section",
+)
 for (const banned of ["name", "isActive", "configRevision"])
 	assert.ok(
 		!domiaSchema.fields.some((f) => f.key === banned),
@@ -95,7 +103,11 @@ assert.equal(
 )
 
 const schema: ConfigSchema = structuredClone(CONFIG_SCHEMA_SNAPSHOT)
-const sectionOf = (id: string) => schema.sections.find((s) => s.id === id)!
+const sectionOf = (id: string) =>
+	must(
+		schema.sections.find((s) => s.id === id),
+		`schema section ${id}`,
+	)
 sectionOf("llm").fields.push(
 	field("brandNewKnobMs", { type: "number", default: 250 }),
 )
@@ -133,10 +145,21 @@ const sections = buildConfigSections(
 	HIDDEN_FIELDS,
 )
 const schemaFieldOf = (source: string, key: string) =>
-	sectionOf(source).fields.find((f) => f.key === key)!
+	must(
+		sectionOf(source).fields.find((f) => f.key === key),
+		`schema field ${source}.${key}`,
+	)
 const isHidden = (source: string, key: string) =>
 	(HIDDEN_FIELDS["*"] ?? []).includes(key) ||
 	(HIDDEN_FIELDS[source] ?? []).includes(key)
+const consoleFieldOf = (sectionId: string, key: string) =>
+	must(
+		must(
+			sections.find((s) => s.id === sectionId),
+			`console section ${sectionId}`,
+		).fields.find((f) => f.key === key),
+		`console field ${sectionId}.${key}`,
+	)
 
 let total = 0
 let reachable = 0
@@ -164,7 +187,7 @@ assert.equal(reachable + hidden, total)
 
 for (const sec of sections)
 	for (const f of sec.fields) {
-		const sf = schemaFieldOf(sec.source!, f.key)
+		const sf = schemaFieldOf(must(sec.source, `${sec.id} source`), f.key)
 		if (sf.type === "enum") {
 			assert.equal(
 				f.kind,
@@ -172,7 +195,7 @@ for (const sec of sections)
 				`${sec.id}.${f.key} enum must render as select`,
 			)
 			assert.deepEqual(
-				[...f.options!],
+				[...must(f.options, `${sec.id}.${f.key} options`)],
 				sf.enumValues,
 				`${sec.id}.${f.key} options must come from the schema`,
 			)
@@ -184,31 +207,33 @@ for (const sec of sections)
 			assert.equal(f.kind, "secret", `${sec.id}.${f.key} must render as secret`)
 	}
 
-const ttsEngine = sections
-	.find((s) => s.id === "tts")!
-	.fields.find((f) => f.key === "engine")!
-assert.deepEqual([...ttsEngine.options!], ["KOKORO", "NEW_ENGINE"])
-const sttEngine = sections
-	.find((s) => s.id === "stt")!
-	.fields.find((f) => f.key === "engine")!
+const ttsEngine = consoleFieldOf("tts", "engine")
 assert.deepEqual(
-	[...sttEngine.options!],
+	[...must(ttsEngine.options, "tts engine options")],
+	["KOKORO", "NEW_ENGINE"],
+)
+const sttEngine = consoleFieldOf("stt", "engine")
+assert.deepEqual(
+	[...must(sttEngine.options, "stt engine options")],
 	schemaFieldOf("stt", "engine").enumValues,
 )
 
-const llm = sections.find((s) => s.id === "llm")!
-const knob = llm.fields.find((f) => f.key === "brandNewKnobMs")!
+const knob = consoleFieldOf("llm", "brandNewKnobMs")
 assert.equal(knob.label(), "Brand New Knob (ms)")
 assert.equal(knob.kind, "number")
 assert.equal(knob.advanced, true)
 assert.equal(knob.default, 250)
-const mode = sections
-	.find((s) => s.id === "tts")!
-	.fields.find((f) => f.key === "futureEngineMode")!
+const mode = consoleFieldOf("tts", "futureEngineMode")
 assert.equal(mode.label(), "Future Engine Mode")
-assert.deepEqual([...mode.options!], ["alpha", "beta"])
+assert.deepEqual(
+	[...must(mode.options, "futureEngineMode options")],
+	["alpha", "beta"],
+)
 
-const enhancer = sections.find((s) => s.source === "speechEnhancer")!
+const enhancer = must(
+	sections.find((s) => s.source === "speechEnhancer"),
+	"speechEnhancer console section",
+)
 assert.equal(enhancer.label(), "Speech Enhancer")
 assert.equal(enhancer.group, "system")
 assert.deepEqual(
@@ -226,7 +251,10 @@ for (const id of EXPECTED_SECTION_IDS)
 		sections.some((s) => s.source === id),
 		`schema section ${id} must map to a console section`,
 	)
-const advanced = sections.find((s) => s.id === "advanced")!
+const advanced = must(
+	sections.find((s) => s.id === "advanced"),
+	"advanced console section",
+)
 assert.ok(
 	!advanced.fields.some((f) => f.key === "name"),
 	"advanced must not expose a name field",
@@ -236,11 +264,17 @@ for (const key of HIDDEN_FIELDS.domia)
 		!advanced.fields.some((f) => f.key === key),
 		`${key} must stay hidden`,
 	)
+assert.ok(
+	!HIDDEN_FIELDS.domia.includes("meshSecretGraceMs"),
+	"meshSecretGraceMs is edited from the mesh rotation card and must not be hidden",
+)
+assert.ok(
+	advanced.fields.some((f) => f.key === "meshSecretGraceMs"),
+	"meshSecretGraceMs must render in the advanced section",
+)
 
 for (const src of ["stt", "tts", "wakeWord"]) {
-	const provider = sections
-		.find((s) => s.id === src)!
-		.fields.find((f) => f.key === "provider")!
+	const provider = consoleFieldOf(src, "provider")
 	assert.equal(
 		provider.kind,
 		"text",

@@ -14,9 +14,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { m } from "@/paraglide/messages"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { getLivekitTokenFn } from "@/server/livekit"
 import { satellitesQueryOptions } from "@/server/satellites"
 import type { MeshDomiaRow } from "@/types/fleet"
+import type { LivekitTokenGrant } from "@/types/satellites"
 import type { LivekitLabStatus, LivekitLabLogEntry } from "@/types/satellites"
 
 const statusVariant = (
@@ -67,18 +70,7 @@ export const LivekitLab = ({ domias }: { domias: MeshDomiaRow[] }) => {
 		disconnect()
 	}, [selectedKey])
 
-	const connect = async (): Promise<void> => {
-		if (!selectedKey || !satelliteId) return
-		setStatus("connecting")
-		setLog([])
-		const grant = await getLivekitTokenFn({
-			data: { domiaKey: selectedKey, satelliteId },
-		})
-		if (!grant.ok || !grant.data) {
-			setStatus("error")
-			appendLog("error", grant.ok ? "empty grant" : grant.error)
-			return
-		}
+	const joinRoom = async (grant: LivekitTokenGrant): Promise<void> => {
 		const room = new Room()
 		roomRef.current = room
 		room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
@@ -104,15 +96,40 @@ export const LivekitLab = ({ domias }: { domias: MeshDomiaRow[] }) => {
 			setStatus("idle")
 		})
 		try {
-			await room.connect(grant.data.url, grant.data.token)
+			await room.connect(grant.url, grant.token)
 			await room.localParticipant.setMicrophoneEnabled(true)
 			setStatus("connected")
-			appendLog("info", `joined ${grant.data.roomName} — speak now`)
+			appendLog("info", `joined ${grant.roomName} — speak now`)
 		} catch (err) {
 			setStatus("error")
 			appendLog("error", err instanceof Error ? err.message : String(err))
 			roomRef.current = null
 		}
+	}
+
+	const connectMutation = useActionMutation({
+		mutationFn: (vars: { domiaKey: string; satelliteId: string }) =>
+			getLivekitTokenFn({ data: vars }),
+		failureTitle: m.err_request_failed,
+		onDone: (grant) => {
+			if (!grant) {
+				setStatus("error")
+				appendLog("error", "empty grant")
+				return
+			}
+			void joinRoom(grant)
+		},
+		onFail: () => {
+			setStatus("error")
+			appendLog("error", "livekit token request failed")
+		},
+	})
+
+	const connect = (): void => {
+		if (!selectedKey || !satelliteId) return
+		setStatus("connecting")
+		setLog([])
+		connectMutation.mutate({ domiaKey: selectedKey, satelliteId })
 	}
 
 	return (
@@ -172,7 +189,7 @@ export const LivekitLab = ({ domias }: { domias: MeshDomiaRow[] }) => {
 							</Button>
 						) : (
 							<Button
-								onClick={() => void connect()}
+								onClick={connect}
 								disabled={
 									!selectedKey || !satelliteId || status === "connecting"
 								}

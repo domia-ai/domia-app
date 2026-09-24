@@ -1,7 +1,7 @@
 import { Radar, Loader2 } from "lucide-react"
-import { useMutation } from "@tanstack/react-query"
 import { discoverSkillProvidersFn } from "@/server/skills"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { m } from "@/paraglide/messages"
 import { Button } from "@/components/ui/button"
 import type { DiscoveredSkillProvider } from "@/types/skills"
@@ -15,8 +15,9 @@ export function SkillProviderDiscovery({
 	existingUrls: string[]
 	onAdd: (found: DiscoveredSkillProvider) => void
 }) {
-	const discover = useMutation({
+	const discover = useActionMutation({
 		mutationFn: () => discoverSkillProvidersFn({ data: domiaKey }),
+		failureTitle: m.config_skill_discover_failed,
 	})
 	const discovered: DiscoveredSkillProvider[] = discover.data?.ok
 		? (discover.data.data ?? [])
@@ -28,7 +29,7 @@ export function SkillProviderDiscovery({
 				type="button"
 				variant="outline"
 				disabled={discover.isPending}
-				onClick={() => discover.mutate()}
+				onClick={() => discover.mutate(undefined)}
 			>
 				{discover.isPending ? (
 					<Loader2 className="size-4 animate-spin" />

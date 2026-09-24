@@ -1,21 +1,18 @@
-import { readFileSync, writeFileSync } from "node:fs"
+import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const coreDir = resolve(here, "../../../../domia-core/templates")
 const webDir = resolve(here, "../src/constants/system-templates")
-const files = [
-	"standalone.json",
-	"full-hub.json",
-	"thin-client.json",
-	"defaults.json",
-	"jetson.json",
-	"snappy.json",
-	"balanced.json",
-	"rich.json",
-	"espanol.json",
-]
+const CONSOLE_ONLY = new Set(["home-assistant.json"])
+const files = readdirSync(coreDir)
+	.filter((f) => f.endsWith(".json"))
+	.sort()
+const orphans = readdirSync(webDir)
+	.filter((f) => f.endsWith(".json"))
+	.filter((f) => !files.includes(f) && !CONSOLE_ONLY.has(f))
+	.sort()
 const check = process.argv.includes("--check")
 
 let drift = false
@@ -37,6 +34,11 @@ for (const file of files) {
 		writeFileSync(target, source)
 		console.log(`✓ synced ${file}`)
 	}
+}
+
+for (const file of orphans) {
+	drift = true
+	console.error(`✗ ${file} has no counterpart in domia-core/templates`)
 }
 
 if (check && drift) process.exit(1)

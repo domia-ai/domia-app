@@ -14,6 +14,8 @@ import { PersonaStateCard } from "@/components/conversations/persona-state-card"
 import { FactsCard } from "@/components/conversations/facts-card"
 import { SessionNav } from "@/components/conversations/session-nav"
 import { RawTrace } from "@/components/conversations/raw-trace"
+import { PerceivedLatencyCard } from "@/components/conversations/perceived-latency-card"
+import { ToolRunsPanel } from "@/components/conversations/tool-runs-panel"
 import { getInteractionFn, getTurnEventsFn } from "@/server/conversations"
 import { listRunTargetsFn } from "@/server/fleet"
 import { formatTs } from "@/utils/format"
@@ -93,6 +95,11 @@ function ConversationPage() {
 									: "No LLM response"}
 							</Badge>
 						)}
+						{trace.abortReason && (
+							<Badge variant="outline" title={m.conv_abort_reason()}>
+								{m.conv_abort_reason_badge({ reason: trace.abortReason })}
+							</Badge>
+						)}
 						{trace.inputType && (
 							<Badge variant="outline">{trace.inputType}</Badge>
 						)}
@@ -128,6 +135,7 @@ function ConversationPage() {
 								<TraceDetail detail={detail} />
 							</CardContent>
 						</Card>
+						<PerceivedLatencyCard trace={trace} />
 						<Card>
 							<CardHeader>
 								<CardTitle className="text-base">
@@ -141,6 +149,11 @@ function ConversationPage() {
 								/>
 							</CardContent>
 						</Card>
+						<ToolRunsPanel
+							interactionId={trace.id}
+							domiaKey={trace.sourceDomiaKey}
+							mirrored={detail.toolRuns}
+						/>
 						<RawTrace trace={trace} />
 					</div>
 

@@ -3,6 +3,7 @@ import type {
 	SatelliteNumberEntity,
 	SatelliteCapabilities,
 	SatelliteEvent,
+	SatelliteProtocol,
 } from "@/types/rooms"
 import type { ConfigApplyResult } from "@/types/config"
 
@@ -46,6 +47,13 @@ export type BoundSatelliteRow = {
 	protocol: string
 	isActive: boolean
 	followUpEnabled: boolean
+	followUpNoSpeechMs: number
+	followUpRequestMaxMs: number
+	playbackDrainMarginMs: number
+	runListeningMaxMs: number
+	captureHeadTrimMs: number
+	wyomingStreamingTts: boolean
+	mediaPlayerName: string | null
 }
 
 export type SatelliteWakeWord = {
@@ -80,6 +88,19 @@ export type SatelliteWithContext = BoundSatellite & {
 	avatarId: string | null
 }
 
+export type SatelliteFleetStats = {
+	connected: number
+	offline: number
+	byProtocol: Record<SatelliteProtocol, number>
+	announce: number
+	intercom: number
+}
+
+export type SatelliteFleet = {
+	satellites: SatelliteWithContext[]
+	stats: SatelliteFleetStats
+}
+
 export type SetWakeWordsResult = {
 	applied: boolean
 	live: boolean
@@ -98,6 +119,57 @@ export type SetFollowUpResult = {
 export type SetVolumeResult = {
 	applied: boolean
 	live: boolean
+}
+
+export type SatelliteSettings = {
+	followUpNoSpeechMs: number
+	followUpRequestMaxMs: number
+	playbackDrainMarginMs: number
+	runListeningMaxMs: number
+	captureHeadTrimMs: number
+	wyomingStreamingTts: boolean
+	mediaPlayerName: string | null
+}
+
+export type SatelliteSettingsInput = Partial<SatelliteSettings>
+
+export type SetSatelliteSettingsResult = {
+	applied: boolean
+	settings: SatelliteSettingsInput
+	apply: ConfigApplyResult
+}
+
+export type SetSatelliteSettingsInput = {
+	domiaKey: string
+	satelliteId: string
+	settings: SatelliteSettingsInput
+}
+
+export type SatelliteSettingsNumberField =
+	| "followUpNoSpeechMs"
+	| "followUpRequestMaxMs"
+	| "playbackDrainMarginMs"
+	| "runListeningMaxMs"
+	| "captureHeadTrimMs"
+
+export type SatelliteSettingsNumberMeta = {
+	field: SatelliteSettingsNumberField
+	label: () => string
+	hint: () => string
+}
+
+export type SatelliteSettingsDraft = {
+	numbers: Record<SatelliteSettingsNumberField, string>
+	wyomingStreamingTts: boolean
+	mediaPlayerName: string
+}
+
+export type SatelliteSettingsProps = {
+	satellite: SatelliteWithContext
+}
+
+export type SatelliteTimersProps = {
+	satellite: SatelliteWithContext
 }
 
 export type SatelliteNumberGroup = {
@@ -187,4 +259,9 @@ export type InfoRowProps = {
 	icon: LucideIcon
 	label: string
 	value: string
+}
+
+export type BindSatelliteVars = {
+	body: BindSatelliteBody
+	form: { reset: () => void }
 }

@@ -16,6 +16,7 @@ import type {
 	MeshDomiaRow,
 	OverviewActivity,
 	OverviewData,
+	OverviewLeanRow,
 	OverviewPerformance,
 	RecentInteraction,
 } from "@/types/fleet"
@@ -36,13 +37,13 @@ export const listMeshDomias = async (): Promise<MeshDomiaRow[]> => {
 	}))
 }
 
-export const buildMeshEdges = (rows: MeshDomiaRow[]): MeshEdge[] => {
+const buildMeshEdges = (rows: MeshDomiaRow[]): MeshEdge[] => {
 	const edges: MeshEdge[] = []
 	for (const row of rows) {
 		for (const delegation of row.config.capabilityDelegations) {
 			edges.push({
 				source: row.domiaKey,
-				target: delegation.targetDomiaKey,
+				target: delegation.delegateToDomiaKey,
 				capability: delegation.capability,
 			})
 		}
@@ -50,7 +51,15 @@ export const buildMeshEdges = (rows: MeshDomiaRow[]): MeshEdge[] => {
 	return edges
 }
 
-export const getOverviewStats = async (): Promise<
+const meshHubKey = (rows: MeshDomiaRow[], edges: MeshEdge[]): string | null => {
+	const inbound = new Map<string, number>()
+	for (const edge of edges)
+		inbound.set(edge.target, (inbound.get(edge.target) ?? 0) + 1)
+	const top = [...inbound.entries()].sort((a, b) => b[1] - a[1])[0]
+	return top?.[0] ?? rows[0]?.domiaKey ?? null
+}
+
+const getOverviewStats = async (): Promise<
 	Omit<OverviewStats, "conversationsAllTime">
 > => {
 	const [fleet] = await db
@@ -80,24 +89,7 @@ export const getOverviewStats = async (): Promise<
 	}
 }
 
-type LeanRow = {
-	id: string
-	sourceDomiaKey: string
-	inputType: string | null
-	responseType: string | null
-	sttMs: number | null
-	llmMs: number | null
-	ttsMs: number | null
-	ttfaMs: number | null
-	totalMs: number | null
-	llmExecutorKey: string | null
-	llmResponse: string | null
-	sttResult: string | null
-	inputRaw: string | null
-	createdAt: string
-}
-
-const latencyFields = (r: LeanRow) => ({
+const latencyFields = (r: OverviewLeanRow) => ({
 	sttMs: r.sttMs,
 	llmMs: r.llmMs,
 	ttfaMs: r.ttfaMs,
@@ -105,7 +97,7 @@ const latencyFields = (r: LeanRow) => ({
 	sourceDomiaKey: r.sourceDomiaKey,
 })
 
-const buildTrend = (rows: LeanRow[]): TimeBucketRow[] => {
+const buildTrend = (rows: OverviewLeanRow[]): TimeBucketRow[] => {
 	const map = new Map<string, { count: number; errors: number; ms: number[] }>()
 	for (const r of rows) {
 		const bucket = r.createdAt.slice(0, 10)
@@ -125,7 +117,7 @@ const buildTrend = (rows: LeanRow[]): TimeBucketRow[] => {
 		}))
 }
 
-const pullInteractions = async (): Promise<LeanRow[]> =>
+const pullInteractions = async (): Promise<OverviewLeanRow[]> =>
 	db
 		.select({
 			id: interactionTrace.id,
@@ -149,7 +141,7 @@ const pullInteractions = async (): Promise<LeanRow[]> =>
 const ACTIVITY_DENSE_DAY_LIMIT = 2
 const ACTIVITY_DAY_SLOTS = 14
 
-const buildActivity = (rows: LeanRow[]): OverviewActivity => {
+const buildActivity = (rows: OverviewLeanRow[]): OverviewActivity => {
 	const days = new Set(rows.map((r) => r.createdAt.slice(0, 10)))
 
 	if (days.size > 0 && days.size <= ACTIVITY_DENSE_DAY_LIMIT) {
@@ -183,7 +175,7 @@ const buildActivity = (rows: LeanRow[]): OverviewActivity => {
 	return { granularity: "day", label: "last 14 days", buckets }
 }
 
-const buildPerformance = (rows: LeanRow[]): OverviewPerformance => {
+const buildPerformance = (rows: OverviewLeanRow[]): OverviewPerformance => {
 	const total = rows.length
 	const s2s = rows.filter(
 		(r) => deriveFlow(r.inputType, r.responseType) === "s2s",
@@ -213,8 +205,10 @@ const buildPerformance = (rows: LeanRow[]): OverviewPerformance => {
 	}
 }
 
-const buildTelemetryMap = (rows: LeanRow[]): Record<string, DomiaTelemetry> => {
-	const groups = new Map<string, LeanRow[]>()
+const buildTelemetryMap = (
+	rows: OverviewLeanRow[],
+): Record<string, DomiaTelemetry> => {
+	const groups = new Map<string, OverviewLeanRow[]>()
 	for (const r of rows) {
 		const arr = groups.get(r.sourceDomiaKey) ?? []
 		arr.push(r)
@@ -231,7 +225,7 @@ const buildTelemetryMap = (rows: LeanRow[]): Record<string, DomiaTelemetry> => {
 }
 
 const buildRecent = (
-	rows: LeanRow[],
+	rows: OverviewLeanRow[],
 	dirByKey: Map<string, { name: string; avatarId: string | null }>,
 ): RecentInteraction[] =>
 	rows.slice(0, RECENT_LIMIT).map((r) => ({
@@ -259,9 +253,11 @@ export const getOverviewData = async (): Promise<OverviewData> => {
 	const dirByKey = new Map(
 		rows.map((r) => [r.domiaKey, { name: r.name, avatarId: r.avatarId }]),
 	)
+	const edges = buildMeshEdges(rows)
 	return {
 		rows,
-		edges: buildMeshEdges(rows),
+		edges,
+		hubDomiaKey: meshHubKey(rows, edges),
 		stats: { ...stats, conversationsAllTime: interactions.length },
 		performance: buildPerformance(interactions),
 		recent: buildRecent(interactions, dirByKey),

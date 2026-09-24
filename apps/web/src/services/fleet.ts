@@ -9,6 +9,7 @@ import { db } from "@/db"
 import { buildOrderBy, buildSearchWhere } from "@/utils/table-builders"
 import { ONLINE_THRESHOLD_MS, isOnline } from "@/utils/presence"
 import { parseConfigSnapshot } from "@/utils/config"
+import { asHttpScheme, nodeBaseUrl } from "@/utils/node-base"
 import { fromSqliteTs, toSqliteTs } from "@/utils/format"
 import { deriveFlow } from "@/utils/flow"
 import { effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
@@ -21,7 +22,9 @@ import type {
 	FleetRow,
 	FleetStatsFull,
 	FleetTelemetry,
+	FleetTelemetryRow,
 } from "@/types/fleet"
+import type { NodeEndpoint } from "@/types/nodes"
 
 const ACTIVE_SESSION_WINDOW_MS = 30 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -35,6 +38,7 @@ export const listRunTargets = async (
 			name: domiaRegistry.name,
 			localIp: domiaRegistry.localIp,
 			httpPort: domiaRegistry.httpPort,
+			httpScheme: domiaRegistry.httpScheme,
 			lastSeenAt: domiaRegistry.lastSeenAt,
 		})
 		.from(domiaRegistry)
@@ -46,6 +50,7 @@ export const listRunTargets = async (
 			name: r.name,
 			localIp: r.localIp as string,
 			httpPort: r.httpPort as number,
+			httpScheme: asHttpScheme(r.httpScheme),
 			isOrigin: r.domiaKey === originKey,
 			online: isOnline(r.lastSeenAt),
 		}))
@@ -54,17 +59,22 @@ export const listRunTargets = async (
 
 export const getNodeEndpoint = async (
 	domiaKey: string,
-): Promise<{ localIp: string; httpPort: number } | null> => {
+): Promise<NodeEndpoint | null> => {
 	const [row] = await db
 		.select({
 			localIp: domiaRegistry.localIp,
 			httpPort: domiaRegistry.httpPort,
+			httpScheme: domiaRegistry.httpScheme,
 		})
 		.from(domiaRegistry)
 		.where(eq(domiaRegistry.domiaKey, domiaKey))
 		.limit(1)
 	if (!row?.localIp || !row.httpPort) return null
-	return { localIp: row.localIp, httpPort: row.httpPort }
+	return {
+		localIp: row.localIp,
+		httpPort: row.httpPort,
+		httpScheme: asHttpScheme(row.httpScheme),
+	}
 }
 
 export const resolveNodeBase = async (
@@ -74,7 +84,7 @@ export const resolveNodeBase = async (
 	if (!endpoint) {
 		return { ok: false, error: "This node has no reachable address" }
 	}
-	return { ok: true, data: `http://${endpoint.localIp}:${endpoint.httpPort}` }
+	return { ok: true, data: nodeBaseUrl(endpoint) }
 }
 
 const SEARCH_COLUMNS = [domiaRegistry.name, domiaRegistry.domiaKey]
@@ -103,7 +113,7 @@ export const listDomiaTargets = async (): Promise<DomiaTarget[]> => {
 	}))
 }
 
-export const listDomias = async (
+const listDomias = async (
 	params: TableParams,
 ): Promise<Paginated<DomiaRegistryRow>> => {
 	const where = buildSearchWhere(SEARCH_COLUMNS, params.search)
@@ -146,20 +156,7 @@ export const getFleetStats = async (): Promise<FleetStats> => {
 	}
 }
 
-type TelemetryRow = {
-	sourceDomiaKey: string
-	inputType: string | null
-	responseType: string | null
-	sttMs: number | null
-	llmMs: number | null
-	ttfaMs: number | null
-	sttExecutorKey: string | null
-	llmExecutorKey: string | null
-	ttsExecutorKey: string | null
-	createdAt: string
-}
-
-const latencyFields = (r: TelemetryRow) => ({
+const latencyFields = (r: FleetTelemetryRow) => ({
 	sttMs: r.sttMs,
 	llmMs: r.llmMs,
 	ttfaMs: r.ttfaMs,
@@ -169,7 +166,7 @@ const latencyFields = (r: TelemetryRow) => ({
 
 const inferRole = (
 	key: string,
-	all: TelemetryRow[],
+	all: FleetTelemetryRow[],
 	delegatesAway: boolean,
 	delegatedCount: number,
 ): DomiaRole => {
@@ -212,7 +209,7 @@ export const getFleetTelemetry = async (): Promise<
 			.orderBy(desc(interactionTrace.createdAt)),
 	])
 
-	const bySource = new Map<string, TelemetryRow[]>()
+	const bySource = new Map<string, FleetTelemetryRow[]>()
 	for (const r of interactions) {
 		const arr = bySource.get(r.sourceDomiaKey) ?? []
 		arr.push(r)

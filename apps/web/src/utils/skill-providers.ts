@@ -1,15 +1,46 @@
+import {
+	DEFAULT_SKILL_TRUST_TIER,
+	SKILL_TOOL_NAME_SEPARATOR,
+	SKILL_TOOL_POLICY_VALUES,
+	SKILL_TRUST_TIER_VALUES,
+} from "@/constants/skills"
+import { descriptorErrors } from "@/schemas/descriptor"
 import type {
 	DomiaSkillDescriptor,
 	JsonObject,
+	JsonValue,
 	SkillDescriptorI18n,
 	SkillExecutionDescriptor,
+	SkillFastPathBlock,
+	SkillFastPathIntent,
 	SkillFinalizeRule,
 	SkillProviderDraft,
+	SkillProviderTransport,
 	SkillRoutingDescriptor,
 } from "@/types/config"
+import type { FastPathSlot, FastPathSlotSource } from "@/types/routines"
+import type { SkillToolPolicy, SkillTrustTier } from "@/types/skills"
+
+export const skillToolBaseName = (rawName: string): string => {
+	const idx = rawName.lastIndexOf(SKILL_TOOL_NAME_SEPARATOR)
+	return idx >= 0
+		? rawName.slice(idx + SKILL_TOOL_NAME_SEPARATOR.length)
+		: rawName
+}
 
 const normalizeProtocol = (raw: unknown): SkillProviderDraft["protocol"] =>
-	raw === "http" || raw === "mqtt" ? raw : "mcp"
+	raw === "http" || raw === "mqtt" || raw === "builtin" ? raw : "mcp"
+
+const normalizeTransport = (raw: unknown): SkillProviderTransport =>
+	raw === "sse" || raw === "stdio" ? raw : "http"
+
+export const isBuiltinSkillProvider = (s: SkillProviderDraft): boolean =>
+	s.protocol === "builtin"
+
+const normalizeTrustTier = (raw: unknown): SkillTrustTier =>
+	SKILL_TRUST_TIER_VALUES.includes(raw as SkillTrustTier)
+		? (raw as SkillTrustTier)
+		: DEFAULT_SKILL_TRUST_TIER
 
 const normalizeAuthKind = (row: JsonObject): SkillProviderDraft["authKind"] => {
 	const direct = row.authKind
@@ -19,7 +50,7 @@ const normalizeAuthKind = (row: JsonObject): SkillProviderDraft["authKind"] => {
 	return kind === "bearer" || kind === "headers" ? kind : "none"
 }
 
-export const isValidConfigJson = (s: string): boolean => {
+const isValidConfigJson = (s: string): boolean => {
 	if (!s.trim()) return true
 	try {
 		JSON.parse(s)
@@ -29,7 +60,7 @@ export const isValidConfigJson = (s: string): boolean => {
 	}
 }
 
-export const isValidHeadersJson = (s: string): boolean => {
+const isValidHeadersJson = (s: string): boolean => {
 	if (!s.trim()) return true
 	try {
 		const parsed = JSON.parse(s)
@@ -56,7 +87,7 @@ export const normalizeSkillProviders = (
 		id: String(r.id ?? ""),
 		name: String(r.name ?? ""),
 		protocol: normalizeProtocol(r.protocol),
-		type: r.type === "sse" ? "sse" : "http",
+		type: normalizeTransport(r.type),
 		url: String(r.url ?? ""),
 		authKind: normalizeAuthKind(r),
 		token: "",
@@ -68,8 +99,19 @@ export const normalizeSkillProviders = (
 			r.config && typeof r.config === "object"
 				? JSON.stringify(r.config, null, 2)
 				: "",
+		trustTier: normalizeTrustTier(r.trustTier),
 		descriptor: normalizeDescriptor(r.descriptor),
+		serverDescriptor: normalizeDescriptor(r.serverDescriptor),
+		serverDescriptorHash:
+			typeof r.serverDescriptorHash === "string"
+				? r.serverDescriptorHash
+				: null,
 	}))
+
+const passThrough = <T>(value: T | undefined): T | undefined =>
+	value && typeof value === "object" && Object.keys(value).length
+		? value
+		: undefined
 
 const trimList = (arr?: string[]): string[] | undefined => {
 	const out = (arr ?? []).map((s) => s.trim()).filter(Boolean)
@@ -89,12 +131,12 @@ const trimStringMap = (
 }
 
 const trimEnumMap = (
-	map?: Record<string, "allow" | "block">,
-): Record<string, "allow" | "block"> | undefined => {
-	const out: Record<string, "allow" | "block"> = {}
+	map?: Record<string, SkillToolPolicy>,
+): Record<string, SkillToolPolicy> | undefined => {
+	const out: Record<string, SkillToolPolicy> = {}
 	for (const [k, v] of Object.entries(map ?? {})) {
 		const key = k.trim()
-		if (key && (v === "allow" || v === "block")) out[key] = v
+		if (key && SKILL_TOOL_POLICY_VALUES.includes(v)) out[key] = v
 	}
 	return Object.keys(out).length ? out : undefined
 }
@@ -117,6 +159,122 @@ const pruneFinalizeMap = (
 	return Object.keys(out).length ? out : undefined
 }
 
+const trimTextMap = (
+	map?: Record<string, string>,
+): Record<string, string> | undefined => {
+	const out: Record<string, string> = {}
+	for (const [k, v] of Object.entries(map ?? {})) {
+		const key = k.trim()
+		const value = v?.trim()
+		if (key && value) out[key] = value
+	}
+	return Object.keys(out).length ? out : undefined
+}
+
+const pruneSlotSource = (
+	source?: FastPathSlotSource,
+): FastPathSlotSource | undefined => {
+	if (!source) return undefined
+	if (source.kind === "context") {
+		const key = source.key.trim()
+		return key ? { kind: "context", key } : undefined
+	}
+	if (source.kind === "enum") {
+		const values = trimList(source.values)
+		return values ? { kind: "enum", values } : undefined
+	}
+	if (source.kind === "map") {
+		const values = source.values
+			.map((entry) => ({ in: trimList(entry.in), out: entry.out }))
+			.filter((entry): entry is { in: string[]; out: JsonValue } => !!entry.in)
+		return values.length ? { kind: "map", values } : undefined
+	}
+	if (source.kind === "schemaEnum") {
+		const arg = source.arg.trim()
+		return arg ? { kind: "schemaEnum", arg } : undefined
+	}
+	if (source.kind === "range")
+		return Number.isFinite(source.min) && Number.isFinite(source.max)
+			? { kind: "range", min: source.min, max: source.max }
+			: undefined
+	if (source.kind === "duration")
+		return typeof source.maxSeconds === "number" &&
+			Number.isFinite(source.maxSeconds) &&
+			source.maxSeconds > 0
+			? { kind: "duration", maxSeconds: source.maxSeconds }
+			: { kind: "duration" }
+	return { kind: "clockTime" }
+}
+
+const pruneSlots = (
+	map?: Record<string, FastPathSlot>,
+): Record<string, FastPathSlot> | undefined => {
+	const out: Record<string, FastPathSlot> = {}
+	for (const [k, v] of Object.entries(map ?? {})) {
+		const name = k.trim()
+		const source = pruneSlotSource(v?.source)
+		if (!name || !source) continue
+		const arg = v.arg?.trim()
+		out[name] = arg ? { source, arg } : { source }
+	}
+	return Object.keys(out).length ? out : undefined
+}
+
+const pruneKeywordGroups = (groups?: string[][]): string[][] | undefined => {
+	const out = (groups ?? [])
+		.map(trimList)
+		.filter((group): group is string[] => !!group)
+	return out.length ? out : undefined
+}
+
+const pruneArgDefaults = (
+	map?: Record<string, JsonValue>,
+): Record<string, JsonValue> | undefined => {
+	const out: Record<string, JsonValue> = {}
+	for (const [k, v] of Object.entries(map ?? {})) {
+		const key = k.trim()
+		if (key && v !== undefined && v !== "") out[key] = v
+	}
+	return Object.keys(out).length ? out : undefined
+}
+
+const pruneIntent = (
+	intent: SkillFastPathIntent,
+): SkillFastPathIntent | undefined => {
+	const tool = intent.tool?.trim()
+	const templates = trimList(intent.templates)
+	if (!tool || !templates) return undefined
+	const out: SkillFastPathIntent = { tool, templates }
+	const slots = pruneSlots(intent.slots)
+	const requiredKeywords = pruneKeywordGroups(intent.requiredKeywords)
+	const argDefaults = pruneArgDefaults(intent.argDefaults)
+	if (slots) out.slots = slots
+	if (requiredKeywords) out.requiredKeywords = requiredKeywords
+	if (argDefaults) out.argDefaults = argDefaults
+	if (typeof intent.priority === "number" && Number.isInteger(intent.priority))
+		out.priority = intent.priority
+	if (intent.allowBlockedTokens === true) out.allowBlockedTokens = true
+	return out
+}
+
+const pruneFastPath = (
+	block?: SkillFastPathBlock,
+): SkillFastPathBlock | undefined => {
+	if (!block) return undefined
+	const intents = (block.intents ?? []).flatMap((intent) => {
+		const pruned = pruneIntent(intent)
+		return pruned ? [pruned] : []
+	})
+	const expansionRules = trimTextMap(block.expansionRules)
+	if (!intents.length && !expansionRules) return undefined
+	const out: SkillFastPathBlock = { intents }
+	if (expansionRules) out.expansionRules = expansionRules
+	return out
+}
+
+export const fastPathIntentDropped = (block?: SkillFastPathBlock): number =>
+	(block?.intents ?? []).filter((intent) => !pruneIntent(intent)).length
+
 const pruneRouting = (
 	r?: SkillRoutingDescriptor,
 ): SkillRoutingDescriptor | undefined => {
@@ -137,15 +295,23 @@ const pruneExecution = (
 	if (!e) return undefined
 	const out: SkillExecutionDescriptor = {}
 	const coreTools = trimList(e.coreTools)
+	const hiddenTools = trimList(e.hiddenTools)
 	const toolPolicy = trimEnumMap(e.toolPolicy)
+	const toolHints = passThrough(e.toolHints)
 	const paramAllow = trimStringMap(e.paramAllow)
+	const argNormalize = passThrough(e.argNormalize)
 	const finalize = pruneFinalizeMap(e.finalize)
 	const generic = trimList(e.genericWords)
+	const resilience = passThrough(e.resilience)
 	if (coreTools) out.coreTools = coreTools
+	if (hiddenTools) out.hiddenTools = hiddenTools
 	if (toolPolicy) out.toolPolicy = toolPolicy
+	if (toolHints) out.toolHints = toolHints
 	if (paramAllow) out.paramAllow = paramAllow
+	if (argNormalize) out.argNormalize = argNormalize
 	if (finalize) out.finalize = finalize
 	if (generic) out.genericWords = generic
+	if (resilience) out.resilience = resilience
 	return Object.keys(out).length ? out : undefined
 }
 
@@ -160,11 +326,13 @@ const pruneI18n = (
 		const keywords = trimList(v.keywords)
 		const finalize = pruneFinalizeMap(v.finalize)
 		const generic = trimList(v.genericWords)
+		const fastPath = pruneFastPath(v.fastPath)
 		if (aliases) entry.aliases = aliases
 		if (examples) entry.exampleUtterances = examples
 		if (keywords) entry.keywords = keywords
 		if (finalize) entry.finalize = finalize
 		if (generic) entry.genericWords = generic
+		if (fastPath) entry.fastPath = fastPath
 		if (Object.keys(entry).length) out[loc] = entry
 	}
 	return Object.keys(out).length ? out : undefined
@@ -181,30 +349,29 @@ export const pruneDescriptor = (
 	if (routing) out.routing = routing
 	const execution = pruneExecution(d.execution)
 	if (execution) out.execution = execution
+	const fastPath = pruneFastPath(d.fastPath)
+	if (fastPath) out.fastPath = fastPath
 	const i18n = pruneI18n(d.i18n)
 	if (i18n) out.i18n = i18n
 	const hasContent =
-		out.kind || out.description || out.routing || out.execution || out.i18n
+		out.kind ||
+		out.description ||
+		out.routing ||
+		out.execution ||
+		out.fastPath ||
+		out.i18n
 	return hasContent ? out : undefined
 }
 
-export const descriptorValid = (d?: DomiaSkillDescriptor): boolean => {
-	if (!d) return true
-	for (const rule of Object.values(d.execution?.finalize ?? {})) {
-		if (
-			rule.ackAfterMs != null &&
-			!(Number.isFinite(rule.ackAfterMs) && rule.ackAfterMs >= 0)
-		)
-			return false
-	}
-	for (const v of Object.values(d.execution?.toolPolicy ?? {}))
-		if (v !== "allow" && v !== "block") return false
-	return true
-}
+export const descriptorIssues = (d?: DomiaSkillDescriptor): string[] =>
+	descriptorErrors(pruneDescriptor(d))
+
+const descriptorValid = (d?: DomiaSkillDescriptor): boolean =>
+	descriptorIssues(d).length === 0
 
 export const skillProviderValid = (s: SkillProviderDraft): boolean =>
 	s.name.trim() !== "" &&
-	s.url.trim() !== "" &&
+	(isBuiltinSkillProvider(s) || s.type === "stdio" || s.url.trim() !== "") &&
 	isValidConfigJson(s.config) &&
 	(s.authKind !== "headers" || isValidHeadersJson(s.headers)) &&
 	descriptorValid(s.descriptor)
@@ -215,7 +382,8 @@ export const skillProviderToBundle = (s: SkillProviderDraft): JsonObject => {
 		protocol: s.protocol,
 		type: s.type,
 		url: s.url.trim(),
-		toolWhitelist: s.whitelist,
+		toolWhitelist: s.whitelist.length ? s.whitelist : null,
+		trustTier: s.trustTier,
 	}
 	if (s.id) out.id = s.id
 	if (s.authKind === "none") out.auth = null
@@ -238,7 +406,8 @@ export const skillProviderToSnapshot = (s: SkillProviderDraft): JsonObject => {
 		type: s.type,
 		url: s.url.trim(),
 		authKind: s.authKind,
-		toolWhitelist: s.whitelist,
+		toolWhitelist: s.whitelist.length ? s.whitelist : null,
+		trustTier: s.trustTier,
 		...(s.config.trim() && isValidConfigJson(s.config)
 			? { config: JSON.parse(s.config) }
 			: {}),

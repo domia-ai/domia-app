@@ -1,8 +1,7 @@
 import dbAdapter from "@/db/adapter"
 import { identitiesResponseSchema } from "@/schemas"
 import { meshHeaders, registryLogger } from "@/utils"
-
-type NodeGroup = { localIp: string; httpPort: number; keys: string[] }
+import type { NodeGroup } from "@/types"
 
 export const reconcileRosters = async (): Promise<void> => {
 	const rows = dbAdapter.getActiveMirrorIdentities()
@@ -12,6 +11,7 @@ export const reconcileRosters = async (): Promise<void> => {
 		const group = byNode.get(r.nodeId) ?? {
 			localIp: r.localIp,
 			httpPort: r.httpPort,
+			httpScheme: r.httpScheme,
 			keys: [],
 		}
 		group.keys.push(r.domiaKey)
@@ -21,7 +21,7 @@ export const reconcileRosters = async (): Promise<void> => {
 	for (const [nodeId, node] of byNode) {
 		try {
 			const res = await fetch(
-				`http://${node.localIp}:${node.httpPort}/identities`,
+				`${node.httpScheme}://${node.localIp}:${node.httpPort}/identities`,
 				{ headers: meshHeaders(), signal: AbortSignal.timeout(8_000) },
 			)
 			if (!res.ok) continue

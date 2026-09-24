@@ -1,12 +1,11 @@
-import { EMOTION_KEYS, type EmotionKey } from "@/constants/emotions"
+import { EMOTION_KEYS } from "@/constants/emotions"
 import { fromSqliteTs } from "@/utils/format"
 import type { EmotionState } from "@/types"
-import type { EmotionEventRow } from "@/types/emotions"
-
-export type EmotionSeriesPoint = { ts: string; time: string } & Record<
+import type {
+	EmotionEventRow,
 	EmotionKey,
-	number
-> & { dominantBand: number }
+	EmotionSeriesPoint,
+} from "@/types/emotions"
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 

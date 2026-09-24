@@ -110,6 +110,16 @@ function NodeDetailPage() {
 									{m.nodes_restarting()}
 								</Badge>
 							)}
+							<Button
+								variant="outline"
+								size="sm"
+								render={
+									<Link to="/nodes/$nodeId/config" params={{ nodeId }}>
+										<Settings2 className="size-4" />
+										{m.node_cfg_title()}
+									</Link>
+								}
+							/>
 							<RestartButton
 								domiaKey={anchor}
 								domiaName={node.principalName ?? m.nodes_this_node()}

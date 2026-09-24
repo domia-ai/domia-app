@@ -3,8 +3,14 @@ import { m } from "@/paraglide/messages"
 import { locales } from "@/paraglide/runtime"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ListInput } from "@/components/ui/list-input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { useKeyedRows } from "@/components/ui/keyed-rows"
+import {
+	DescriptorField,
+	DuplicateKeyIssue,
+	KeyValueMapField,
+} from "@/components/domia/config/descriptor-fields"
 import {
 	Select,
 	SelectContent,
@@ -12,14 +18,34 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import {
+	ConfigFastPath,
+	ToolChecklist,
+} from "@/components/domia/config/config-fast-path"
+import { SKILL_DESCRIPTOR_KINDS } from "@/constants/skill-presets"
+import { DESCRIPTOR_COUNTER_LABELS } from "@/constants/skills"
+import { descriptorCounters } from "@/schemas/descriptor"
+import {
+	descriptorIssues,
+	fastPathIntentDropped,
+	pruneDescriptor,
+} from "@/utils/skill-providers"
+import { cn } from "@/lib/utils"
 import type {
+	ConfigSkillDescriptorProps,
+	DescriptorChecksProps,
 	DomiaSkillDescriptor,
+	FinalizeFieldProps,
+	KeyEnumMapFieldProps,
+	LocaleOverridesProps,
 	SkillDescriptorI18n,
 	SkillExecutionDescriptor,
 	SkillFinalizeMode,
 	SkillFinalizeRule,
 	SkillRoutingDescriptor,
+	StringListFieldProps,
 } from "@/types/config"
+import type { SkillToolPolicy } from "@/types/skills"
 
 const FINALIZE_MODES: { value: SkillFinalizeMode; label: () => string }[] = [
 	{ value: "agent_loop", label: m.config_desc_mode_agent_loop },
@@ -28,130 +54,32 @@ const FINALIZE_MODES: { value: SkillFinalizeMode; label: () => string }[] = [
 	{ value: "deadline", label: m.config_desc_mode_deadline },
 ]
 
-function Field({
-	label,
-	hint,
-	children,
-}: {
-	label: string
-	hint?: string
-	children: React.ReactNode
-}) {
-	return (
-		<div className="space-y-1.5">
-			<Label className="text-xs">{label}</Label>
-			{children}
-			{hint && <p className="text-muted-foreground text-[11px]">{hint}</p>}
-		</div>
-	)
-}
+const TOOL_POLICIES: { value: SkillToolPolicy; label: () => string }[] = [
+	{ value: "allow", label: m.config_desc_policy_allow },
+	{ value: "confirm", label: m.config_desc_policy_confirm },
+	{ value: "block", label: m.config_desc_policy_block },
+]
+
+const CUSTOM_KIND = "__custom"
 
 function StringListField({
 	label,
 	value,
 	onChange,
-	multiline,
+	multiline = false,
 	placeholder,
-}: {
-	label: string
-	value?: string[]
-	onChange: (v: string[]) => void
-	multiline?: boolean
-	placeholder?: string
-}) {
-	const text = (value ?? []).join(multiline ? "\n" : ", ")
-	const parse = (raw: string): string[] =>
-		raw
-			.split(multiline ? /[\n,]/ : ",")
-			.map((s) => s.trim())
-			.filter(Boolean)
+}: StringListFieldProps) {
 	return (
-		<Field label={label}>
-			{multiline ? (
-				<Textarea
-					value={text}
-					onChange={(e) => onChange(parse(e.target.value))}
-					rows={2}
-					placeholder={placeholder}
-					spellCheck={false}
-				/>
-			) : (
-				<Input
-					value={text}
-					onChange={(e) => onChange(parse(e.target.value))}
-					placeholder={placeholder}
-				/>
-			)}
-		</Field>
-	)
-}
-
-function KeyValueListField({
-	label,
-	addLabel,
-	value,
-	onChange,
-	keyLabel,
-	valuesLabel,
-	keyPlaceholder,
-}: {
-	label: string
-	addLabel: string
-	value?: Record<string, string[]>
-	onChange: (v: Record<string, string[]>) => void
-	keyLabel: string
-	valuesLabel: string
-	keyPlaceholder?: string
-}) {
-	const rows = Object.entries(value ?? {})
-	const emit = (next: [string, string[]][]) =>
-		onChange(Object.fromEntries(next))
-	const setKey = (i: number, key: string) =>
-		emit(rows.map((r, idx) => (idx === i ? [key, r[1]] : r)))
-	const setVals = (i: number, vals: string[]) =>
-		emit(rows.map((r, idx) => (idx === i ? [r[0], vals] : r)))
-	const remove = (i: number) => emit(rows.filter((_, idx) => idx !== i))
-	const add = () => emit([...rows, ["", []]])
-	const parse = (raw: string) =>
-		raw
-			.split(",")
-			.map((s) => s.trim())
-			.filter(Boolean)
-
-	return (
-		<Field label={label}>
-			<div className="space-y-2">
-				{rows.map(([key, vals], i) => (
-					<div key={i} className="grid grid-cols-[10rem_1fr_auto] gap-2">
-						<Input
-							value={key}
-							onChange={(e) => setKey(i, e.target.value)}
-							placeholder={keyPlaceholder ?? keyLabel}
-							aria-label={keyLabel}
-						/>
-						<Input
-							value={vals.join(", ")}
-							onChange={(e) => setVals(i, parse(e.target.value))}
-							placeholder={valuesLabel}
-							aria-label={valuesLabel}
-						/>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="text-muted-foreground hover:text-destructive h-9 px-2"
-							onClick={() => remove(i)}
-						>
-							<Trash2 className="size-3.5" />
-						</Button>
-					</div>
-				))}
-				<Button type="button" variant="outline" size="sm" onClick={add}>
-					<Plus className="size-3.5" />
-					{addLabel}
-				</Button>
-			</div>
-		</Field>
+		<DescriptorField label={label}>
+			<ListInput
+				value={value ?? []}
+				onChange={onChange}
+				multiline={multiline}
+				rows={2}
+				placeholder={placeholder}
+				aria-label={label}
+			/>
+		</DescriptorField>
 	)
 }
 
@@ -161,25 +89,17 @@ function KeyEnumMapField({
 	value,
 	onChange,
 	keyLabel,
-}: {
-	label: string
-	addLabel: string
-	value?: Record<string, "allow" | "block">
-	onChange: (v: Record<string, "allow" | "block">) => void
-	keyLabel: string
-}) {
-	const rows = Object.entries(value ?? {})
-	const emit = (next: [string, "allow" | "block"][]) =>
-		onChange(Object.fromEntries(next))
+}: KeyEnumMapFieldProps) {
+	const { rows, setRows: emit } = useKeyedRows(value, onChange)
 	const setKey = (i: number, key: string) =>
 		emit(rows.map((r, idx) => (idx === i ? [key, r[1]] : r)))
-	const setVal = (i: number, v: "allow" | "block") =>
+	const setVal = (i: number, v: SkillToolPolicy) =>
 		emit(rows.map((r, idx) => (idx === i ? [r[0], v] : r)))
 	const remove = (i: number) => emit(rows.filter((_, idx) => idx !== i))
 	const add = () => emit([...rows, ["", "allow"]])
 
 	return (
-		<Field label={label}>
+		<DescriptorField label={label}>
 			<div className="space-y-2">
 				{rows.map(([key, v], i) => (
 					<div key={i} className="grid grid-cols-[1fr_8rem_auto] gap-2">
@@ -191,18 +111,17 @@ function KeyEnumMapField({
 						/>
 						<Select
 							value={v}
-							onValueChange={(nv) => setVal(i, nv as "allow" | "block")}
+							onValueChange={(nv) => setVal(i, nv as SkillToolPolicy)}
 						>
 							<SelectTrigger>
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="allow">
-									{m.config_desc_policy_allow()}
-								</SelectItem>
-								<SelectItem value="block">
-									{m.config_desc_policy_block()}
-								</SelectItem>
+								{TOOL_POLICIES.map((policy) => (
+									<SelectItem key={policy.value} value={policy.value}>
+										{policy.label()}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 						<Button
@@ -216,25 +135,18 @@ function KeyEnumMapField({
 						</Button>
 					</div>
 				))}
+				<DuplicateKeyIssue rows={rows} />
 				<Button type="button" variant="outline" size="sm" onClick={add}>
 					<Plus className="size-3.5" />
 					{addLabel}
 				</Button>
 			</div>
-		</Field>
+		</DescriptorField>
 	)
 }
 
-function FinalizeField({
-	value,
-	onChange,
-}: {
-	value?: Record<string, SkillFinalizeRule>
-	onChange: (v: Record<string, SkillFinalizeRule>) => void
-}) {
-	const rows = Object.entries(value ?? {})
-	const emit = (next: [string, SkillFinalizeRule][]) =>
-		onChange(Object.fromEntries(next))
+function FinalizeField({ value, onChange }: FinalizeFieldProps) {
+	const { rows, setRows: emit } = useKeyedRows(value, onChange)
 	const setKey = (i: number, key: string) =>
 		emit(rows.map((r, idx) => (idx === i ? [key, r[1]] : r)))
 	const setRule = (i: number, patch: Partial<SkillFinalizeRule>) =>
@@ -243,7 +155,7 @@ function FinalizeField({
 	const add = () => emit([...rows, ["", { mode: "agent_loop" }]])
 
 	return (
-		<Field label={m.config_desc_finalize()}>
+		<DescriptorField label={m.config_desc_finalize()}>
 			<div className="space-y-3">
 				{rows.map(([key, rule], i) => {
 					const timed = rule.mode === "deadline" || rule.mode === "async"
@@ -284,27 +196,27 @@ function FinalizeField({
 								</Button>
 							</div>
 							<div className="grid gap-2 sm:grid-cols-3">
-								<Field label={m.config_desc_ack()}>
+								<DescriptorField label={m.config_desc_ack()}>
 									<Input
 										value={rule.ack ?? ""}
 										onChange={(e) => setRule(i, { ack: e.target.value })}
 									/>
-								</Field>
-								<Field label={m.config_desc_error()}>
+								</DescriptorField>
+								<DescriptorField label={m.config_desc_error()}>
 									<Input
 										value={rule.error ?? ""}
 										onChange={(e) => setRule(i, { error: e.target.value })}
 									/>
-								</Field>
-								<Field label={m.config_desc_done()}>
+								</DescriptorField>
+								<DescriptorField label={m.config_desc_done()}>
 									<Input
 										value={rule.done ?? ""}
 										onChange={(e) => setRule(i, { done: e.target.value })}
 									/>
-								</Field>
+								</DescriptorField>
 							</div>
 							{timed && (
-								<Field label={m.config_desc_ack_after_ms()}>
+								<DescriptorField label={m.config_desc_ack_after_ms()}>
 									<Input
 										type="number"
 										value={rule.ackAfterMs ?? ""}
@@ -317,29 +229,27 @@ function FinalizeField({
 											})
 										}
 									/>
-								</Field>
+								</DescriptorField>
 							)}
 						</div>
 					)
 				})}
+				<DuplicateKeyIssue rows={rows} />
 				<Button type="button" variant="outline" size="sm" onClick={add}>
 					<Plus className="size-3.5" />
 					{m.config_desc_add_finalize()}
 				</Button>
 			</div>
-		</Field>
+		</DescriptorField>
 	)
 }
 
 function LocaleOverrides({
 	locale,
 	value,
+	options,
 	onChange,
-}: {
-	locale: string
-	value?: SkillDescriptorI18n
-	onChange: (v: SkillDescriptorI18n) => void
-}) {
+}: LocaleOverridesProps) {
 	const entry = value ?? {}
 	const patch = (p: Partial<SkillDescriptorI18n>) =>
 		onChange({ ...entry, ...p })
@@ -348,7 +258,7 @@ function LocaleOverrides({
 			<p className="text-xs font-medium">
 				{m.config_desc_locale_overrides({ locale })}
 			</p>
-			<KeyValueListField
+			<KeyValueMapField
 				label={m.config_desc_aliases()}
 				addLabel={m.config_desc_add_alias()}
 				value={entry.aliases}
@@ -376,6 +286,97 @@ function LocaleOverrides({
 				value={entry.finalize}
 				onChange={(finalize) => patch({ finalize })}
 			/>
+			<ConfigFastPath
+				scope={locale}
+				value={entry.fastPath}
+				options={options}
+				onChange={(fastPath) => patch({ fastPath })}
+			/>
+		</div>
+	)
+}
+
+function DescriptorChecks({ value, limits }: DescriptorChecksProps) {
+	const pruned = pruneDescriptor(value)
+	const errors = descriptorIssues(value)
+	const counters = descriptorCounters(pruned, limits.limits)
+	const dropped =
+		fastPathIntentDropped(value.fastPath) +
+		Object.values(value.i18n ?? {}).reduce(
+			(n, entry) => n + fastPathIntentDropped(entry.fastPath),
+			0,
+		)
+
+	return (
+		<div className="space-y-2 border-t pt-3">
+			<div className="space-y-0.5">
+				<p className="text-xs font-semibold tracking-wide uppercase opacity-70">
+					{m.desc_limits_title()}
+				</p>
+				<p className="text-muted-foreground text-[11px]">
+					{m.desc_limits_hint()}
+				</p>
+				{!limits.fromNode && (
+					<p className="text-muted-foreground text-[11px]">
+						{m.desc_limits_offline()}
+					</p>
+				)}
+			</div>
+
+			<div className="flex flex-wrap gap-1.5">
+				{counters.map((counter) => (
+					<span
+						key={counter.id}
+						className={cn(
+							"rounded-md border px-1.5 py-0.5 text-[11px]",
+							counter.used > counter.max &&
+								"border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+						)}
+					>
+						{DESCRIPTOR_COUNTER_LABELS[counter.id]()}{" "}
+						<span className="font-mono">
+							{counter.used}/{counter.max}
+						</span>
+					</span>
+				))}
+			</div>
+
+			{dropped > 0 && (
+				<p className="text-muted-foreground text-[11px]">
+					{m.desc_intents_dropped({ count: dropped })}
+				</p>
+			)}
+
+			{limits.stripped.length > 0 && (
+				<p className="text-muted-foreground text-[11px]">
+					{m.desc_server_strips({
+						uri: limits.resourceUri ?? "domia://descriptor",
+					})}{" "}
+					<span className="font-mono">{limits.stripped.join(", ")}</span>
+					{limits.rejected.length > 0 && (
+						<>
+							{" "}
+							{m.desc_server_rejects()}{" "}
+							<span className="font-mono">{limits.rejected.join(", ")}</span>
+						</>
+					)}
+				</p>
+			)}
+
+			{errors.length > 0 && (
+				<div className="space-y-1">
+					<p className="text-destructive text-[11px] font-medium">
+						{m.desc_invalid_title()}
+					</p>
+					<ul className="text-destructive space-y-0.5 text-[11px]">
+						{errors.map((error) => (
+							<li key={error} className="font-mono">
+								{error}
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
 		</div>
 	)
 }
@@ -383,10 +384,10 @@ function LocaleOverrides({
 export function ConfigSkillDescriptor({
 	value,
 	onChange,
-}: {
-	value?: DomiaSkillDescriptor
-	onChange: (d: DomiaSkillDescriptor) => void
-}) {
+	options,
+	limits,
+	kindLocked = false,
+}: ConfigSkillDescriptorProps) {
 	const d: DomiaSkillDescriptor = value ?? { version: 1 }
 	const routing: SkillRoutingDescriptor = d.routing ?? {}
 	const execution: SkillExecutionDescriptor = d.execution ?? {}
@@ -397,33 +398,62 @@ export function ConfigSkillDescriptor({
 		emit({ ...d, execution: { ...execution, ...patch } })
 	const setI18n = (locale: string, entry: SkillDescriptorI18n) =>
 		emit({ ...d, i18n: { ...(d.i18n ?? {}), [locale]: entry } })
+	const knownKind = SKILL_DESCRIPTOR_KINDS.some((k) => k.id === d.kind)
 
 	return (
 		<div className="space-y-4">
 			<p className="text-sm font-medium">{m.config_desc_title()}</p>
 
 			<div className="grid gap-3 sm:grid-cols-2">
-				<Field label={m.config_desc_kind()}>
-					<Input
-						value={d.kind ?? ""}
-						onChange={(e) => emit({ ...d, kind: e.target.value })}
-						placeholder="home_assistant"
-					/>
-				</Field>
+				<DescriptorField
+					label={m.config_desc_kind()}
+					hint={m.config_desc_kind_hint()}
+				>
+					<Select
+						value={knownKind ? (d.kind as string) : CUSTOM_KIND}
+						onValueChange={(v) =>
+							emit({ ...d, kind: !v || v === CUSTOM_KIND ? "" : v })
+						}
+						disabled={kindLocked}
+					>
+						<SelectTrigger>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{SKILL_DESCRIPTOR_KINDS.map((kind) => (
+								<SelectItem key={kind.id} value={kind.id}>
+									{kind.label()}
+								</SelectItem>
+							))}
+							<SelectItem value={CUSTOM_KIND}>
+								{m.config_desc_kind_custom()}
+							</SelectItem>
+						</SelectContent>
+					</Select>
+				</DescriptorField>
+				{!knownKind && !kindLocked && (
+					<DescriptorField label={m.config_desc_kind_custom()}>
+						<Input
+							value={d.kind ?? ""}
+							onChange={(e) => emit({ ...d, kind: e.target.value })}
+							placeholder={m.desc_kind_custom_placeholder()}
+						/>
+					</DescriptorField>
+				)}
 			</div>
-			<Field label={m.config_desc_description()}>
+			<DescriptorField label={m.config_desc_description()}>
 				<Textarea
 					value={d.description ?? ""}
 					onChange={(e) => emit({ ...d, description: e.target.value })}
 					rows={2}
 				/>
-			</Field>
+			</DescriptorField>
 
 			<div className="space-y-3 border-t pt-3">
 				<p className="text-xs font-semibold tracking-wide uppercase opacity-70">
 					{m.config_desc_routing()}
 				</p>
-				<KeyValueListField
+				<KeyValueMapField
 					label={m.config_desc_aliases()}
 					addLabel={m.config_desc_add_alias()}
 					value={routing.aliases}
@@ -460,7 +490,7 @@ export function ConfigSkillDescriptor({
 					onChange={(toolPolicy) => setExecution({ toolPolicy })}
 					keyLabel={m.config_desc_finalize_tool()}
 				/>
-				<KeyValueListField
+				<KeyValueMapField
 					label={m.config_desc_param_allow()}
 					addLabel={m.config_desc_add_param()}
 					value={execution.paramAllow}
@@ -480,6 +510,31 @@ export function ConfigSkillDescriptor({
 					value={execution.finalize}
 					onChange={(finalize) => setExecution({ finalize })}
 				/>
+				<ToolChecklist
+					label={m.desc_hidden_tools()}
+					hint={m.desc_hidden_tools_hint()}
+					value={execution.hiddenTools ?? []}
+					onChange={(hiddenTools) => setExecution({ hiddenTools })}
+					options={options}
+					placeholder={m.desc_hidden_tools_placeholder()}
+				/>
+			</div>
+
+			<div className="space-y-3 border-t pt-3">
+				<div className="space-y-0.5">
+					<p className="text-xs font-semibold tracking-wide uppercase opacity-70">
+						{m.desc_fast_path()}
+					</p>
+					<p className="text-muted-foreground text-[11px]">
+						{m.desc_fast_path_hint()}
+					</p>
+				</div>
+				<ConfigFastPath
+					scope={m.desc_fast_path_scope_base()}
+					value={d.fastPath}
+					options={options}
+					onChange={(fastPath) => emit({ ...d, fastPath })}
+				/>
 			</div>
 
 			<div className="space-y-3 border-t pt-3">
@@ -491,10 +546,13 @@ export function ConfigSkillDescriptor({
 						key={locale}
 						locale={locale}
 						value={d.i18n?.[locale]}
+						options={options}
 						onChange={(entry) => setI18n(locale, entry)}
 					/>
 				))}
 			</div>
+
+			<DescriptorChecks value={d} limits={limits} />
 		</div>
 	)
 }

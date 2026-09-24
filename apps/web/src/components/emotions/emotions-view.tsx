@@ -8,11 +8,8 @@ import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { MoodRadar } from "@/components/domia/mood-radar"
 import { getEmotionsOverviewFn } from "@/server/emotions"
 import { accentFor } from "@/utils/accent"
-import {
-	EMOTION_KEYS,
-	EMOTION_META,
-	type EmotionKey,
-} from "@/constants/emotions"
+import { EMOTION_KEYS, EMOTION_META } from "@/constants/emotions"
+import type { EmotionKey } from "@/types/emotions"
 import { cn } from "@/lib/utils"
 import { EmotionTrend } from "./emotion-trend"
 import { DeltaChips } from "./delta-chips"

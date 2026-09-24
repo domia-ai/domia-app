@@ -1,17 +1,4 @@
-import type { z } from "zod"
-import type { EmotionState } from "@/types"
 import type { ConfigSnapshot } from "@/types/config"
-import type {
-	mindSchema,
-	mindCharacterSchema,
-	mindModulesSchema,
-} from "@/schemas/mind"
-
-export type MindCharacter = z.infer<typeof mindCharacterSchema>
-export type MindModules = z.infer<typeof mindModulesSchema>
-export type MindSnapshot = z.infer<typeof mindSchema>
-
-export type MindEmotion = EmotionState
 
 export type AppTemplate = {
 	id: string
@@ -50,5 +37,3 @@ export type CharacterTagKey =
 	| "interests"
 	| "hobbies"
 	| "skills"
-
-export type EmotionKey = keyof EmotionState

@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { summarizeApply } from "@/lib/config-apply"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -27,31 +27,24 @@ export function NameStep({
 	const trimmed = name.trim()
 	const unchanged = trimmed === domiaName
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: () => setSetupNameFn({ data: { domiaKey, name: trimmed } }),
-	})
-
-	const save = async () => {
-		const result = await mutation.mutateAsync()
-		if (result.ok && result.data) {
+		failureTitle: m.toast_config_save_failed,
+		onDone: (data) => {
 			toast.success(m.setup_name_saved({ name: trimmed }), {
-				description: result.data.apply
-					? summarizeApply(result.data.apply)
-					: undefined,
+				description: data?.apply ? summarizeApply(data.apply) : undefined,
 			})
-			await Promise.all([
+			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
 				queryClient.invalidateQueries({ queryKey: ["setup-targets"] }),
 				queryClient.invalidateQueries({ queryKey: ["setup-candidates"] }),
 				queryClient.invalidateQueries({ queryKey: ["config", domiaKey] }),
 			])
 			onNext()
-		} else {
-			toast.error(m.toast_config_save_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
-	}
+		},
+	})
+
+	const save = () => mutation.mutate(undefined)
 
 	return (
 		<StepShell
@@ -76,7 +69,7 @@ export function NameStep({
 			<form
 				onSubmit={(e) => {
 					e.preventDefault()
-					if (trimmed && !unchanged) void save()
+					if (trimmed && !unchanged) save()
 				}}
 				className="max-w-sm"
 			>

@@ -14,14 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { PAGE_SIZE_OPTIONS } from "@/constants/table"
-
-type Props = {
-	page: number
-	pageSize: number
-	total: number
-	onPageChange: (page: number) => void
-	onPageSizeChange: (size: number) => void
-}
+import type { DataTablePaginationProps } from "@/types/table"
 
 export function DataTablePagination({
 	page,
@@ -29,7 +22,7 @@ export function DataTablePagination({
 	total,
 	onPageChange,
 	onPageSizeChange,
-}: Props) {
+}: DataTablePaginationProps) {
 	const pageCount = Math.max(1, Math.ceil(total / pageSize))
 	const from = total === 0 ? 0 : page * pageSize + 1
 	const to = Math.min(total, (page + 1) * pageSize)

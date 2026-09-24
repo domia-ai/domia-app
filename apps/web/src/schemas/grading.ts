@@ -5,5 +5,3 @@ export const gradeSchema = z.object({
 	correction: z.string(),
 	tags: z.array(z.string()),
 })
-
-export type GradeValues = z.infer<typeof gradeSchema>

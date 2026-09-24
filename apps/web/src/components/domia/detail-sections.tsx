@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router"
+import { ArrowRight } from "lucide-react"
 import { m } from "@/paraglide/messages"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -144,9 +146,11 @@ export function MoodCard({
 }
 
 export function CapabilitiesCard({
+	domiaKey,
 	capabilities,
 	delegations,
 }: {
+	domiaKey: string
 	capabilities: RuntimeCapabilities
 	delegations: CapabilityDelegation[]
 }) {
@@ -172,23 +176,19 @@ export function CapabilitiesCard({
 					<p className="text-muted-foreground text-xs">
 						{m.domia_delegations()}
 					</p>
-					{delegations.length ? (
-						<div className="flex flex-wrap gap-1.5">
-							{delegations.map((d) => (
-								<Badge
-									key={`${d.capability}-${d.targetDomiaKey}`}
-									variant="outline"
-									className="font-mono text-xs"
-								>
-									{d.capability} → {d.targetDomiaKey}
-								</Badge>
-							))}
-						</div>
-					) : (
-						<p className="text-muted-foreground text-sm">
-							{m.domia_delegations_none()}
-						</p>
-					)}
+					<p className="text-sm">
+						{delegations.length
+							? m.deleg_count({ count: delegations.length })
+							: m.domia_delegations_none()}
+					</p>
+					<Link
+						to="/domias/$key/config"
+						params={{ key: domiaKey }}
+						className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
+					>
+						{m.deleg_edit_link()}
+						<ArrowRight className="size-3.5" />
+					</Link>
 				</div>
 			</CardContent>
 		</Card>

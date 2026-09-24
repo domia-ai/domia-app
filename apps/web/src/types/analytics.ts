@@ -1,3 +1,59 @@
+import type { LatencyStatsSummary, LatencyStatsView } from "@/types/latency"
+
+export type AnalyticsInteractionRow = {
+	id: string
+	inputType: string | null
+	responseType: string | null
+	sttMs: number | null
+	llmMs: number | null
+	ttsMs: number | null
+	ttfaMs: number | null
+	totalMs: number | null
+	sttModel: string | null
+	llmModel: string | null
+	ttsEngine: string | null
+	llmExecutor: string | null
+	source: string
+	createdAt: string
+	error: boolean
+	input: string
+	promptTokens: number | null
+	completionTokens: number | null
+	tokensPerSec: number | null
+	ttftMs: number | null
+	contextWindow: number | null
+	toolCalls: number | null
+	toolErrors: number | null
+	inputAudioMs: number | null
+	satelliteProtocol: string | null
+	llmQueueMs: number | null
+	rssMb: number | null
+}
+
+export type DomiaPerfRow = {
+	sourceDomiaKey: string
+	responseType: string | null
+	sttMs: number | null
+	llmMs: number | null
+	ttsMs: number | null
+	ttfaMs: number | null
+	totalMs: number | null
+	llmExecutorKey: string | null
+	llmResponse: string | null
+	sttModel: string | null
+	llmModel: string | null
+	ttsEngine: string | null
+	createdAt: string
+}
+
+export type LatencyFields = {
+	sttMs: number | null
+	llmMs: number | null
+	ttfaMs: number | null
+	llmExecutorKey: string | null
+	sourceDomiaKey: string
+}
+
 export type LatencySummary = {
 	count: number
 	p50: number | null
@@ -143,4 +199,16 @@ export type AnalyticsData = {
 export type AnalyticsChartsProps = {
 	timeSeries: TimeBucketRow[]
 	histogram: HistogramBin[]
+}
+
+export type LatencyStatsSectionProps = {
+	stats: LatencyStatsSummary
+}
+
+export type LatencyStatsViewProps = {
+	view: LatencyStatsView
+}
+
+export type LiveNodeMetricsBodyProps = {
+	domiaKey: string
 }

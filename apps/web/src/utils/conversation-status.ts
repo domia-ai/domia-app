@@ -8,7 +8,9 @@ export const getIncompleteReason = (
 	if (trace.status === "aborted")
 		return {
 			title: m.conv_incomplete_aborted_title(),
-			detail: m.conv_incomplete_aborted_detail(),
+			detail: trace.abortReason
+				? m.conv_incomplete_aborted_detail_reason({ reason: trace.abortReason })
+				: m.conv_incomplete_aborted_detail(),
 		}
 	if (trace.status === "failed" || trace.errorMessage)
 		return {

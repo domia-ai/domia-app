@@ -9,6 +9,7 @@ import { deriveFlow } from "@/utils/flow"
 import { avgOf, effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
 import type {
 	AnalyticsData,
+	AnalyticsInteractionRow,
 	DomiaLatencyRow,
 	ExemplarRow,
 	FlowLatencyRow,
@@ -28,39 +29,9 @@ const avgDec = (values: number[]): number | null => {
 	return Math.round((f.reduce((a, b) => a + b, 0) / f.length) * 10) / 10
 }
 
-type Row = {
-	id: string
-	inputType: string | null
-	responseType: string | null
-	sttMs: number | null
-	llmMs: number | null
-	ttsMs: number | null
-	ttfaMs: number | null
-	totalMs: number | null
-	sttModel: string | null
-	llmModel: string | null
-	ttsEngine: string | null
-	llmExecutor: string | null
-	source: string
-	createdAt: string
-	error: boolean
-	input: string
-	promptTokens: number | null
-	completionTokens: number | null
-	tokensPerSec: number | null
-	ttftMs: number | null
-	contextWindow: number | null
-	toolCalls: number | null
-	toolErrors: number | null
-	inputAudioMs: number | null
-	satelliteProtocol: string | null
-	llmQueueMs: number | null
-	rssMb: number | null
-}
-
 const num = (v: number | null | undefined): number | null =>
 	v == null ? null : v
-const eff = (r: Row): number =>
+const eff = (r: AnalyticsInteractionRow): number =>
 	effectiveTtfa({
 		sttMs: r.sttMs,
 		llmMs: r.llmMs,
@@ -68,7 +39,7 @@ const eff = (r: Row): number =>
 		llmExecutorKey: r.llmExecutor,
 		sourceDomiaKey: r.source,
 	})
-const delegated = (r: Row): boolean =>
+const delegated = (r: AnalyticsInteractionRow): boolean =>
 	isDelegated({
 		sttMs: r.sttMs,
 		llmMs: r.llmMs,
@@ -135,7 +106,7 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 	])
 
 	const nameOf = new Map(names.map((n) => [n.domiaKey, n.name ?? n.domiaKey]))
-	const data: Row[] = rows.map((r) => ({
+	const data: AnalyticsInteractionRow[] = rows.map((r) => ({
 		id: r.id,
 		inputType: r.inputType,
 		responseType: r.responseType,
@@ -165,7 +136,8 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		rssMb: r.rssMb,
 	}))
 
-	const flowOf = (r: Row) => deriveFlow(r.inputType, r.responseType)
+	const flowOf = (r: AnalyticsInteractionRow) =>
+		deriveFlow(r.inputType, r.responseType)
 
 	const byFlow: FlowLatencyRow[] = (["s2s", "t2s", "v2t", "t2t"] as const)
 		.map((flow) => {
@@ -228,7 +200,9 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 	const ranked = data
 		.filter((r) => eff(r) > 0 && !r.error)
 		.sort((a, b) => eff(a) - eff(b))
-	const toExemplar = (r: Row | undefined): ExemplarRow | null =>
+	const toExemplar = (
+		r: AnalyticsInteractionRow | undefined,
+	): ExemplarRow | null =>
 		r
 			? {
 					id: r.id,
@@ -255,8 +229,8 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		.sort((a, b) => b.count - a.count)
 
 	const stagePerf = (
-		pick: (r: Row) => string | null,
-		ms: (r: Row) => number | null,
+		pick: (r: AnalyticsInteractionRow) => string | null,
+		ms: (r: AnalyticsInteractionRow) => number | null,
 		stage: StagePerfRow["stage"],
 	): StagePerfRow[] => {
 		const groups = new Map<string, number[]>()
@@ -317,7 +291,7 @@ export const getAnalytics = async (): Promise<AnalyticsData> => {
 		}))
 
 	const tokenRows = data.filter((r) => r.completionTokens != null)
-	const tokenModels = new Map<string, Row[]>()
+	const tokenModels = new Map<string, AnalyticsInteractionRow[]>()
 	for (const r of tokenRows) {
 		if (!r.llmModel) continue
 		const arr = tokenModels.get(r.llmModel) ?? []

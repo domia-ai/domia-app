@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { DataTable } from "@/components/data-table/data-table"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
+import { useDataQuery } from "@/hooks/use-query-state"
 import { useTableParams } from "@/hooks/use-table-params"
 import { useTableQuery } from "@/hooks/use-table-query"
 import { tableParamsToQuery } from "@/utils/table-params"
@@ -58,14 +60,15 @@ export function ConversationsTable() {
 		tp.filters.live === "1" ? liveRefreshMs : undefined,
 	)
 
-	const facetsQuery = useQuery({
+	const { state: facetsState } = useDataQuery<ConversationFacets>({
 		queryKey: ["conversation-facets"],
 		queryFn: () => getConversationFacetsFn(),
+		errorMessage: m.conv_facets_error,
 	})
 
-	const facets = facetsQuery.data ?? EMPTY_FACETS
+	const facets =
+		facetsState.status === "ready" ? facetsState.data : EMPTY_FACETS
 	const domiaFacetOptions = facets.domiaOptions
-	const facetsError = facetsQuery.isError
 
 	const loadFailed = isError && !data
 	const rows = data?.rows ?? []
@@ -103,9 +106,12 @@ export function ConversationsTable() {
 			rowActions={(row) => <RowActions row={row} />}
 			toolbar={
 				<div className="space-y-3">
-					{facetsError && (
+					{facetsState.status === "loading" && (
+						<Skeleton className="h-4 w-48" />
+					)}
+					{facetsState.status === "error" && (
 						<p className="text-muted-foreground text-xs">
-							{m.conv_facets_error()}
+							{facetsState.message}
 						</p>
 					)}
 					{selectedRows.length > 0 && (

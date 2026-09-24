@@ -1,10 +1,9 @@
 import { useRef, useState } from "react"
-import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import { Pencil, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import {
 	Dialog,
 	DialogContent,
@@ -46,20 +45,14 @@ export function AvatarPicker({
 	const [open, setOpen] = useState(false)
 	const fileRef = useRef<HTMLInputElement>(null)
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: (input: SetAvatarInput) => setAvatarFn({ data: input }),
-		onSuccess: (res) => {
-			if (!res.ok) {
-				toast.error(m.toast_avatar_update_failed(), {
-					description: errText(res.error),
-				})
-				return
-			}
+		failureTitle: m.toast_avatar_update_failed,
+		onDone: () => {
 			void router.invalidate()
 			toast.success(m.toast_avatar_updated())
 			setOpen(false)
 		},
-		onError: () => toast.error(m.toast_avatar_update_failed()),
 	})
 
 	const onFile = async (file: File | undefined) => {

@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -33,31 +33,43 @@ export function AddIdentityDialog({
 	const queryClient = useQueryClient()
 	const demo = isDemoMode()
 
-	const form = useForm({
-		defaultValues: { name: "" },
-		validators: { onChange: buildAddIdentityFormSchema() },
-		onSubmit: async ({ value }) => {
-			const trimmed = value.name.trim()
-			const result = await createIdentityFn({
-				data: { anchorDomiaKey, name: trimmed },
-			})
-			if (result.ok) {
+	const create = useActionMutation({
+		mutationFn: (input: { name: string; domiaKey?: string }) =>
+			createIdentityFn({ data: { anchorDomiaKey, ...input } }),
+		failureTitle: m.err_create_identity,
+		onDone: async (data, vars) => {
+			const name = data?.name ?? vars.name
+			if (data?.restored)
+				toast.success(m.identity_restored(), {
+					description: m.identity_restored_desc({
+						name,
+						key: data.domiaKey,
+					}),
+				})
+			else
 				toast.success(m.toast_identity_created(), {
-					description: m.toast_identity_created_desc({ name: trimmed }),
+					description: m.toast_identity_created_desc({ name }),
 				})
-				form.reset()
-				setOpen(false)
-				await Promise.all([
-					queryClient.invalidateQueries({ queryKey: ["nodes"] }),
-					queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
-					queryClient.invalidateQueries({ queryKey: ["identities"] }),
-					queryClient.invalidateQueries({ queryKey: ["fleet"] }),
-				])
-			} else {
-				toast.error(m.err_create_identity(), {
-					description: errText(result.error),
-				})
-			}
+			form.reset()
+			setOpen(false)
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["nodes"] }),
+				queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
+				queryClient.invalidateQueries({ queryKey: ["identities"] }),
+				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
+			])
+		},
+	})
+
+	const form = useForm({
+		defaultValues: { name: "", domiaKey: "" },
+		validators: { onChange: buildAddIdentityFormSchema() },
+		onSubmit: ({ value }) => {
+			const key = value.domiaKey.trim()
+			create.mutate({
+				name: value.name.trim(),
+				...(key ? { domiaKey: key } : {}),
+			})
 		},
 	})
 
@@ -96,6 +108,26 @@ export function AddIdentityDialog({
 									placeholder={m.dlg_identity_name_placeholder()}
 									autoFocus
 								/>
+							</Field>
+						)}
+					</form.Field>
+					<form.Field name="domiaKey">
+						{(field) => (
+							<Field className="mt-3">
+								<FieldLabel htmlFor="identity-key">
+									{m.identity_key_label()}
+								</FieldLabel>
+								<Input
+									id="identity-key"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder={m.identity_key_placeholder()}
+									className="font-mono"
+									spellCheck={false}
+								/>
+								<p className="text-muted-foreground text-[11px]">
+									{m.identity_key_hint()}
+								</p>
 							</Field>
 						)}
 					</form.Field>

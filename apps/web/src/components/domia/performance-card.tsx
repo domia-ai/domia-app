@@ -6,8 +6,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	type ChartConfig,
 } from "@/components/ui/chart"
+import type { ChartConfig } from "@/types/ui"
 import { WaterfallPanel } from "@/components/analytics/waterfall"
 import { formatMs } from "@/utils/format"
 import type { DomiaPerformance } from "@/types/fleet"

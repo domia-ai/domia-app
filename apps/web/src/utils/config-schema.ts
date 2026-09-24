@@ -117,16 +117,17 @@ export const buildConfigSections = (
 			sections.push({ ...meta, fields: [] })
 			continue
 		}
-		const schemaSection = schemaById.get(meta.source)
+		const source = meta.source
+		const schemaSection = schemaById.get(source)
 		if (!schemaSection) continue
-		covered.add(meta.source)
+		covered.add(source)
 		const claimed = claimedBySiblings(sectionMeta, meta)
 		const visible = schemaSection.fields.filter(
 			(f) =>
-				!isHidden(hidden, meta.source!, f.key) &&
+				!isHidden(hidden, source, f.key) &&
 				(meta.only ? meta.only.includes(f.key) : !claimed.has(f.key)),
 		)
-		const fields = orderFields(visible, fieldMeta[meta.source])
+		const fields = orderFields(visible, fieldMeta[source])
 		if (fields.length === 0) continue
 		sections.push({
 			id: meta.id,

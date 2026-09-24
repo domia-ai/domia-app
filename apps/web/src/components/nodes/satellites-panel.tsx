@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "@tanstack/react-form"
 import {
 	RadarIcon,
@@ -11,6 +11,12 @@ import {
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
+import {
+	applyNeedsAttention,
+	applyOf,
+	summarizeApply,
+} from "@/lib/config-apply"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { StatusDot } from "@/components/domia/status"
@@ -85,30 +91,24 @@ function NumberSlider({
 		setDraft(entity.value ?? min)
 	}, [entity.value, min])
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: (value: number) =>
 			setSatelliteNumberFn({
 				data: { domiaKey, satelliteId, entityId: entity.id, value },
 			}),
-	})
-
-	const onCommit = async (value: number) => {
-		const result = await mutation.mutateAsync(value)
-		if (result.ok) {
+		failureTitle: () => m.toast_entity_set_failed({ name: entity.name }),
+		onDone: (data) => {
 			toast.success(
-				result.data?.live
+				data?.live
 					? m.toast_entity_applied({ name: entity.name })
 					: m.toast_entity_saved_reconnect({ name: entity.name }),
 			)
-			await queryClient.invalidateQueries({
+			void queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
-		} else {
-			toast.error(m.toast_entity_set_failed({ name: entity.name }), {
-				description: errText(result.error),
-			})
-		}
-	}
+		},
+		onFail: () => setDraft(entity.value ?? min),
+	})
 
 	return (
 		<div className="space-y-1">
@@ -130,7 +130,7 @@ function NumberSlider({
 				disabled={disabled || mutation.isPending}
 				onValueChange={(v) => setDraft(Array.isArray(v) ? (v[0] ?? min) : v)}
 				onValueCommitted={(v) =>
-					void onCommit(Array.isArray(v) ? (v[0] ?? min) : v)
+					mutation.mutate(Array.isArray(v) ? (v[0] ?? min) : v)
 				}
 			/>
 		</div>
@@ -149,26 +149,19 @@ function FollowUpToggle({
 	disabled: boolean
 }) {
 	const queryClient = useQueryClient()
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: (next: boolean) =>
 			setSatelliteFollowUpFn({
 				data: { domiaKey, satelliteId, enabled: next },
 			}),
-	})
-
-	const onToggle = async (next: boolean) => {
-		const result = await mutation.mutateAsync(next)
-		if (result.ok) {
+		failureTitle: m.toast_follow_up_change_failed,
+		onDone: (_data, next) => {
 			toast.success(next ? m.toast_follow_up_on() : m.toast_follow_up_off())
-			await queryClient.invalidateQueries({
+			void queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
-		} else {
-			toast.error(m.toast_follow_up_change_failed(), {
-				description: errText(result.error),
-			})
-		}
-	}
+		},
+	})
 
 	return (
 		<div className="flex items-center justify-between gap-2 pt-1">
@@ -178,7 +171,7 @@ function FollowUpToggle({
 			<Switch
 				checked={enabled}
 				disabled={disabled || mutation.isPending}
-				onCheckedChange={(v) => void onToggle(v)}
+				onCheckedChange={(v) => mutation.mutate(v)}
 			/>
 		</div>
 	)
@@ -199,52 +192,44 @@ function SatelliteRow({
 }) {
 	const queryClient = useQueryClient()
 
-	const testMutation = useMutation({
+	const testMutation = useActionMutation({
 		mutationFn: () =>
 			testSatelliteSpeakerFn({
 				data: { domiaKey, satelliteId: sat.satelliteId },
 			}),
+		failureTitle: m.toast_test_play_failed,
+		onDone: (data) => {
+			if (data?.delivered) {
+				toast.success(m.toast_test_playing())
+				return
+			}
+			toast.error(m.toast_test_play_failed(), {
+				description: m.toast_test_play_failed_desc({
+					target: data?.target ?? "none",
+				}),
+			})
+		},
 	})
 
-	const wakeMutation = useMutation({
+	const wakeMutation = useActionMutation({
 		mutationFn: (wakeWords: string[]) =>
 			setSatelliteWakeWordsFn({
 				data: { domiaKey, satelliteId: sat.satelliteId, wakeWords },
 			}),
-	})
-
-	const onTest = async () => {
-		const result = await testMutation.mutateAsync()
-		if (result.ok && result.data?.delivered) {
-			toast.success(m.toast_test_playing())
-		} else {
-			toast.error(m.toast_test_play_failed(), {
-				description: result.ok
-					? m.toast_test_play_failed_desc({
-							target: result.data?.target ?? "none",
-						})
-					: errText(result.error),
-			})
-		}
-	}
-
-	const onWake = async (wakeWordId: string | null) => {
-		if (!wakeWordId) return
-		const result = await wakeMutation.mutateAsync([wakeWordId])
-		if (result.ok) {
+		failureTitle: m.toast_wake_set_failed,
+		onDone: (data) => {
 			toast.success(
-				result.data?.live
-					? m.toast_wake_applied()
-					: m.toast_wake_saved_reconnect(),
+				data?.live ? m.toast_wake_applied() : m.toast_wake_saved_reconnect(),
 			)
-			await queryClient.invalidateQueries({
+			void queryClient.invalidateQueries({
 				queryKey: ["satellites", domiaKey],
 			})
-		} else {
-			toast.error(m.toast_wake_set_failed(), {
-				description: errText(result.error),
-			})
-		}
+		},
+	})
+
+	const onWake = (wakeWordId: string | null) => {
+		if (!wakeWordId) return
+		wakeMutation.mutate([wakeWordId])
 	}
 
 	const numberGroups = groupSatelliteNumbers(sat.numberEntities)
@@ -306,7 +291,7 @@ function SatelliteRow({
 					size="icon"
 					title={m.sat_test_speaker()}
 					disabled={demo || !sat.online || testMutation.isPending}
-					onClick={onTest}
+					onClick={() => testMutation.mutate(undefined)}
 				>
 					<Volume2 className="size-4" />
 				</Button>
@@ -436,27 +421,26 @@ function BoundSatellites({
 		}
 	}, [confirming, sats, name, onConfirmResolved])
 
-	const mutation = useMutation({
+	const mutation = useActionMutation({
 		mutationFn: (satelliteId: string) =>
 			unbindSatelliteFn({ data: { domiaKey, satelliteId } }),
-	})
-
-	const onUnbind = async (satelliteId: string) => {
-		const result = await mutation.mutateAsync(satelliteId)
-		if (result.ok) {
-			toast.success(m.toast_satellite_unbound(), {
-				description: m.toast_satellite_unbound_desc(),
-			})
-			await Promise.all([
+		failureTitle: m.toast_unbind_failed,
+		onDone: (data) => {
+			const apply = applyOf(data)
+			if (apply && applyNeedsAttention(apply))
+				toast.warning(m.toast_satellite_unbound(), {
+					description: summarizeApply(apply),
+				})
+			else
+				toast.success(m.toast_satellite_unbound(), {
+					description: m.toast_satellite_unbound_desc(),
+				})
+			void Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["satellites", domiaKey] }),
 				queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
 			])
-		} else {
-			toast.error(m.toast_unbind_failed(), {
-				description: errText(result.error),
-			})
-		}
-	}
+		},
+	})
 
 	if (isLoading)
 		return <p className="text-muted-foreground text-xs">{m.sat_loading()}</p>
@@ -481,7 +465,7 @@ function BoundSatellites({
 					sat={sat}
 					domiaKey={domiaKey}
 					demo={demo}
-					onUnbind={onUnbind}
+					onUnbind={(satelliteId) => mutation.mutate(satelliteId)}
 					unbindPending={mutation.isPending}
 				/>
 			))}
@@ -506,41 +490,57 @@ function BindDialog({
 }) {
 	const queryClient = useQueryClient()
 
+	const bind = useActionMutation({
+		mutationFn: ({
+			targetKey,
+			encryptionKey,
+		}: {
+			targetKey: string
+			encryptionKey: string | undefined
+		}) =>
+			bindSatelliteFn({
+				data: {
+					domiaKey: targetKey,
+					satelliteId: device.satelliteId,
+					name: device.name,
+					host: device.host,
+					port: device.port,
+					encryptionKey,
+				},
+			}),
+		failureTitle: m.toast_bind_failed,
+		onDone: (data, { targetKey }) => {
+			const apply = applyOf(data)
+			if (apply && applyNeedsAttention(apply))
+				toast.warning(m.toast_satellite_bound(), {
+					description: summarizeApply(apply),
+				})
+			else
+				toast.success(m.toast_satellite_bound(), {
+					description: m.toast_satellite_bound_desc(),
+				})
+			onOpenChange(false)
+			onBound(targetKey, device.satelliteId)
+			void Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: ["satellites", targetKey],
+				}),
+				queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
+			])
+		},
+	})
+
 	const form = useForm({
 		defaultValues: {
 			targetKey: hosted[0]?.domiaKey ?? "",
 			encryptionKey: "",
 		},
 		validators: { onChange: buildBindSatelliteFormSchema() },
-		onSubmit: async ({ value }) => {
-			const result = await bindSatelliteFn({
-				data: {
-					domiaKey: value.targetKey,
-					satelliteId: device.satelliteId,
-					name: device.name,
-					host: device.host,
-					port: device.port,
-					encryptionKey: value.encryptionKey.trim() || undefined,
-				},
-			})
-			if (result.ok) {
-				toast.success(m.toast_satellite_bound(), {
-					description: m.toast_satellite_bound_desc(),
-				})
-				onOpenChange(false)
-				onBound(value.targetKey, device.satelliteId)
-				await Promise.all([
-					queryClient.invalidateQueries({
-						queryKey: ["satellites", value.targetKey],
-					}),
-					queryClient.invalidateQueries({ queryKey: ["node", nodeId] }),
-				])
-			} else {
-				toast.error(m.toast_bind_failed(), {
-					description: errText(result.error),
-				})
-			}
-		},
+		onSubmit: ({ value }) =>
+			bind.mutate({
+				targetKey: value.targetKey,
+				encryptionKey: value.encryptionKey.trim() || undefined,
+			}),
 	})
 
 	return (
@@ -615,8 +615,13 @@ function BindDialog({
 							})}
 						>
 							{({ canSubmit, isSubmitting }) => (
-								<Button type="submit" disabled={!canSubmit || isSubmitting}>
-									{isSubmitting ? m.dlg_binding() : m.dlg_bind_action()}
+								<Button
+									type="submit"
+									disabled={!canSubmit || isSubmitting || bind.isPending}
+								>
+									{isSubmitting || bind.isPending
+										? m.dlg_binding()
+										: m.dlg_bind_action()}
 								</Button>
 							)}
 						</form.Subscribe>

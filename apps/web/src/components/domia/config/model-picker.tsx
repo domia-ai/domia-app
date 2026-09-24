@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Download, Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -23,6 +23,7 @@ import {
 	installModelFn,
 	getModelJobFn,
 } from "@/server/models"
+import { modelJobDuration, modelJobSpecLabel } from "@/utils/config"
 import type { ModelCatalogEntry } from "@/types/config"
 
 const MAX_POLL_FAILURES = 5
@@ -69,9 +70,22 @@ export function ModelPicker({
 		...modelsQueryOptions(domiaKey),
 		enabled: !!domiaKey,
 	})
-	const installMutation = useMutation({
-		mutationFn: (spec: Record<string, unknown>) =>
-			installModelFn({ data: { domiaKey, spec } }),
+	const installMutation = useActionMutation({
+		mutationFn: ({ entry }: { entry: ModelCatalogEntry; label: string }) =>
+			installModelFn({ data: { domiaKey, spec: specFromCatalog(entry) } }),
+		failureTitle: m.err_start_install,
+		onDone: (data, { entry, label }) => {
+			if (!data) {
+				setInstalling(null)
+				toast.error(m.err_start_install())
+				return
+			}
+			toast.info(m.toast_installing_name({ name: label }))
+			if (entry.target) onChange(entry.target)
+			pollJob(data.id, label)
+			setOpen(false)
+		},
+		onFail: () => setInstalling(null),
 	})
 
 	if (!domiaKey)
@@ -120,8 +134,14 @@ export function ModelPicker({
 				return
 			}
 			setInstalling(null)
+			const duration = modelJobDuration(res.data)
 			if (res.data.status === "done") {
-				toast.success(m.toast_installed_name({ name: label }))
+				toast.success(
+					m.toast_installed_name({
+						name: modelJobSpecLabel(res.data) ?? label,
+					}),
+					duration ? { description: duration } : undefined,
+				)
 				queryClient.invalidateQueries({ queryKey: ["models", domiaKey] })
 			} else {
 				toast.error(m.toast_install_failed(), { description: res.data.detail })
@@ -130,21 +150,10 @@ export function ModelPicker({
 		schedule()
 	}
 
-	const onInstall = async (entry: ModelCatalogEntry) => {
+	const onInstall = (entry: ModelCatalogEntry) => {
 		const label = catalogValue(entry)
 		setInstalling(label)
-		const result = await installMutation.mutateAsync(specFromCatalog(entry))
-		if (result.ok && result.data) {
-			toast.info(m.toast_installing_name({ name: label }))
-			if (entry.target) onChange(entry.target)
-			pollJob(result.data.id, label)
-			setOpen(false)
-		} else {
-			setInstalling(null)
-			toast.error(m.err_start_install(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
+		installMutation.mutate({ entry, label })
 	}
 
 	return (

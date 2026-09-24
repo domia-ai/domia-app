@@ -63,19 +63,22 @@ export const computeLayout = (graph: FleetGraph): GraphLayout => {
 		agg.set(key, g)
 	}
 
-	const edges: LayoutEdge[] = [...agg.values()].map((g) => {
-		const a = centers.get(g.from)!
-		const b = centers.get(g.to)!
+	const edges: LayoutEdge[] = [...agg.values()].flatMap((g) => {
+		const a = centers.get(g.from)
+		const b = centers.get(g.to)
+		if (!a || !b) return []
 		const { path, mid } = quadratic(a, b, g.from < g.to ? 1 : -1)
-		return {
-			id: `${g.from}->${g.to}`,
-			from: g.from,
-			to: g.to,
-			caps: [...g.caps],
-			count: g.count,
-			path,
-			mid,
-		}
+		return [
+			{
+				id: `${g.from}->${g.to}`,
+				from: g.from,
+				to: g.to,
+				caps: [...g.caps],
+				count: g.count,
+				path,
+				mid,
+			},
+		]
 	})
 
 	return {

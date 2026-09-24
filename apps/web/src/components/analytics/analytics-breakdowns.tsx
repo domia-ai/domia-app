@@ -16,8 +16,8 @@ import {
 	ChartTooltipContent,
 	ChartLegend,
 	ChartLegendContent,
-	type ChartConfig,
 } from "@/components/ui/chart"
+import type { ChartConfig } from "@/types/ui"
 import type {
 	DomiaLatencyRow,
 	FlowLatencyRow,

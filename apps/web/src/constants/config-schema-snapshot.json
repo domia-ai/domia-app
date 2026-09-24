@@ -6,14 +6,6 @@
 			"table": "domia",
 			"fields": [
 				{
-					"key": "domiaKey",
-					"column": "domia_key",
-					"type": "string",
-					"default": null,
-					"nullable": false,
-					"secret": false
-				},
-				{
 					"key": "sessionIdTimeoutMs",
 					"column": "session_id_timeout_ms",
 					"type": "number",
@@ -78,46 +70,6 @@
 					"secret": false
 				},
 				{
-					"key": "isHosted",
-					"column": "is_hosted",
-					"type": "boolean",
-					"default": false,
-					"nullable": false,
-					"secret": false
-				},
-				{
-					"key": "localIp",
-					"column": "local_ip",
-					"type": "string",
-					"default": null,
-					"nullable": true,
-					"secret": false
-				},
-				{
-					"key": "grpcPort",
-					"column": "grpc_port",
-					"type": "number",
-					"default": null,
-					"nullable": true,
-					"secret": false
-				},
-				{
-					"key": "lastSeenAt",
-					"column": "last_seen_at",
-					"type": "number",
-					"default": null,
-					"nullable": true,
-					"secret": false
-				},
-				{
-					"key": "peerNodeId",
-					"column": "peer_node_id",
-					"type": "string",
-					"default": null,
-					"nullable": true,
-					"secret": false
-				},
-				{
 					"key": "grpcUnaryDeadlineMs",
 					"column": "grpc_unary_deadline_ms",
 					"type": "number",
@@ -146,14 +98,6 @@
 					"column": "peer_stale_after_ms",
 					"type": "number",
 					"default": 90000,
-					"nullable": false,
-					"secret": false
-				},
-				{
-					"key": "configReloadDrainMs",
-					"column": "config_reload_drain_ms",
-					"type": "number",
-					"default": 5000,
 					"nullable": false,
 					"secret": false
 				},
@@ -190,15 +134,7 @@
 					"key": "meshSecretGraceMs",
 					"column": "mesh_secret_grace_ms",
 					"type": "number",
-					"default": null,
-					"nullable": false,
-					"secret": true
-				},
-				{
-					"key": "grpcTls",
-					"column": "grpc_tls",
-					"type": "boolean",
-					"default": false,
+					"default": 86400000,
 					"nullable": false,
 					"secret": false
 				},
@@ -265,6 +201,14 @@
 			"id": "character",
 			"table": "character_profile",
 			"fields": [
+				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
 				{
 					"key": "personality",
 					"column": "personality",
@@ -443,6 +387,14 @@
 			"table": "module_settings",
 			"fields": [
 				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "emotionEngine",
 					"column": "emotion_engine",
 					"type": "boolean",
@@ -480,6 +432,22 @@
 					"type": "boolean",
 					"default": true,
 					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "memoryRecallIncludeExpired",
+					"column": "memory_recall_include_expired",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "memoryFactMaxAgeDays",
+					"column": "memory_fact_max_age_days",
+					"type": "number",
+					"default": null,
+					"nullable": true,
 					"secret": false
 				},
 				{
@@ -582,7 +550,15 @@
 					"key": "skillsEngine",
 					"column": "skills_engine",
 					"type": "boolean",
-					"default": false,
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "builtinTools",
+					"column": "builtin_tools",
+					"type": "boolean",
+					"default": true,
 					"nullable": false,
 					"secret": false
 				},
@@ -683,6 +659,14 @@
 					"secret": false
 				},
 				{
+					"key": "proactiveCriticalDeferMaxMs",
+					"column": "proactive_critical_defer_max_ms",
+					"type": "number",
+					"default": 300000,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "proactiveTickMs",
 					"column": "proactive_tick_ms",
 					"type": "number",
@@ -711,6 +695,149 @@
 					"column": "proactive_retry_backoff_ms",
 					"type": "number",
 					"default": 30000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelAutotuneEnabled",
+					"column": "voice_feel_autotune_enabled",
+					"type": "boolean",
+					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelWindowTurns",
+					"column": "voice_feel_window_turns",
+					"type": "number",
+					"default": 40,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelMinTurns",
+					"column": "voice_feel_min_turns",
+					"type": "number",
+					"default": 15,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelTickMs",
+					"column": "voice_feel_tick_ms",
+					"type": "number",
+					"default": 60000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelDailyBudget",
+					"column": "voice_feel_daily_budget",
+					"type": "number",
+					"default": 4,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelCooldownMs",
+					"column": "voice_feel_cooldown_ms",
+					"type": "number",
+					"default": 21600000,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "voiceFeelRules",
+					"column": "voice_feel_rules",
+					"type": "json",
+					"default": [
+						{
+							"id": "cut-off-user",
+							"when": [
+								{
+									"feature": "cutOffRate",
+									"op": "gt",
+									"value": 0.25
+								}
+							],
+							"knob": {
+								"section": "wakeWord",
+								"field": "vadMinSilenceS"
+							},
+							"step": 0.1,
+							"min": 0.3,
+							"max": 1,
+							"minTurns": 15,
+							"enabled": true
+						},
+						{
+							"id": "early-barge-in",
+							"when": [
+								{
+									"feature": "earlyBargeInRate",
+									"op": "gt",
+									"value": 0.2
+								}
+							],
+							"knob": {
+								"section": "wakeWord",
+								"field": "vadMinSilenceS"
+							},
+							"step": 0.1,
+							"min": 0.3,
+							"max": 1,
+							"minTurns": 15,
+							"enabled": true
+						},
+						{
+							"id": "late-barge-in",
+							"when": [
+								{
+									"feature": "lateBargeInRate",
+									"op": "gt",
+									"value": 0.3
+								}
+							],
+							"knob": {
+								"section": "llm",
+								"field": "numPredict"
+							},
+							"step": -32,
+							"min": 64,
+							"max": 512,
+							"minTurns": 15,
+							"enabled": false
+						},
+						{
+							"id": "slow-ttfa",
+							"when": [
+								{
+									"feature": "perceivedTtfaP50",
+									"op": "gt",
+									"value": 1800
+								},
+								{
+									"feature": "eouDelayP50",
+									"op": "gt",
+									"value": 600
+								},
+								{
+									"feature": "cutOffRate",
+									"op": "lt",
+									"value": 0.1
+								}
+							],
+							"knob": {
+								"section": "wakeWord",
+								"field": "vadMinSilenceS"
+							},
+							"step": -0.05,
+							"min": 0.3,
+							"max": 1,
+							"minTurns": 15,
+							"enabled": true
+						}
+					],
 					"nullable": false,
 					"secret": false
 				}
@@ -799,6 +926,14 @@
 			"table": "stt_config",
 			"fields": [
 				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "engine",
 					"column": "engine",
 					"type": "enum",
@@ -809,6 +944,7 @@
 						"ZIPFORMER",
 						"PARAKEET",
 						"STREAMING_TRANSDUCER",
+						"NEMOTRON_STREAMING",
 						"OPENAI_COMPATIBLE",
 						"NEMO_SPEECH"
 					],
@@ -944,6 +1080,14 @@
 					"secret": false
 				},
 				{
+					"key": "flushPaddingMs",
+					"column": "stt_flush_padding_ms",
+					"type": "number",
+					"default": 600,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "partialAtEndpointEnabled",
 					"column": "stt_partial_at_endpoint_enabled",
 					"type": "boolean",
@@ -1037,6 +1181,14 @@
 			"id": "tts",
 			"table": "tts_config",
 			"fields": [
+				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
 				{
 					"key": "engine",
 					"column": "engine",
@@ -1350,10 +1502,42 @@
 					"secret": false
 				},
 				{
+					"key": "phraseCacheVoiceStep",
+					"column": "phrase_cache_voice_step",
+					"type": "number",
+					"default": 0.05,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "sentenceFirstFragmentMaxWords",
 					"column": "sentence_first_fragment_max_words",
 					"type": "number",
 					"default": 0,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "prewarmOnBoot",
+					"column": "prewarm_on_boot",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "prewarmOnReload",
+					"column": "prewarm_on_reload",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "prewarmPasses",
+					"column": "prewarm_passes",
+					"type": "number",
+					"default": 2,
 					"nullable": false,
 					"secret": false
 				}
@@ -1363,6 +1547,14 @@
 			"id": "llm",
 			"table": "llm_model_config",
 			"fields": [
+				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
 				{
 					"key": "engine",
 					"column": "engine",
@@ -1402,6 +1594,24 @@
 					"type": "string",
 					"default": null,
 					"nullable": true,
+					"secret": false
+				},
+				{
+					"key": "reasoningEffort",
+					"column": "reasoning_effort",
+					"type": "enum",
+					"default": "none",
+					"enumValues": ["none", "low", "medium", "high"],
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "reflectionReasoningEffort",
+					"column": "reflection_reasoning_effort",
+					"type": "enum",
+					"default": "none",
+					"enumValues": ["none", "low", "medium", "high"],
+					"nullable": false,
 					"secret": false
 				},
 				{
@@ -1504,6 +1714,14 @@
 					"column": "intent_embed_threshold",
 					"type": "number",
 					"default": 0.66,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentLexicalMinScore",
+					"column": "intent_lexical_min_score",
+					"type": "number",
+					"default": 2,
 					"nullable": false,
 					"secret": false
 				},
@@ -1794,7 +2012,7 @@
 					"key": "fastPathEnabled",
 					"column": "fast_path_enabled",
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"nullable": false,
 					"secret": false
 				},
@@ -1819,6 +2037,30 @@
 					"column": "fast_path_compound_max_targets",
 					"type": "number",
 					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentCacheEnabled",
+					"column": "intent_cache_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentCacheSize",
+					"column": "intent_cache_size",
+					"type": "number",
+					"default": 256,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "intentCacheMinSimilarity",
+					"column": "intent_cache_min_similarity",
+					"type": "number",
+					"default": 0.97,
 					"nullable": false,
 					"secret": false
 				},
@@ -1893,6 +2135,14 @@
 			"id": "wakeWord",
 			"table": "wake_word_config",
 			"fields": [
+				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
 				{
 					"key": "engine",
 					"column": "engine",
@@ -2021,6 +2271,14 @@
 					"column": "vad_end_of_speech_ms",
 					"type": "number",
 					"default": 200,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "vadPrewarmOnBoot",
+					"column": "vad_prewarm_on_boot",
+					"type": "boolean",
+					"default": true,
 					"nullable": false,
 					"secret": false
 				},
@@ -2250,6 +2508,30 @@
 					"secret": false
 				},
 				{
+					"key": "twoTierSettleMaxWaitMs",
+					"column": "two_tier_settle_max_wait_ms",
+					"type": "number",
+					"default": 1500,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculationMaxAttempts",
+					"column": "speculation_max_attempts",
+					"type": "number",
+					"default": 3,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "speculationMaxUtteranceMs",
+					"column": "speculation_max_utterance_ms",
+					"type": "number",
+					"default": 10000,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "sharedMicStreamEnabled",
 					"column": "shared_mic_stream_enabled",
 					"type": "boolean",
@@ -2438,8 +2720,8 @@
 					"key": "denoiseEngine",
 					"column": "denoise_engine",
 					"type": "enum",
-					"default": "GTCRN",
-					"enumValues": ["GTCRN"],
+					"default": "DPDFNET",
+					"enumValues": ["GTCRN", "DPDFNET"],
 					"nullable": false,
 					"secret": false
 				},
@@ -2447,7 +2729,7 @@
 					"key": "denoiseModelPath",
 					"column": "denoise_model_path",
 					"type": "string",
-					"default": "data/models/gtcrn_simple.onnx",
+					"default": "data/models/dpdfnet_baseline.onnx",
 					"nullable": false,
 					"secret": false
 				},
@@ -2516,6 +2798,22 @@
 					"secret": false
 				},
 				{
+					"key": "echoReferenceSeconds",
+					"column": "echo_reference_seconds",
+					"type": "number",
+					"default": 4,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "echoLiveSpeechTtlMs",
+					"column": "echo_live_speech_ttl_ms",
+					"type": "number",
+					"default": 1500,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "stopWordAbortEnabled",
 					"column": "stop_word_abort_enabled",
 					"type": "boolean",
@@ -2532,11 +2830,19 @@
 					"secret": false
 				},
 				{
+					"key": "stopWordMaxExtraWords",
+					"column": "stop_word_max_extra_words",
+					"type": "number",
+					"default": 1,
+					"nullable": false,
+					"secret": false
+				},
+				{
 					"key": "wakeVerifier",
 					"column": "wake_verifier",
 					"type": "enum",
 					"default": "NONE",
-					"enumValues": ["NONE", "ENERGY"],
+					"enumValues": ["NONE", "ENERGY", "STT"],
 					"nullable": false,
 					"secret": false
 				},
@@ -2568,7 +2874,15 @@
 					"key": "wakeVerifierMinScore",
 					"column": "wake_verifier_min_score",
 					"type": "number",
-					"default": 0.5,
+					"default": 0.6,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "wakeVerifierMaxMs",
+					"column": "wake_verifier_max_ms",
+					"type": "number",
+					"default": 400,
 					"nullable": false,
 					"secret": false
 				}
@@ -2578,6 +2892,14 @@
 			"id": "playback",
 			"table": "audio_playback_config",
 			"fields": [
+				{
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
+					"nullable": false,
+					"secret": false
+				},
 				{
 					"key": "engine",
 					"column": "engine",
@@ -2616,6 +2938,22 @@
 					"column": "word_level_heard_enabled",
 					"type": "boolean",
 					"default": false,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "heardSilenceTrimEnabled",
+					"column": "heard_silence_trim_enabled",
+					"type": "boolean",
+					"default": true,
+					"nullable": false,
+					"secret": false
+				},
+				{
+					"key": "heardSilenceRms",
+					"column": "heard_silence_rms",
+					"type": "number",
+					"default": 0.01,
 					"nullable": false,
 					"secret": false
 				},
@@ -2746,11 +3084,10 @@
 			"table": "mqtt_config",
 			"fields": [
 				{
-					"key": "type",
-					"column": "type",
-					"type": "enum",
-					"default": "LOCAL",
-					"enumValues": ["LOCAL"],
+					"key": "name",
+					"column": "name",
+					"type": "string",
+					"default": null,
 					"nullable": false,
 					"secret": false
 				},

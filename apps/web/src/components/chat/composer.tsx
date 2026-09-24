@@ -18,10 +18,20 @@ import {
 	InputGroupButton,
 	InputGroupTextarea,
 } from "@/components/ui/input-group"
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
 import { RecordingIndicator } from "@/components/audio/recording-indicator"
 import { useAudioRecorder } from "@/hooks/use-audio-recorder"
+import { useActionQuery } from "@/hooks/use-query-state"
+import { satellitesQueryOptions } from "@/server/satellites"
 import { isDemoMode } from "@/lib/demo"
 import type { ComposerProps } from "@/types/chat"
+import type { BoundSatellite } from "@/types/satellites"
 
 const toBase64 = (file: File): Promise<string> =>
 	new Promise((resolve, reject) => {
@@ -36,6 +46,7 @@ const toBase64 = (file: File): Promise<string> =>
 
 export function Composer({
 	disabled: disabledProp,
+	domiaKey,
 	onSendText,
 	onSendVoice,
 }: ComposerProps) {
@@ -44,20 +55,36 @@ export function Composer({
 	const [draft, setDraft] = useState("")
 	const [speak, setSpeak] = useState(false)
 	const [clip, setClip] = useState<string | null>(null)
+	const [satelliteId, setSatelliteId] = useState("")
 	const fileRef = useRef<HTMLInputElement | null>(null)
 
 	const recorder = useAudioRecorder(setClip)
 
+	const { state: satellitesState } = useActionQuery<BoundSatellite[], string[]>(
+		{
+			...satellitesQueryOptions(domiaKey ?? ""),
+			enabled: Boolean(domiaKey),
+			errorMessage: m.err_list_satellites,
+		},
+	)
+	const satellites =
+		satellitesState.status === "ready"
+			? (satellitesState.data ?? []).filter((s) => s.isActive)
+			: []
+	const target = satellites.some((s) => s.satelliteId === satelliteId)
+		? satelliteId
+		: ""
+
 	const submitText = () => {
 		const text = draft.trim()
 		if (!text || disabled) return
-		onSendText(text, speak)
+		onSendText(text, speak, target || undefined)
 		setDraft("")
 	}
 
 	const submitVoice = () => {
 		if (!clip || disabled) return
-		onSendVoice(clip, "recording.wav", speak)
+		onSendVoice(clip, "recording.wav", speak, target || undefined)
 		setClip(null)
 	}
 
@@ -92,6 +119,38 @@ export function Composer({
 						<Volume2 className="size-3.5" /> {m.chat_reply_voice()}
 					</ToggleGroupItem>
 				</ToggleGroup>
+
+				{satellitesState.status === "error" && (
+					<span className="text-destructive text-xs">
+						{satellitesState.message}
+					</span>
+				)}
+
+				{satellites.length > 0 && (
+					<Select
+						value={target}
+						onValueChange={(value) => setSatelliteId(value ?? "")}
+						items={[
+							{ value: "", label: m.chat_satellite_none() },
+							...satellites.map((s) => ({
+								value: s.satelliteId,
+								label: s.name ?? s.satelliteId,
+							})),
+						]}
+					>
+						<SelectTrigger className="h-8 w-44" title={m.chat_satellite_hint()}>
+							<SelectValue placeholder={m.chat_satellite_none()} />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="">{m.chat_satellite_none()}</SelectItem>
+							{satellites.map((s) => (
+								<SelectItem key={s.satelliteId} value={s.satelliteId}>
+									{s.name ?? s.satelliteId}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				)}
 
 				<input
 					ref={fileRef}

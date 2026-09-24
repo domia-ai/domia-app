@@ -1,5 +1,8 @@
 import type { LucideIcon } from "lucide-react"
 import type { LinkProps } from "@tanstack/react-router"
+import type { CapabilityDelegation } from "@/types/config"
+
+export type { CapabilityDelegation, DelegationCapability } from "@/types/config"
 
 export type {
 	DomiaRole,
@@ -25,17 +28,14 @@ export type {
 } from "@/types/chat"
 
 export type {
-	MindCharacter,
-	MindModules,
-	MindSnapshot,
-	MindEmotion,
 	AppTemplate,
 	ApplyTemplateInput,
 	TemplateCardProps,
 	CharacterEnumKey,
 	CharacterTagKey,
-	EmotionKey,
 } from "@/types/mind"
+
+export type { EmotionKey } from "@/types/emotions"
 
 export type ActionResult<T = void> =
 	| { ok: true; data?: T }
@@ -195,11 +195,6 @@ export type WakeWordConfig = {
 	engine: string
 	wakeWord: string
 	framework: string
-}
-
-export type CapabilityDelegation = {
-	capability: string
-	targetDomiaKey: string
 }
 
 export type SkillProviderConfig = {

@@ -10,22 +10,34 @@ import {
 	nodeSetSatelliteFollowUp,
 	nodeSetSatelliteVolume,
 	nodeTestSatelliteSpeaker,
+	nodeSetSatelliteSettings,
 	nodePresence,
 } from "@/lib/node-client"
+import { nodeBaseUrl } from "@/utils/node-base"
 import type { ActionResult } from "@/types"
 import type {
 	DiscoveredSatellite,
 	BoundSatellite,
 	BoundSatelliteRow,
 	BindSatelliteBody,
+	BindSatelliteResult,
+	UnbindSatelliteResult,
 	SetWakeWordsResult,
 	SetNumberResult,
 	SetFollowUpResult,
 	SetVolumeResult,
+	SetSatelliteSettingsInput,
+	SetSatelliteSettingsResult,
 	TestSpeakerResult,
 	SatelliteWithContext,
+	SatelliteFleet,
+	SatelliteFleetStats,
 } from "@/types/satellites"
-import type { PresenceEntry, SatelliteCapabilities } from "@/types/rooms"
+import type {
+	PresenceEntry,
+	SatelliteCapabilities,
+	SatelliteProtocol,
+} from "@/types/rooms"
 
 const NO_CAPABILITIES: SatelliteCapabilities = {
 	canHear: false,
@@ -102,8 +114,38 @@ export const listSatellites = async (
 	}
 }
 
+const emptyByProtocol = (): Record<SatelliteProtocol, number> => ({
+	native: 0,
+	wyoming: 0,
+	esphome: 0,
+	livekit: 0,
+	"openai-realtime": 0,
+})
+
+const isSatelliteProtocol = (value: string): value is SatelliteProtocol =>
+	value in emptyByProtocol()
+
+const accumulate = (satellites: SatelliteWithContext[]): SatelliteFleetStats =>
+	satellites.reduce<SatelliteFleetStats>(
+		(acc, s) => {
+			if (s.online) acc.connected += 1
+			else acc.offline += 1
+			if (isSatelliteProtocol(s.protocol)) acc.byProtocol[s.protocol] += 1
+			if (s.capabilities.canAnnounce) acc.announce += 1
+			if (s.capabilities.canIntercom) acc.intercom += 1
+			return acc
+		},
+		{
+			connected: 0,
+			offline: 0,
+			byProtocol: emptyByProtocol(),
+			announce: 0,
+			intercom: 0,
+		},
+	)
+
 export const listAllSatellites = async (): Promise<
-	ActionResult<SatelliteWithContext[]>
+	ActionResult<SatelliteFleet>
 > => {
 	try {
 		const nodes = await listNodes()
@@ -111,7 +153,7 @@ export const listAllSatellites = async (): Promise<
 			nodes.map(async (n) => {
 				const hosted = n.identities.filter((i) => i.isHosted)
 				if (hosted.length === 0) return []
-				const base = `http://${n.localIp}:${n.httpPort}`
+				const base = nodeBaseUrl(n)
 				const presence = await nodePresence(base)
 					.then((r) => r.presence)
 					.catch((): PresenceEntry[] => [])
@@ -135,7 +177,8 @@ export const listAllSatellites = async (): Promise<
 				return lists.flat()
 			}),
 		)
-		return { ok: true, data: perNode.flat() }
+		const satellites = perNode.flat()
+		return { ok: true, data: { satellites, stats: accumulate(satellites) } }
 	} catch (err) {
 		return {
 			ok: false,
@@ -147,16 +190,16 @@ export const listAllSatellites = async (): Promise<
 export const bindSatellite = async (input: {
 	domiaKey: string
 	satellite: BindSatelliteBody
-}): Promise<ActionResult<boolean>> => {
+}): Promise<ActionResult<BindSatelliteResult>> => {
 	const base = await resolveNodeBase(input.domiaKey)
 	if (!base.ok) return base
 	try {
-		const { bound } = await nodeBindSatellite(
+		const { bound, apply } = await nodeBindSatellite(
 			base.data,
 			input.domiaKey,
 			input.satellite,
 		)
-		return { ok: true, data: bound }
+		return { ok: true, data: { bound, apply } }
 	} catch (err) {
 		return {
 			ok: false,
@@ -168,16 +211,16 @@ export const bindSatellite = async (input: {
 export const unbindSatellite = async (input: {
 	domiaKey: string
 	satelliteId: string
-}): Promise<ActionResult<boolean>> => {
+}): Promise<ActionResult<UnbindSatelliteResult>> => {
 	const base = await resolveNodeBase(input.domiaKey)
 	if (!base.ok) return base
 	try {
-		const { removed } = await nodeUnbindSatellite(
+		const { removed, apply } = await nodeUnbindSatellite(
 			base.data,
 			input.domiaKey,
 			input.satelliteId,
 		)
-		return { ok: true, data: removed }
+		return { ok: true, data: { removed, apply } }
 	} catch (err) {
 		return {
 			ok: false,
@@ -276,6 +319,27 @@ export const setSatelliteVolume = async (input: {
 		return {
 			ok: false,
 			error: err instanceof Error ? err.message : "Could not set volume",
+		}
+	}
+}
+
+export const setSatelliteSettings = async (
+	input: SetSatelliteSettingsInput,
+): Promise<ActionResult<SetSatelliteSettingsResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		const { applied, apply } = await nodeSetSatelliteSettings(
+			base.data,
+			input.domiaKey,
+			input.satelliteId,
+			input.settings,
+		)
+		return { ok: true, data: { applied, settings: input.settings, apply } }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not save settings",
 		}
 	}
 }

@@ -7,6 +7,8 @@ import type { ReactNode } from "react"
 import type { SQL } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 
+export type TableParamGetter = (key: string) => string | undefined
+
 export type SortDir = "asc" | "desc"
 
 export type SortState = { field: string; dir: SortDir }
@@ -105,6 +107,14 @@ export type DataTableProps<TData, TValue> = {
 	rowId?: (row: TData) => string
 	rowSelection?: RowSelectionState
 	onRowSelectionChange?: (value: RowSelectionState) => void
+}
+
+export type DataTablePaginationProps = {
+	page: number
+	pageSize: number
+	total: number
+	onPageChange: (page: number) => void
+	onPageSizeChange: (size: number) => void
 }
 
 export type ViewMode = "table" | "cards" | "map"

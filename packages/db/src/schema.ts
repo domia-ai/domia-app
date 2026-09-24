@@ -7,15 +7,7 @@ import {
 	index,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
-import type { ToolTraceEntry } from "./json-types"
-
-type JsonValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonValue[]
-	| { [key: string]: JsonValue }
+import type { JsonValue, ToolTraceEntry, VoiceFeelFeatures } from "./json-types"
 
 const DEFAULT_TIMESTAMP = sql`CURRENT_TIMESTAMP`
 
@@ -30,6 +22,7 @@ export const domiaRegistry = sqliteTable(
 		localIp: text("local_ip"),
 		grpcPort: integer("grpc_port"),
 		httpPort: integer("http_port"),
+		httpScheme: text("http_scheme").notNull().default("http"),
 		isHosted: integer("is_hosted", { mode: "boolean" }).notNull().default(true),
 		isPrincipal: integer("is_principal", { mode: "boolean" })
 			.notNull()
@@ -61,6 +54,7 @@ export const interactionTrace = sqliteTable(
 		sttResult: text("stt_result"),
 		intentDecision: text("intent_decision"),
 		intentMs: integer("intent_ms"),
+		fastPathMs: integer("fast_path_ms"),
 		agentDecisionMs: integer("agent_decision_ms"),
 		agentToolMs: integer("agent_tool_ms"),
 		agentFinalizeMs: integer("agent_finalize_ms"),
@@ -94,6 +88,21 @@ export const interactionTrace = sqliteTable(
 		llmTtftMs: integer("llm_ttft_ms"),
 		llmContextWindow: integer("llm_context_window"),
 		llmFinishReason: text("llm_finish_reason"),
+		llmRequestId: text("llm_request_id"),
+		llmFreshTokens: integer("llm_fresh_tokens"),
+		llmCachedTokens: integer("llm_cached_tokens"),
+		transcriptionDelayMs: integer("transcription_delay_ms"),
+		eouDelayMs: integer("eou_delay_ms"),
+		endpointDebounceMs: integer("endpoint_debounce_ms"),
+		speechEndAt: integer("speech_end_at"),
+		endpointDecisionAt: integer("endpoint_decision_at"),
+		sttFinalAt: integer("stt_final_at"),
+		promptReadyAt: integer("prompt_ready_at"),
+		llmQueuedAt: integer("llm_queued_at"),
+		llmFirstTokenAt: integer("llm_first_token_at"),
+		ttsFirstUnitAt: integer("tts_first_unit_at"),
+		audioDeliveredAt: integer("audio_delivered_at"),
+		audioAudibleAt: integer("audio_audible_at"),
 		toolCallCount: integer("tool_call_count"),
 		toolErrorCount: integer("tool_error_count"),
 		inputAudioMs: integer("input_audio_ms"),
@@ -117,6 +126,9 @@ export const interactionTrace = sqliteTable(
 		errorMessage: text("error_message"),
 		satelliteId: text("satellite_id"),
 		satelliteProtocol: text("satellite_protocol"),
+		implicitFeedback: text("implicit_feedback"),
+		abortReason: text("abort_reason"),
+		traceId: text("trace_id"),
 		domiaSnapshot: text("domia_snapshot", { mode: "json" }).$type<JsonValue>(),
 		createdAt: text("created_at").notNull(),
 		updatedAt: text("updated_at").notNull(),
@@ -134,6 +146,7 @@ export const interactionTrace = sqliteTable(
 			t.sourceDomiaKey,
 			t.updatedAt,
 		),
+		index("interaction_trace_trace_id_idx").on(t.traceId),
 	],
 )
 
@@ -181,6 +194,10 @@ export const memoryFact = sqliteTable(
 		valueKey: text("value_key"),
 		confidence: real("confidence"),
 		kind: text("kind"),
+		sourceKind: text("source_kind"),
+		personId: text("person_id"),
+		validFrom: text("valid_from"),
+		validUntil: text("valid_until"),
 		supersededAt: text("superseded_at"),
 		sourceInteractionId: text("source_interaction_id"),
 		createdAt: text("created_at").notNull(),
@@ -194,6 +211,8 @@ export const memoryFact = sqliteTable(
 		),
 		index("memory_fact_source_updated_idx").on(t.sourceDomiaKey, t.updatedAt),
 		index("memory_fact_interaction_idx").on(t.sourceInteractionId),
+		index("memory_fact_source_valid_idx").on(t.sourceDomiaKey, t.validUntil),
+		index("memory_fact_source_person_idx").on(t.sourceDomiaKey, t.personId),
 	],
 )
 
@@ -204,6 +223,16 @@ export const syncCursor = sqliteTable("sync_cursor", {
 	lastTurnId: text("last_turn_id"),
 	lastFactsAt: text("last_facts_at"),
 	lastFactsId: text("last_facts_id"),
+	lastToolAt: text("last_tool_at"),
+	lastToolId: text("last_tool_id"),
+	lastEpisodeAt: text("last_episode_at"),
+	lastEpisodeId: text("last_episode_id"),
+	lastKnowledgeAt: text("last_knowledge_at"),
+	lastKnowledgeId: text("last_knowledge_id"),
+	lastVoiceFeelAt: text("last_voice_feel_at"),
+	lastVoiceFeelId: text("last_voice_feel_id"),
+	lastEvidenceAt: text("last_evidence_at"),
+	lastEvidenceId: text("last_evidence_id"),
 	lastSyncedAt: integer("last_synced_at"),
 })
 
@@ -339,6 +368,7 @@ export const announcement = sqliteTable(
 			.notNull()
 			.default(false),
 		audioPath: text("audio_path"),
+		personId: text("person_id"),
 		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
 		updatedAt: text("updated_at").notNull().default(DEFAULT_TIMESTAMP),
 	},
@@ -390,6 +420,191 @@ export const turnEventRelations = relations(turnEvent, ({ one }) => ({
 export type TurnEventRow = typeof turnEvent.$inferSelect
 export type TurnEventInsert = typeof turnEvent.$inferInsert
 
+export const toolRun = sqliteTable(
+	"tool_run",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		interactionId: text("interaction_id").notNull(),
+		tool: text("tool").notNull(),
+		providerSlug: text("provider_slug"),
+		argsHash: text("args_hash"),
+		riskClass: text("risk_class"),
+		policyDecision: text("policy_decision"),
+		policySource: text("policy_source"),
+		confirmationId: text("confirmation_id"),
+		routineSlug: text("routine_slug"),
+		stepIndex: integer("step_index"),
+		status: text("status"),
+		durationMs: integer("duration_ms"),
+		spokenAt: text("spoken_at"),
+		settledAt: text("settled_at"),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("tool_run_source_created_idx").on(t.sourceDomiaKey, t.createdAt),
+		index("tool_run_interaction_idx").on(t.interactionId),
+		index("tool_run_routine_idx").on(t.routineSlug),
+	],
+)
+
+export const memoryEpisode = sqliteTable(
+	"memory_episode",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		sessionId: text("session_id"),
+		summary: text("summary"),
+		moodArc: text("mood_arc"),
+		topics: text("topics", { mode: "json" }).$type<string[]>(),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("memory_episode_source_created_idx").on(
+			t.sourceDomiaKey,
+			t.createdAt,
+		),
+		index("memory_episode_session_idx").on(t.sessionId),
+	],
+)
+
+export const userModel = sqliteTable("user_model", {
+	sourceDomiaKey: text("source_domia_key").primaryKey(),
+	id: text("id"),
+	summary: text("summary"),
+	moodTendencies: text("mood_tendencies"),
+	interests: text("interests", { mode: "json" }).$type<string[]>(),
+	prefs: text("prefs", { mode: "json" }).$type<string[]>(),
+	familiarity: real("familiarity"),
+	updatedAt: text("updated_at").notNull().default(DEFAULT_TIMESTAMP),
+})
+
+export const knowledgeEntry = sqliteTable(
+	"knowledge_entry",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		title: text("title"),
+		content: text("content"),
+		keywords: text("keywords", { mode: "json" }).$type<string[]>(),
+		priority: integer("priority"),
+		isActive: integer("is_active", { mode: "boolean" }),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+		updatedAt: text("updated_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("knowledge_entry_source_updated_idx").on(
+			t.sourceDomiaKey,
+			t.updatedAt,
+		),
+		index("knowledge_entry_source_active_idx").on(t.sourceDomiaKey, t.isActive),
+	],
+)
+
+export const voiceFeelAdjustment = sqliteTable(
+	"voice_feel_adjustment",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		rule: text("rule"),
+		section: text("section"),
+		field: text("field"),
+		fromValue: real("from_value"),
+		toValue: real("to_value"),
+		features: text("features", { mode: "json" }).$type<VoiceFeelFeatures>(),
+		sampleSize: integer("sample_size"),
+		confidence: real("confidence"),
+		configRevision: integer("config_revision"),
+		appliedAt: text("applied_at"),
+		revertedAt: text("reverted_at"),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("voice_feel_source_created_idx").on(t.sourceDomiaKey, t.createdAt),
+	],
+)
+
+export const factEvidence = sqliteTable(
+	"fact_evidence",
+	{
+		id: text("id").primaryKey(),
+		sourceDomiaKey: text("source_domia_key").notNull(),
+		factId: text("fact_id").notNull(),
+		sourceInteractionId: text("source_interaction_id"),
+		createdAt: text("created_at").notNull().default(DEFAULT_TIMESTAMP),
+	},
+	(t) => [
+		index("fact_evidence_fact_idx").on(t.factId),
+		index("fact_evidence_source_created_idx").on(t.sourceDomiaKey, t.createdAt),
+	],
+)
+
+export const toolRunRelations = relations(toolRun, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [toolRun.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+	interaction: one(interactionTrace, {
+		fields: [toolRun.interactionId],
+		references: [interactionTrace.id],
+	}),
+}))
+
+export const memoryEpisodeRelations = relations(memoryEpisode, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [memoryEpisode.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+}))
+
+export const userModelRelations = relations(userModel, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [userModel.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+}))
+
+export const knowledgeEntryRelations = relations(knowledgeEntry, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [knowledgeEntry.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+}))
+
+export const voiceFeelAdjustmentRelations = relations(
+	voiceFeelAdjustment,
+	({ one }) => ({
+		domia: one(domiaRegistry, {
+			fields: [voiceFeelAdjustment.sourceDomiaKey],
+			references: [domiaRegistry.domiaKey],
+		}),
+	}),
+)
+
+export const factEvidenceRelations = relations(factEvidence, ({ one }) => ({
+	domia: one(domiaRegistry, {
+		fields: [factEvidence.sourceDomiaKey],
+		references: [domiaRegistry.domiaKey],
+	}),
+	fact: one(memoryFact, {
+		fields: [factEvidence.factId],
+		references: [memoryFact.id],
+	}),
+}))
+
+export type ToolRunRow = typeof toolRun.$inferSelect
+export type ToolRunInsert = typeof toolRun.$inferInsert
+export type MemoryEpisodeRow = typeof memoryEpisode.$inferSelect
+export type MemoryEpisodeInsert = typeof memoryEpisode.$inferInsert
+export type UserModelRow = typeof userModel.$inferSelect
+export type UserModelInsert = typeof userModel.$inferInsert
+export type KnowledgeEntryRow = typeof knowledgeEntry.$inferSelect
+export type KnowledgeEntryInsert = typeof knowledgeEntry.$inferInsert
+export type VoiceFeelAdjustmentRow = typeof voiceFeelAdjustment.$inferSelect
+export type VoiceFeelAdjustmentInsert = typeof voiceFeelAdjustment.$inferInsert
+export type FactEvidenceRow = typeof factEvidence.$inferSelect
+export type FactEvidenceInsert = typeof factEvidence.$inferInsert
+
 export type DomiaRegistryRow = typeof domiaRegistry.$inferSelect
 export type DomiaRegistryInsert = typeof domiaRegistry.$inferInsert
 export type InteractionTraceRow = typeof interactionTrace.$inferSelect
@@ -401,6 +616,7 @@ export type EmotionEventInsert = typeof emotionEvent.$inferInsert
 export type MemoryFactRow = typeof memoryFact.$inferSelect
 export type MemoryFactInsert = typeof memoryFact.$inferInsert
 export type SyncCursorRow = typeof syncCursor.$inferSelect
+export type SyncCursorInsert = typeof syncCursor.$inferInsert
 export type AudioAssetRow = typeof audioAsset.$inferSelect
 export type AudioAssetInsert = typeof audioAsset.$inferInsert
 export type InteractionLabelRow = typeof interactionLabel.$inferSelect

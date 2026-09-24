@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Check, Loader2, Radar } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
 import { cn } from "@/lib/utils"
 import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { summarizeApply } from "@/lib/config-apply"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,14 +34,30 @@ export function HomeAssistantStep({
 	const [token, setToken] = useState("")
 	const [paired, setPaired] = useState(false)
 
-	const discover = useMutation({
+	const discover = useActionMutation({
 		mutationFn: () => discoverSkillProvidersFn({ data: domiaKey }),
+		failureTitle: m.config_skill_discover_failed,
 	})
-	const pair = useMutation({
+	const pair = useActionMutation({
 		mutationFn: () =>
 			pairHomeAssistantFn({
 				data: { domiaKey, url: url.trim(), token: token.trim() },
 			}),
+		failureTitle: m.setup_ha_pair_failed,
+		onDone: (data) => {
+			setPaired(true)
+			setToken("")
+			toast.success(m.setup_ha_paired(), {
+				description: data?.apply ? summarizeApply(data.apply) : undefined,
+			})
+			void Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["config", domiaKey] }),
+				queryClient.invalidateQueries({
+					queryKey: ["skills-status", domiaKey],
+				}),
+				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
+			])
+		},
 	})
 
 	const found: DiscoveredSkillProvider[] = discover.data?.ok
@@ -52,29 +69,7 @@ export function HomeAssistantStep({
 			? errText(discover.data.error)
 			: null
 
-	const onPair = async () => {
-		const result = await pair.mutateAsync()
-		if (result.ok && result.data) {
-			setPaired(true)
-			setToken("")
-			toast.success(m.setup_ha_paired(), {
-				description: result.data.apply
-					? summarizeApply(result.data.apply)
-					: undefined,
-			})
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["config", domiaKey] }),
-				queryClient.invalidateQueries({
-					queryKey: ["skills-status", domiaKey],
-				}),
-				queryClient.invalidateQueries({ queryKey: ["fleet"] }),
-			])
-		} else {
-			toast.error(m.setup_ha_pair_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
-	}
+	const onPair = () => pair.mutate(undefined)
 
 	const canPair = url.trim() !== "" && token.trim() !== "" && online
 
@@ -105,7 +100,7 @@ export function HomeAssistantStep({
 						variant="outline"
 						size="sm"
 						disabled={!online || discover.isPending}
-						onClick={() => discover.mutate()}
+						onClick={() => discover.mutate(undefined)}
 					>
 						{discover.isPending ? (
 							<Loader2 className="size-4 animate-spin" />

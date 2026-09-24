@@ -9,6 +9,7 @@ export const domiaSnapshotSchema = z.looseObject({
 	localIp: z.string().nullish(),
 	grpcPort: z.number().optional(),
 	httpPort: z.number().optional(),
+	httpScheme: z.enum(["http", "https"]).optional(),
 	isHosted: z.boolean().optional(),
 	isPrincipal: z.boolean().optional(),
 	lastInteractionAt: z.string().nullish(),
@@ -30,6 +31,34 @@ const turnEventRowSchema = z.looseObject({
 	createdAt: z.string(),
 })
 
+const toolRunRowSchema = z.looseObject({
+	id: z.string().min(1),
+	interactionId: z.string().min(1),
+	tool: z.string().min(1),
+	createdAt: z.string(),
+})
+
+const createdAtRowSchema = z.looseObject({
+	id: z.string().min(1),
+	createdAt: z.string(),
+})
+
+const factEvidenceRowSchema = z.looseObject({
+	id: z.string().min(1),
+	factId: z.string().min(1),
+	createdAt: z.string(),
+})
+
+const userModelRowSchema = z.looseObject({
+	updatedAt: z.string(),
+})
+
+const keysetCursorSchema = z
+	.object({ since: z.string(), id: z.string() })
+	.nullable()
+	.optional()
+	.default(null)
+
 export const identitiesResponseSchema = z.object({
 	identities: z.array(z.object({ domiaKey: z.string().min(1) })),
 })
@@ -41,15 +70,18 @@ export const syncResponseSchema = z.object({
 	facts: z.array(traceRowSchema),
 	announcements: z.array(traceRowSchema).optional().default([]),
 	turnEvents: z.array(turnEventRowSchema).optional().default([]),
+	toolRuns: z.array(toolRunRowSchema).optional().default([]),
+	memoryEpisodes: z.array(createdAtRowSchema).optional().default([]),
+	knowledgeEntries: z.array(traceRowSchema).optional().default([]),
+	voiceFeelAdjustments: z.array(createdAtRowSchema).optional().default([]),
+	factEvidence: z.array(factEvidenceRowSchema).optional().default([]),
+	userModel: userModelRowSchema.nullable().optional().default(null),
 	nextCursor: z.string(),
-	nextTurnCursor: z
-		.object({ since: z.string(), id: z.string() })
-		.nullable()
-		.optional()
-		.default(null),
-	nextFactsCursor: z
-		.object({ since: z.string(), id: z.string() })
-		.nullable()
-		.optional()
-		.default(null),
+	nextTurnCursor: keysetCursorSchema,
+	nextFactsCursor: keysetCursorSchema,
+	nextToolCursor: keysetCursorSchema,
+	nextEpisodeCursor: keysetCursorSchema,
+	nextKnowledgeCursor: keysetCursorSchema,
+	nextVoiceFeelCursor: keysetCursorSchema,
+	nextEvidenceCursor: keysetCursorSchema,
 })

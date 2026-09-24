@@ -1,7 +1,15 @@
 import { and, count, isNotNull, ne } from "drizzle-orm"
 import { domiaRegistry, interactionTrace } from "@domia-app/db"
 import { db } from "@/db"
+import { resolveNodeBase } from "@/services/fleet"
+import { nodeRotateMesh } from "@/lib/node-client"
+import {
+	MESH_ROTATE_FORBIDDEN,
+	isNodeRequestError,
+	nodeFailure,
+} from "@/utils/service-errors"
 import type { ActionResult } from "@/types"
+import type { MeshRotateInput, MeshRotateResult } from "@/types/mesh-admin"
 import type {
 	MeshCapability,
 	MeshEdge,
@@ -116,5 +124,19 @@ export const getMeshTopology = async (): Promise<
 			ok: false,
 			error: err instanceof Error ? err.message : "Could not load topology",
 		}
+	}
+}
+
+export const rotateMesh = async (
+	input: MeshRotateInput,
+): Promise<ActionResult<MeshRotateResult>> => {
+	const base = await resolveNodeBase(input.domiaKey)
+	if (!base.ok) return base
+	try {
+		return { ok: true, data: await nodeRotateMesh(base.data, input.action) }
+	} catch (err) {
+		if (isNodeRequestError(err) && err.status === 403)
+			return { ok: false, error: MESH_ROTATE_FORBIDDEN }
+		return nodeFailure(err, "Could not reach the mesh admin")
 	}
 }

@@ -1,13 +1,28 @@
 import type { ReactNode } from "react"
 import type { CharacterProfile, EmotionState, WaveformHandle } from "@/types"
 import type { FilterFacetOption } from "@/types/table"
+import type { HttpScheme } from "@/types/nodes"
 import type {
 	AudioAssetRow,
 	InteractionLabelRow,
 	InteractionSessionTraceRow,
 	InteractionTraceRow,
-	MemoryFactRow,
 } from "@domia-app/db"
+import type { FactWithEvidence } from "@/types/memories"
+import type { ToolRunGroup } from "@/types/tool-runs"
+import type { PerceivedLadder, PerceivedLatencySource } from "@/types/latency"
+
+export type TurnEventGroup =
+	| "start"
+	| "stt"
+	| "intent"
+	| "llm"
+	| "tool"
+	| "tts"
+	| "playback"
+	| "terminal"
+	| "error"
+	| "speculation"
 
 export type {
 	ToolTraceEntry,
@@ -51,8 +66,6 @@ export type ConversationPreset = {
 	label: () => string
 	params: Record<string, string | null>
 }
-
-export type DomiaOption = { domiaKey: string; name: string | null }
 
 export type ConversationExportRow = {
 	id: string
@@ -111,8 +124,14 @@ export type InteractionDetail = {
 	label: InteractionLabelRow | null
 	inputAudio: AudioAssetRow | null
 	ttsAudio: AudioAssetRow | null
-	memoryFacts: MemoryFactRow[]
+	memoryFacts: FactWithEvidence[]
+	toolRuns: ToolRunGroup[]
 	adjacent: AdjacentTurns | null
+}
+
+export type StatusStyle = {
+	variant: "secondary" | "destructive" | "outline"
+	className: string
 }
 
 export type ExecutionJourneyStep = {
@@ -249,6 +268,7 @@ export type RunTarget = {
 	name: string
 	localIp: string
 	httpPort: number
+	httpScheme: HttpScheme
 	isOrigin: boolean
 	online: boolean
 }
@@ -265,6 +285,7 @@ export type RunInteractionInput = {
 	sourceInteractionId: string
 	targetDomiaKey: string
 	mode: RunMode
+	satelliteId?: string
 }
 
 export type RunInteractionResult = {
@@ -276,10 +297,15 @@ export type RunInteractionResult = {
 	audioBase: string
 }
 
+export type NodeInteractionResult = {
+	interaction: InteractionTraceRow
+}
+
 export type NodeChatBody = {
 	text: string
 	speak?: boolean
 	domiaKey?: string
+	satelliteId?: string
 }
 export type NodeChatResponse = {
 	interactionId: string
@@ -325,7 +351,7 @@ export type PersonaStateCardProps = {
 }
 
 export type FactsCardProps = {
-	facts: MemoryFactRow[]
+	facts: FactWithEvidence[]
 }
 
 export type SessionNavProps = {
@@ -345,4 +371,17 @@ export type CollapsiblePromptProps = {
 export type CopyButtonProps = {
 	text: string
 	label?: string
+}
+
+export type TraceDetailProps = {
+	detail: InteractionDetail
+}
+
+export type PerceivedLadderProps = {
+	ladder: PerceivedLadder
+	source: PerceivedLatencySource
+}
+
+export type PerceivedSourceProps = {
+	source: PerceivedLatencySource
 }

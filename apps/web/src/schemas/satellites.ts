@@ -27,4 +27,12 @@ export const buildAddLivekitSatelliteFormSchema = () =>
 export const buildAddIdentityFormSchema = () =>
 	z.object({
 		name: z.string().trim().min(1, m.err_name_required()).max(80),
+		domiaKey: z
+			.string()
+			.trim()
+			.max(200)
+			.refine(
+				(v) => v === "" || /^[A-Za-z0-9_]+$/.test(v),
+				m.identity_key_invalid(),
+			),
 	})

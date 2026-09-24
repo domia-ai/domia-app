@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
 import {
 	AudioLines,
@@ -16,11 +16,12 @@ import {
 	Speaker,
 	Stethoscope,
 	ToggleRight,
+	TriangleAlert,
 	User,
 } from "lucide-react"
 import { toast } from "sonner"
 import { m } from "@/paraglide/messages"
-import { errText } from "@/utils/service-errors"
+import { useActionMutation } from "@/hooks/use-action-mutation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ConfigSection } from "./config-section"
@@ -37,12 +38,15 @@ import {
 import { CONFIG_SCHEMA_SNAPSHOT } from "@/constants/config-schema"
 import { buildConfigSections, fieldMatches } from "@/utils/config-schema"
 import { cn } from "@/lib/utils"
-import { summarizeApply } from "@/lib/config-apply"
+import { applyNeedsAttention, summarizeApply } from "@/lib/config-apply"
+import { subsystemLabel } from "@/constants/config-apply"
 import type {
+	ConfigApplyState,
 	ConfigFetchSource,
 	ConfigSchema,
 	ConfigSectionDef,
 	ConfigWorkspaceProps,
+	SubsystemRevisionState,
 } from "@/types/config"
 
 const ICONS: Record<string, typeof User> = {
@@ -58,6 +62,53 @@ const ICONS: Record<string, typeof User> = {
 	sliders: SlidersHorizontal,
 	stethoscope: Stethoscope,
 	package: Package,
+}
+
+const driftRows = (state: ConfigApplyState): SubsystemRevisionState[] =>
+	state.subsystems.filter((s) => !s.inSync || s.lastError)
+
+function ApplyStateBanner({ state }: { state: ConfigApplyState }) {
+	const rows = driftRows(state)
+	if (rows.length === 0 && state.pending.length === 0) return null
+	return (
+		<div className="border-destructive/40 bg-destructive/5 mb-4 space-y-2 rounded-lg border px-4 py-3">
+			<div className="flex items-center gap-2 text-sm font-medium">
+				<TriangleAlert className="text-destructive size-4" />
+				{m.apply_state_title()}
+			</div>
+			<p className="text-muted-foreground text-xs">{m.apply_state_hint()}</p>
+			<ul className="space-y-1.5">
+				{rows.map((row) => (
+					<li key={row.subsystem} className="text-xs">
+						<span className="font-medium">{subsystemLabel(row.subsystem)}</span>
+						<span className="text-muted-foreground">
+							{" · "}
+							{m.apply_state_revisions({
+								running: row.runningRevision,
+								desired: row.desiredRevision,
+							})}
+						</span>
+						{row.lastError && (
+							<p className="text-destructive">
+								{m.apply_state_error_at({
+									error: row.lastError,
+									at: row.lastErrorAt
+										? new Date(row.lastErrorAt).toLocaleString()
+										: "—",
+								})}
+							</p>
+						)}
+					</li>
+				))}
+			</ul>
+			{state.pending.length > 0 && (
+				<p className="text-muted-foreground text-xs">
+					{m.apply_state_pending()}{" "}
+					{state.pending.map(subsystemLabel).join(", ")}
+				</p>
+			)}
+		</div>
+	)
 }
 
 export function ConfigWorkspace(props: ConfigWorkspaceProps) {
@@ -96,6 +147,7 @@ function ConfigWorkspaceBody({
 	onSaved,
 	editTemplate,
 	readOnly = false,
+	applyState = null,
 	schema,
 	schemaSource,
 	schemaFailed,
@@ -116,6 +168,13 @@ function ConfigWorkspaceBody({
 	const draft = useConfigDraft(config, allSections)
 	const [activeId, setActiveId] = useState(sections[0]?.id ?? "")
 	const [search, setSearch] = useState("")
+	const [savedState, setSavedState] = useState<ConfigApplyState | null>(null)
+	const [seenState, setSeenState] = useState(applyState)
+	if (seenState !== applyState) {
+		setSeenState(applyState)
+		setSavedState(null)
+	}
+	const liveApplyState = savedState ?? applyState
 
 	const isTemplate = mode === "template"
 	const snapshotConfig = draft.mergeInto(config)
@@ -131,34 +190,31 @@ function ConfigWorkspaceBody({
 		]),
 	)
 
-	const importMutation = useMutation({
+	const importMutation = useActionMutation({
 		mutationFn: (bundle: Record<string, unknown>) =>
 			importConfigFn({ data: { domiaKey, bundle } }),
-	})
-
-	const onApply = async () => {
-		const bundle = draft.buildBundle()
-		const result = await importMutation.mutateAsync(bundle)
-		if (result.ok && result.data) {
+		failureTitle: m.toast_config_save_failed,
+		onDone: (data) => {
+			if (!data) {
+				toast.error(m.toast_config_save_failed())
+				return
+			}
 			draft.commit()
 			queryClient.invalidateQueries({ queryKey: ["fleet"] })
 			queryClient.invalidateQueries({ queryKey: ["config", domiaKey] })
 			void router.invalidate()
-			const apply = result.data.apply
+			setSavedState(data.state ?? null)
+			const apply = data.apply
 			const description = apply
 				? summarizeApply(apply)
 				: m.toast_config_applied_fallback({ name: domiaName })
-			if (apply && (apply.result === "partial" || apply.result === "restart")) {
+			if (apply && applyNeedsAttention(apply)) {
 				toast.warning(m.toast_config_saved(), { description })
 			} else {
 				toast.success(m.toast_config_saved(), { description })
 			}
-		} else {
-			toast.error(m.toast_config_save_failed(), {
-				description: errText(result.ok ? undefined : result.error),
-			})
-		}
-	}
+		},
+	})
 
 	const dirty = draft.impact.totalChanged > 0
 
@@ -171,6 +227,7 @@ function ConfigWorkspaceBody({
 
 	return (
 		<div className="flex min-h-0 flex-col">
+			{liveApplyState && <ApplyStateBanner state={liveApplyState} />}
 			{(schemaSource === "snapshot" || schemaFailed) && (
 				<p className="text-muted-foreground mb-4 rounded-lg border border-dashed px-4 py-2.5 text-sm">
 					{schemaFailed
@@ -318,7 +375,7 @@ function ConfigWorkspaceBody({
 								</Button>
 								<Button
 									disabled={importMutation.isPending || !draft.isValid}
-									onClick={onApply}
+									onClick={() => importMutation.mutate(draft.buildBundle())}
 								>
 									{importMutation.isPending
 										? m.config_saving()

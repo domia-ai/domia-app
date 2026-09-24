@@ -8,12 +8,8 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts"
-import {
-	EMOTION_KEYS,
-	EMOTION_META,
-	type EmotionKey,
-} from "@/constants/emotions"
-import type { EmotionSeriesPoint } from "@/utils/emotion-series"
+import { EMOTION_KEYS, EMOTION_META } from "@/constants/emotions"
+import type { EmotionKey, EmotionSeriesPoint } from "@/types/emotions"
 
 export function EmotionTrend({
 	series,

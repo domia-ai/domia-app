@@ -4,13 +4,17 @@ import { Button } from "@/components/ui/button"
 import { HealthPanel } from "../health-panel"
 import { ModelsManager } from "../models-manager"
 import { ConfigFieldGrid } from "./config-field-grid"
+import { ConfigDelegations } from "./config-delegations"
 import { ConfigSkillProviders } from "./config-skill-providers"
 import { SkillsHealthPanel } from "../skills-health-panel"
 import { BenchHealthPanel } from "../bench-health-panel"
 import { ARCHETYPE_PRESETS } from "@/constants/config"
 import { fieldMatches } from "@/utils/config-schema"
-import type { ConfigDraftApi } from "@/hooks/use-config-draft"
-import type { ConfigSectionDef, FieldValue } from "@/types/config"
+import type {
+	ConfigDraftApi,
+	ConfigSectionDef,
+	FieldValue,
+} from "@/types/config"
 
 export function ConfigSection({
 	domiaKey,
@@ -104,6 +108,10 @@ export function ConfigSection({
 					domiaKey={domiaKey}
 					searching={query !== ""}
 				/>
+			)}
+
+			{section.id === "capabilities" && !query && (
+				<ConfigDelegations draft={draft} domiaKey={domiaKey} />
 			)}
 		</div>
 	)

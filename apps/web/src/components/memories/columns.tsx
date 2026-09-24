@@ -5,6 +5,7 @@ import { ExternalLink } from "lucide-react"
 import { PersonaAvatar } from "@/components/domia/persona-avatar"
 import { relativeTime } from "@/utils/format"
 import { ConfidenceBar } from "./confidence-bar"
+import { FactBadges } from "./fact-badges"
 import type { MemoryFactRow } from "@/types/memories"
 
 export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
@@ -40,11 +41,14 @@ export const memoryColumns: ColumnDef<MemoryFactRow>[] = [
 		cell: ({ row }) => {
 			const r = row.original
 			return (
-				<span className="text-sm">
-					<span className="text-muted-foreground">{r.subject}</span>{" "}
-					<span className="text-muted-foreground">{r.relation}</span>{" "}
-					<span className="font-medium">{r.value}</span>
-				</span>
+				<div className="space-y-1">
+					<span className="text-sm">
+						<span className="text-muted-foreground">{r.subject}</span>{" "}
+						<span className="text-muted-foreground">{r.relation}</span>{" "}
+						<span className="font-medium">{r.value}</span>
+					</span>
+					<FactBadges fact={r} />
+				</div>
 			)
 		},
 	},

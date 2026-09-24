@@ -15,8 +15,8 @@ import {
 	ChartTooltipContent,
 	ChartLegend,
 	ChartLegendContent,
-	type ChartConfig,
 } from "@/components/ui/chart"
+import type { ChartConfig } from "@/types/ui"
 import type { AnalyticsChartsProps } from "@/types/analytics"
 
 const volumeConfig = (): ChartConfig => ({

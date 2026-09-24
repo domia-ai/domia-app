@@ -128,17 +128,7 @@ export const SECTION_META: ConfigSectionMeta[] = [
 ]
 
 export const HIDDEN_FIELDS: Record<string, readonly string[]> = {
-	domia: [
-		"domiaKey",
-		"isHosted",
-		"localIp",
-		"grpcPort",
-		"lastSeenAt",
-		"peerNodeId",
-		"configReloadDrainMs",
-		"grpcTls",
-		"meshSecretGraceMs",
-	],
+	domia: [],
 	mqttLocal: ["type"],
 }
 
@@ -148,6 +138,7 @@ const STT_ENGINE_LABELS: ConfigOptionLabels = {
 	ZIPFORMER: m.enum_opt_zipformer,
 	PARAKEET: m.enum_opt_parakeet,
 	STREAMING_TRANSDUCER: m.enum_opt_streaming_transducer,
+	NEMOTRON_STREAMING: m.enum_opt_nemotron_streaming,
 	OPENAI_COMPATIBLE: m.enum_opt_openai_compatible,
 	NEMO_SPEECH: m.enum_opt_nemo_speech,
 }
@@ -184,6 +175,24 @@ const AGENT_DECISION_MODE_LABELS: ConfigOptionLabels = {
 	structured: m.enum_opt_structured,
 }
 
+const REASONING_EFFORT_LABELS: ConfigOptionLabels = {
+	none: m.enum_opt_effort_none,
+	low: m.enum_opt_effort_low,
+	medium: m.enum_opt_effort_medium,
+	high: m.enum_opt_effort_high,
+}
+
+const WAKE_VERIFIER_LABELS: ConfigOptionLabels = {
+	NONE: m.enum_opt_wake_verifier_none,
+	ENERGY: m.enum_opt_wake_verifier_energy,
+	STT: m.enum_opt_wake_verifier_stt,
+}
+
+const DENOISE_ENGINE_LABELS: ConfigOptionLabels = {
+	GTCRN: m.enum_opt_denoise_gtcrn,
+	DPDFNET: m.enum_opt_denoise_dpdfnet,
+}
+
 const MATCHER_ENGINE_LABELS: ConfigOptionLabels = {
 	lexical: m.enum_opt_lexical,
 	semantic: m.enum_opt_semantic,
@@ -194,6 +203,18 @@ const computeProvider: ConfigFieldMetaEntry = {
 	key: "provider",
 	label: m.config_field_compute,
 	hint: m.config_hint_compute_provider,
+}
+
+const presetName: ConfigFieldMetaEntry = {
+	key: "name",
+	label: m.config_field_profile_name,
+	hint: m.config_hint_preset_name,
+}
+
+const characterName: ConfigFieldMetaEntry = {
+	key: "name",
+	label: m.config_field_character_name,
+	hint: m.config_hint_character_name,
 }
 
 const poolFields: ConfigFieldMetaEntry[] = [
@@ -300,6 +321,12 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				hint: m.config_hint_peer_stale_after,
 			},
 			{
+				key: "meshSecretGraceMs",
+				label: m.config_field_mesh_secret_grace,
+				unit: MS,
+				hint: m.config_hint_mesh_secret_grace,
+			},
+			{
 				key: "benchTurns",
 				label: m.config_field_bench_turns,
 				unit: "turns",
@@ -340,6 +367,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			),
 		],
 		advanced: [
+			characterName,
 			{
 				key: "promptOverrides",
 				label: m.config_field_prompt_overrides,
@@ -411,6 +439,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			computeProvider,
 		],
 		advanced: [
+			presetName,
 			{
 				key: "quantization",
 				label: m.config_field_quantization,
@@ -500,10 +529,31 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				hint: m.config_hint_phrase_cache_reply_units_enabled,
 			},
 			{
+				key: "phraseCacheVoiceStep",
+				label: m.config_field_phrase_cache_voice_step,
+				hint: m.config_hint_phrase_cache_voice_step,
+			},
+			{
 				key: "sentenceFirstFragmentMaxWords",
 				label: m.config_field_sentence_first_fragment_max_words,
 				unit: "words",
 				hint: m.config_hint_sentence_first_fragment_max_words,
+			},
+			{
+				key: "prewarmOnBoot",
+				label: m.config_field_tts_prewarm_on_boot,
+				hint: m.config_hint_tts_prewarm_on_boot,
+			},
+			{
+				key: "prewarmOnReload",
+				label: m.config_field_tts_prewarm_on_reload,
+				hint: m.config_hint_tts_prewarm_on_reload,
+			},
+			{
+				key: "prewarmPasses",
+				label: m.config_field_tts_prewarm_passes,
+				unit: "passes",
+				hint: m.config_hint_tts_prewarm_passes,
 			},
 			...poolFields,
 		],
@@ -538,6 +588,18 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				kind: "model",
 				stage: "llm",
 				hint: m.config_hint_reflection_model,
+			},
+			{
+				key: "reasoningEffort",
+				label: m.config_field_reasoning_effort,
+				hint: m.config_hint_reasoning_effort,
+				optionLabels: REASONING_EFFORT_LABELS,
+			},
+			{
+				key: "reflectionReasoningEffort",
+				label: m.config_field_reflection_reasoning_effort,
+				hint: m.config_hint_reflection_reasoning_effort,
+				optionLabels: REASONING_EFFORT_LABELS,
 			},
 			{
 				key: "temperature",
@@ -608,6 +670,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			},
 		],
 		advanced: [
+			presetName,
 			{
 				key: "keepAliveMs",
 				label: m.config_field_keep_alive,
@@ -677,6 +740,35 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{
 				key: "intentEmbedThreshold",
 				label: m.config_field_intent_embed_threshold,
+				kind: "slider",
+				min: 0,
+				max: 1,
+				step: 0.01,
+			},
+			{
+				key: "intentLexicalMinScore",
+				label: m.config_field_intent_lexical_min_score,
+				hint: m.config_hint_intent_lexical_min_score,
+				kind: "slider",
+				min: 0,
+				max: 10,
+				step: 0.25,
+			},
+			{
+				key: "intentCacheEnabled",
+				label: m.config_field_intent_cache_enabled,
+				hint: m.config_hint_intent_cache_enabled,
+			},
+			{
+				key: "intentCacheSize",
+				label: m.config_field_intent_cache_size,
+				unit: "entries",
+				hint: m.config_hint_intent_cache_size,
+			},
+			{
+				key: "intentCacheMinSimilarity",
+				label: m.config_field_intent_cache_min_similarity,
+				hint: m.config_hint_intent_cache_min_similarity,
 				kind: "slider",
 				min: 0,
 				max: 1,
@@ -863,6 +955,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			computeProvider,
 		],
 		advanced: [
+			presetName,
 			{
 				key: "quantization",
 				label: m.config_field_quantization,
@@ -871,6 +964,12 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{
 				key: "decodePaddingMs",
 				label: m.config_field_decode_padding,
+				unit: MS,
+			},
+			{
+				key: "flushPaddingMs",
+				label: m.config_field_flush_padding,
+				hint: m.config_hint_flush_padding,
 				unit: MS,
 			},
 			{
@@ -1000,6 +1099,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{ ...computeProvider, label: m.config_field_provider },
 		],
 		advanced: [
+			presetName,
 			{ key: "framework", label: m.config_field_wake_framework },
 			{ key: "model", label: m.config_field_wake_model_id },
 			{
@@ -1008,6 +1108,11 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				hint: m.config_hint_quantization,
 			},
 			{ key: "vadEngine", label: m.config_field_vad_engine },
+			{
+				key: "vadPrewarmOnBoot",
+				label: m.config_field_vad_prewarm_on_boot,
+				hint: m.config_hint_vad_prewarm_on_boot,
+			},
 			{
 				key: "turnDetectorModelPath",
 				label: m.config_field_turn_detector_model,
@@ -1178,6 +1283,23 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				label: m.config_field_two_tier_max_eager_prefills,
 			},
 			{
+				key: "twoTierSettleMaxWaitMs",
+				label: m.config_field_two_tier_settle_max_wait_ms,
+				hint: m.config_hint_two_tier_settle_max_wait_ms,
+				unit: MS,
+			},
+			{
+				key: "speculationMaxAttempts",
+				label: m.config_field_speculation_max_attempts,
+				hint: m.config_hint_speculation_max_attempts,
+			},
+			{
+				key: "speculationMaxUtteranceMs",
+				label: m.config_field_speculation_max_utterance_ms,
+				hint: m.config_hint_speculation_max_utterance_ms,
+				unit: MS,
+			},
+			{
 				key: "aecEnabled",
 				label: m.config_field_aec_enabled,
 				hint: m.config_hint_aec_enabled,
@@ -1205,7 +1327,11 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				label: m.config_field_denoise_enabled,
 				hint: m.config_hint_denoise_enabled,
 			},
-			{ key: "denoiseEngine", label: m.config_field_denoise_engine },
+			{
+				key: "denoiseEngine",
+				label: m.config_field_denoise_engine,
+				optionLabels: DENOISE_ENGINE_LABELS,
+			},
 			{
 				key: "denoiseModelPath",
 				label: m.config_field_denoise_model_path,
@@ -1245,6 +1371,18 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				unit: "frames",
 			},
 			{
+				key: "echoReferenceSeconds",
+				label: m.config_field_echo_reference_seconds,
+				hint: m.config_hint_echo_reference_seconds,
+				unit: "s",
+			},
+			{
+				key: "echoLiveSpeechTtlMs",
+				label: m.config_field_echo_live_speech_ttl_ms,
+				hint: m.config_hint_echo_live_speech_ttl_ms,
+				unit: MS,
+			},
+			{
 				key: "stopWordAbortEnabled",
 				label: m.config_field_stop_word_abort_enabled,
 				hint: m.config_hint_stop_word_abort_enabled,
@@ -1255,9 +1393,16 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				unit: "words",
 			},
 			{
+				key: "stopWordMaxExtraWords",
+				label: m.config_field_stop_word_max_extra_words,
+				hint: m.config_hint_stop_word_max_extra_words,
+				unit: "words",
+			},
+			{
 				key: "wakeVerifier",
 				label: m.config_field_wake_verifier,
 				hint: m.config_hint_wake_verifier,
+				optionLabels: WAKE_VERIFIER_LABELS,
 			},
 			{
 				key: "wakeVerifierWindowMs",
@@ -1280,6 +1425,12 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				min: 0,
 				max: 1,
 				step: 0.01,
+			},
+			{
+				key: "wakeVerifierMaxMs",
+				label: m.config_field_wake_verifier_max_ms,
+				hint: m.config_hint_wake_verifier_max_ms,
+				unit: MS,
 			},
 		],
 	},
@@ -1308,6 +1459,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{ key: "endpointSoundEnabled", label: m.config_field_endpoint_sound },
 		],
 		advanced: [
+			presetName,
 			{
 				key: "pauseEnabled",
 				label: m.config_field_playback_pause,
@@ -1317,6 +1469,20 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				key: "wordLevelHeardEnabled",
 				label: m.config_field_word_level_heard,
 				hint: m.config_hint_word_level_heard,
+			},
+			{
+				key: "heardSilenceTrimEnabled",
+				label: m.config_field_heard_silence_trim,
+				hint: m.config_hint_heard_silence_trim,
+			},
+			{
+				key: "heardSilenceRms",
+				label: m.config_field_heard_silence_rms,
+				hint: m.config_hint_heard_silence_rms,
+				kind: "slider",
+				min: 0,
+				max: 0.2,
+				step: 0.005,
 			},
 			{
 				key: "watchdogGraceMs",
@@ -1386,6 +1552,11 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{ key: "factCapture", label: m.config_field_fact_capture },
 			{ key: "factRecall", label: m.config_field_fact_recall },
 			{
+				key: "memoryRecallIncludeExpired",
+				label: m.config_field_memory_recall_include_expired,
+				hint: m.config_hint_memory_recall_include_expired,
+			},
+			{
 				key: "identityEngine",
 				label: m.mind_module_identity_engine,
 				hint: m.mind_module_identity_engine_hint,
@@ -1394,6 +1565,11 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				key: "skillsEngine",
 				label: m.config_field_skills_tools,
 				hint: m.config_hint_skills_tools,
+			},
+			{
+				key: "builtinTools",
+				label: m.config_field_builtin_tools,
+				hint: m.config_hint_builtin_tools,
 			},
 			{
 				key: "environmentTimeEnabled",
@@ -1411,6 +1587,13 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			},
 		],
 		advanced: [
+			presetName,
+			{
+				key: "memoryFactMaxAgeDays",
+				label: m.config_field_memory_fact_max_age_days,
+				hint: m.config_hint_memory_fact_max_age_days,
+				unit: "days",
+			},
 			{
 				key: "reflectionConcurrency",
 				label: m.config_field_reflection_concurrency,
@@ -1507,6 +1690,12 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				unit: MS,
 			},
 			{
+				key: "proactiveCriticalDeferMaxMs",
+				label: m.config_field_proactive_critical_defer_max_ms,
+				hint: m.config_hint_proactive_critical_defer_max_ms,
+				unit: MS,
+			},
+			{
 				key: "proactiveTickMs",
 				label: m.config_field_proactive_tick_ms,
 				unit: MS,
@@ -1525,6 +1714,47 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				label: m.config_field_proactive_retry_backoff_ms,
 				unit: MS,
 			},
+			{
+				key: "voiceFeelAutotuneEnabled",
+				label: m.config_field_voice_feel_autotune_enabled,
+				hint: m.config_hint_voice_feel_autotune_enabled,
+			},
+			{
+				key: "voiceFeelWindowTurns",
+				label: m.config_field_voice_feel_window_turns,
+				hint: m.config_hint_voice_feel_window_turns,
+				unit: "turns",
+			},
+			{
+				key: "voiceFeelMinTurns",
+				label: m.config_field_voice_feel_min_turns,
+				hint: m.config_hint_voice_feel_min_turns,
+				unit: "turns",
+			},
+			{
+				key: "voiceFeelTickMs",
+				label: m.config_field_voice_feel_tick_ms,
+				hint: m.config_hint_voice_feel_tick_ms,
+				unit: MS,
+			},
+			{
+				key: "voiceFeelDailyBudget",
+				label: m.config_field_voice_feel_daily_budget,
+				hint: m.config_hint_voice_feel_daily_budget,
+			},
+			{
+				key: "voiceFeelCooldownMs",
+				label: m.config_field_voice_feel_cooldown_ms,
+				hint: m.config_hint_voice_feel_cooldown_ms,
+				unit: MS,
+			},
+			{
+				key: "voiceFeelRules",
+				label: m.config_field_voice_feel_rules,
+				hint: m.config_hint_voice_feel_rules,
+				kind: "json",
+				readOnly: true,
+			},
 		],
 	},
 	mqttLocal: {
@@ -1537,7 +1767,7 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 			{ key: "qos", label: m.config_field_qos },
 			{ key: "topicRoot", label: m.config_field_topic_root },
 		],
-		advanced: [],
+		advanced: [presetName],
 	},
 }
 

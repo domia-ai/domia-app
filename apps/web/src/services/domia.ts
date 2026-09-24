@@ -3,7 +3,21 @@ import { domiaRegistry, interactionTrace } from "@domia-app/db"
 import { db } from "@/db"
 import { avgOf, effectiveTtfa, isDelegated, summarize } from "@/utils/metrics"
 import { deriveFlow } from "@/utils/flow"
-import type { StagePerfRow, TimeBucketRow } from "@/types/analytics"
+import { resolveNodeBase } from "@/services/fleet"
+import {
+	nodeDeleteIdentityData,
+	nodeResetConversation,
+} from "@/lib/node-client"
+import type { ActionResult } from "@/types"
+import type {
+	DomiaPerfRow,
+	StagePerfRow,
+	TimeBucketRow,
+} from "@/types/analytics"
+import type {
+	DeleteIdentityDataResult,
+	ResetConversationResult,
+} from "@/types/mesh-admin"
 import type {
 	DomiaPerformance,
 	DomiaRecentRow,
@@ -49,26 +63,10 @@ export const getRecentInteractions = async (
 	})
 }
 
-type PerfRow = {
-	sourceDomiaKey: string
-	responseType: string | null
-	sttMs: number | null
-	llmMs: number | null
-	ttsMs: number | null
-	ttfaMs: number | null
-	totalMs: number | null
-	llmExecutorKey: string | null
-	llmResponse: string | null
-	sttModel: string | null
-	llmModel: string | null
-	ttsEngine: string | null
-	createdAt: string
-}
-
 const stagePerf = (
-	rows: PerfRow[],
-	pick: (r: PerfRow) => string | null,
-	ms: (r: PerfRow) => number | null,
+	rows: DomiaPerfRow[],
+	pick: (r: DomiaPerfRow) => string | null,
+	ms: (r: DomiaPerfRow) => number | null,
 	stage: StagePerfRow["stage"],
 ): StagePerfRow[] => {
 	const groups = new Map<string, number[]>()
@@ -88,7 +86,7 @@ const stagePerf = (
 	}))
 }
 
-const buildTrend = (rows: PerfRow[]): TimeBucketRow[] => {
+const buildTrend = (rows: DomiaPerfRow[]): TimeBucketRow[] => {
 	const map = new Map<string, { count: number; errors: number; ms: number[] }>()
 	for (const r of rows) {
 		const bucket = r.createdAt.slice(0, 10)
@@ -131,7 +129,7 @@ export const getDomiaPerformance = async (
 		.where(eq(interactionTrace.sourceDomiaKey, domiaKey))
 		.orderBy(desc(interactionTrace.createdAt))
 
-	const eff = (r: PerfRow) => effectiveTtfa(r)
+	const eff = (r: DomiaPerfRow) => effectiveTtfa(r)
 	const local = rows.filter((r) => !isDelegated(r))
 	const delegatedRows = rows.filter((r) => isDelegated(r))
 
@@ -185,5 +183,36 @@ export const getDomiaPerformance = async (
 				"tts",
 			),
 		],
+	}
+}
+
+export const deleteIdentityData = async (
+	domiaKey: string,
+): Promise<ActionResult<DeleteIdentityDataResult>> => {
+	const base = await resolveNodeBase(domiaKey)
+	if (!base.ok) return base
+	try {
+		return { ok: true, data: await nodeDeleteIdentityData(base.data, domiaKey) }
+	} catch (err) {
+		return {
+			ok: false,
+			error: err instanceof Error ? err.message : "Could not erase the data",
+		}
+	}
+}
+
+export const resetConversation = async (
+	domiaKey: string,
+): Promise<ActionResult<ResetConversationResult>> => {
+	const base = await resolveNodeBase(domiaKey)
+	if (!base.ok) return base
+	try {
+		return { ok: true, data: await nodeResetConversation(base.data, domiaKey) }
+	} catch (err) {
+		return {
+			ok: false,
+			error:
+				err instanceof Error ? err.message : "Could not reset the conversation",
+		}
 	}
 }

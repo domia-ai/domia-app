@@ -28,6 +28,8 @@ const META_KEYS = [
 	"localIp",
 	"grpcPort",
 	"isActive",
+	"lastSeenAt",
+	"peerNodeId",
 ]
 
 const stripMeta = (
@@ -54,12 +56,9 @@ const sanitizeConfigBundle = (c: ConfigSnapshot): JsonObject => {
 	if (c.wakeWord) b.wakeWord = stripMeta(c.wakeWord)
 	if (c.playback) b.playback = stripMeta(c.playback)
 	if (c.skillProviders?.length)
-		b.skillProviders = c.skillProviders.map((s) => {
-			const base = stripMeta(s as Record<string, unknown>, ["auth"])
-			const auth = (s as { auth?: { kind?: string } | null }).auth
-			if (auth?.kind) base.auth = { kind: auth.kind } as JsonValue
-			return base
-		})
+		b.skillProviders = c.skillProviders.map((s) =>
+			stripMeta(s, ["auth", "authKind"]),
+		)
 	return b
 }
 
@@ -98,7 +97,7 @@ export const listTemplates = (): AppTemplate[] => {
 	return [...systemTemplates(), ...user]
 }
 
-export const getTemplate = (id: string): AppTemplate | null => {
+const getTemplate = (id: string): AppTemplate | null => {
 	if (id.startsWith(SYSTEM_PREFIX))
 		return systemTemplates().find((t) => t.id === id) ?? null
 	const [row] = db
@@ -133,7 +132,9 @@ export const createConfigTemplate = (
 				updatedAt: now,
 			})
 			.run()
-		return { ok: true, data: getTemplate(id)! }
+		const created = getTemplate(id)
+		if (!created) return { ok: false, error: "Template not found" }
+		return { ok: true, data: created }
 	} catch (err) {
 		return { ok: false, error: errorMessage(err, "name already in use") }
 	}

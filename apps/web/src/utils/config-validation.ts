@@ -1,5 +1,6 @@
 import { m } from "@/paraglide/messages"
-import type { ConfigField, FieldValue } from "@/types/config"
+import { unitLabel } from "@/utils/config"
+import type { BoundedIntRule, ConfigField, FieldValue } from "@/types/config"
 
 export function validateField(
 	field: ConfigField,
@@ -23,6 +24,36 @@ export function validateField(
 		} catch {
 			return m.err_invalid_json()
 		}
+	}
+	return null
+}
+
+export function validateBoundedInt(
+	raw: string,
+	rule: BoundedIntRule,
+): string | null {
+	const text = raw.trim()
+	if (text.length === 0) return m.err_field_required()
+	const n = Number(text)
+	if (!Number.isFinite(n)) return m.err_must_be_number()
+	if (!Number.isInteger(n)) return m.err_must_be_integer()
+	const suffix = rule.unit ? ` ${unitLabel(rule.unit)}` : ""
+	if (n < rule.min) return m.err_min_value({ min: `${rule.min}${suffix}` })
+	if (n > rule.max) return m.err_max_value({ max: `${rule.max}${suffix}` })
+	return null
+}
+
+export function validateOptionalHttpUrl(
+	raw: string,
+	maxChars: number,
+): string | null {
+	const text = raw.trim()
+	if (text.length === 0) return null
+	if (text.length > maxChars) return m.err_max_length({ max: maxChars })
+	try {
+		if (!/^https?:$/.test(new URL(text).protocol)) return m.err_invalid_url()
+	} catch {
+		return m.err_invalid_url()
 	}
 	return null
 }

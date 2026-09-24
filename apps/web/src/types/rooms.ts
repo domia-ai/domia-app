@@ -1,6 +1,11 @@
 export type PresenceStatus = "idle" | "listening" | "thinking" | "speaking"
 
-export type SatelliteProtocol = "native" | "wyoming" | "esphome"
+export type SatelliteProtocol =
+	| "native"
+	| "wyoming"
+	| "esphome"
+	| "livekit"
+	| "openai-realtime"
 
 export type SatelliteWakeWordInfo = {
 	id: string
@@ -63,9 +68,15 @@ export type PresenceEntry = {
 	canBroadcast?: boolean
 }
 
+export type SpeakTarget = "satellite" | "local" | "none"
+
+export type SpeakDeliveryReason = "busy" | "no-follow-up-capability"
+
 export type SpeakResult = {
 	delivered: boolean | string[]
-	target?: string
+	target?: SpeakTarget
+	reason?: SpeakDeliveryReason
+	audioId?: string
 }
 
 export type IntercomResult = {
