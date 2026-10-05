@@ -158,10 +158,8 @@ const LLM_ENGINE_LABELS: ConfigOptionLabels = {
 }
 
 const SKILLS_ROUTING_LABELS: ConfigOptionLabels = {
+	"tool-judge": m.enum_opt_tool_judge,
 	"always-agent": m.enum_opt_always_agent,
-	"intent-gate": m.enum_opt_intent_gate,
-	"embedding-gate": m.enum_opt_embedding_gate,
-	"fast-router": m.enum_opt_fast_router,
 }
 
 const AGENT_PROMPT_MODE_LABELS: ConfigOptionLabels = {
@@ -738,23 +736,6 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				hint: m.config_hint_embedding_model,
 			},
 			{
-				key: "intentEmbedThreshold",
-				label: m.config_field_intent_embed_threshold,
-				kind: "slider",
-				min: 0,
-				max: 1,
-				step: 0.01,
-			},
-			{
-				key: "intentLexicalMinScore",
-				label: m.config_field_intent_lexical_min_score,
-				hint: m.config_hint_intent_lexical_min_score,
-				kind: "slider",
-				min: 0,
-				max: 10,
-				step: 0.25,
-			},
-			{
 				key: "intentCacheEnabled",
 				label: m.config_field_intent_cache_enabled,
 				hint: m.config_hint_intent_cache_enabled,
@@ -764,20 +745,6 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				label: m.config_field_intent_cache_size,
 				unit: "entries",
 				hint: m.config_hint_intent_cache_size,
-			},
-			{
-				key: "intentCacheMinSimilarity",
-				label: m.config_field_intent_cache_min_similarity,
-				hint: m.config_hint_intent_cache_min_similarity,
-				kind: "slider",
-				min: 0,
-				max: 1,
-				step: 0.01,
-			},
-			{
-				key: "descriptorRoutingEnabled",
-				label: m.config_field_descriptor_routing,
-				hint: m.config_hint_descriptor_routing,
 			},
 			{
 				key: "agentMaxSteps",
@@ -883,11 +850,6 @@ export const FIELD_META: Record<string, ConfigSectionFieldMeta> = {
 				key: "asyncFollowUpMaxWaitMs",
 				label: m.config_field_async_follow_up_max_wait,
 				unit: MS,
-			},
-			{
-				key: "intentLlmOnSingleSlot",
-				label: m.config_field_intent_llm_single_slot,
-				hint: m.config_hint_intent_llm_single_slot,
 			},
 			{
 				key: "slotWaitTimeoutMs",

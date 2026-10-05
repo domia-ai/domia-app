@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the console does not work the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste tokens, `.env` contents or other people's conversations and recordings. For a security problem use the private report instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got. A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Fleet and device status
+        - Configuration
+        - Skills and descriptors
+        - Conversations, traces and audio
+        - Chat tester
+        - Satellites
+        - Analytics
+        - Collector or archive
+        - Setup
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Console commit or version, browser, the core version of the device involved, and whether it happens in demo mode.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Browser console or server output, with secrets removed.
+      render: shell

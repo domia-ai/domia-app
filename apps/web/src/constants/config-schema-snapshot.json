@@ -1683,13 +1683,8 @@
 					"key": "skillsRouting",
 					"column": "skills_routing",
 					"type": "enum",
-					"default": "embedding-gate",
-					"enumValues": [
-						"always-agent",
-						"intent-gate",
-						"embedding-gate",
-						"fast-router"
-					],
+					"default": "tool-judge",
+					"enumValues": ["tool-judge", "always-agent"],
 					"nullable": false,
 					"secret": false
 				},
@@ -1707,30 +1702,6 @@
 					"type": "string",
 					"default": null,
 					"nullable": true,
-					"secret": false
-				},
-				{
-					"key": "intentEmbedThreshold",
-					"column": "intent_embed_threshold",
-					"type": "number",
-					"default": 0.66,
-					"nullable": false,
-					"secret": false
-				},
-				{
-					"key": "intentLexicalMinScore",
-					"column": "intent_lexical_min_score",
-					"type": "number",
-					"default": 2,
-					"nullable": false,
-					"secret": false
-				},
-				{
-					"key": "descriptorRoutingEnabled",
-					"column": "descriptor_routing_enabled",
-					"type": "boolean",
-					"default": true,
-					"nullable": false,
 					"secret": false
 				},
 				{
@@ -2057,14 +2028,6 @@
 					"secret": false
 				},
 				{
-					"key": "intentCacheMinSimilarity",
-					"column": "intent_cache_min_similarity",
-					"type": "number",
-					"default": 0.97,
-					"nullable": false,
-					"secret": false
-				},
-				{
 					"key": "fastPathMaxUtteranceChars",
 					"column": "fast_path_max_utterance_chars",
 					"type": "number",
@@ -2101,14 +2064,6 @@
 					"column": "slot_wait_poll_ms",
 					"type": "number",
 					"default": 25,
-					"nullable": false,
-					"secret": false
-				},
-				{
-					"key": "intentLlmOnSingleSlot",
-					"column": "intent_llm_on_single_slot",
-					"type": "boolean",
-					"default": true,
 					"nullable": false,
 					"secret": false
 				},
@@ -2455,7 +2410,7 @@
 					"key": "speculateWithSkills",
 					"column": "speculate_with_skills",
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"nullable": false,
 					"secret": false
 				},

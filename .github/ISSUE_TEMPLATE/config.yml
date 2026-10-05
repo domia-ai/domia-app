@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security problem
+    url: https://github.com/domia-ai/domia-app/security/advisories/new
+    about: Report a vulnerability privately. Never open a public issue for it.
+  - name: A problem with a device, voice or skills
+    url: https://github.com/domia-ai/domia-core/issues/new/choose
+    about: The devices run domia-core. Report voice, routing and skill problems there.

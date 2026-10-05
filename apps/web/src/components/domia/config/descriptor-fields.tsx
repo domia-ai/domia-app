@@ -9,6 +9,7 @@ import { duplicateKeys } from "@/utils/scalar"
 import type {
 	DescriptorFieldProps,
 	DuplicateKeyIssueProps,
+	KeyTextMapFieldProps,
 	KeyValueListFieldProps,
 	KeyValueMapFieldProps,
 } from "@/types/config"
@@ -100,4 +101,60 @@ export function KeyValueMapField({
 }: KeyValueMapFieldProps) {
 	const { rows, setRows } = useKeyedRows(value, onChange)
 	return <KeyValueListField {...rest} rows={rows} onChange={setRows} />
+}
+
+export function KeyTextMapField({
+	label,
+	addLabel,
+	value,
+	onChange,
+	keyLabel,
+	valueLabel,
+	hint,
+}: KeyTextMapFieldProps) {
+	const { rows, setRows } = useKeyedRows(value, onChange)
+	const dupes = duplicateKeys(rows)
+	const setKey = (i: number, key: string) =>
+		setRows(rows.map((r, idx) => (idx === i ? [key, r[1]] : r)))
+	const setVal = (i: number, v: string) =>
+		setRows(rows.map((r, idx) => (idx === i ? [r[0], v] : r)))
+	const remove = (i: number) => setRows(rows.filter((_, idx) => idx !== i))
+	const add = () => setRows([...rows, ["", ""]])
+	return (
+		<DescriptorField label={label} hint={hint}>
+			<div className="space-y-2">
+				{rows.map(([key, v], i) => (
+					<div key={i} className="grid grid-cols-[10rem_1fr_auto] gap-2">
+						<Input
+							value={key}
+							onChange={(e) => setKey(i, e.target.value)}
+							placeholder={keyLabel}
+							aria-label={keyLabel}
+							aria-invalid={dupes.has(key.trim()) || undefined}
+						/>
+						<Input
+							value={v}
+							onChange={(e) => setVal(i, e.target.value)}
+							placeholder={valueLabel}
+							aria-label={valueLabel}
+						/>
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							className="text-muted-foreground hover:text-destructive h-9 px-2"
+							onClick={() => remove(i)}
+						>
+							<Trash2 className="size-3.5" />
+						</Button>
+					</div>
+				))}
+				<DuplicateKeyIssue rows={rows} />
+				<Button type="button" variant="outline" size="sm" onClick={add}>
+					<Plus className="size-3.5" />
+					{addLabel}
+				</Button>
+			</div>
+		</DescriptorField>
+	)
 }

@@ -75,7 +75,10 @@ zod-validated env · dotenvx.
 ## More
 
 - [GETTING_STARTED.md](./GETTING_STARTED.md) — run the Console locally.
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — how changes are made and verified.
+- [AGENTS.md](./AGENTS.md) — the rules of the codebase, for people and for coding agents.
 - [COMMITS.md](./COMMITS.md) — commit style.
+- [SECURITY.md](./SECURITY.md) — reporting a vulnerability.
 
 ## License
 

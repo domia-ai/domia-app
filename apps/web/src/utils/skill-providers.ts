@@ -281,11 +281,11 @@ const pruneRouting = (
 	if (!r) return undefined
 	const out: SkillRoutingDescriptor = {}
 	const aliases = trimStringMap(r.aliases)
-	const examples = trimList(r.exampleUtterances)
-	const keywords = trimList(r.keywords)
+	const toolExamples = trimStringMap(r.toolExamples)
+	const toolLabels = trimTextMap(r.toolLabels)
 	if (aliases) out.aliases = aliases
-	if (examples) out.exampleUtterances = examples
-	if (keywords) out.keywords = keywords
+	if (toolExamples) out.toolExamples = toolExamples
+	if (toolLabels) out.toolLabels = toolLabels
 	return Object.keys(out).length ? out : undefined
 }
 
@@ -322,14 +322,12 @@ const pruneI18n = (
 	for (const [loc, v] of Object.entries(map ?? {})) {
 		const entry: SkillDescriptorI18n = {}
 		const aliases = trimStringMap(v.aliases)
-		const examples = trimList(v.exampleUtterances)
-		const keywords = trimList(v.keywords)
+		const toolExamples = trimStringMap(v.toolExamples)
 		const finalize = pruneFinalizeMap(v.finalize)
 		const generic = trimList(v.genericWords)
 		const fastPath = pruneFastPath(v.fastPath)
 		if (aliases) entry.aliases = aliases
-		if (examples) entry.exampleUtterances = examples
-		if (keywords) entry.keywords = keywords
+		if (toolExamples) entry.toolExamples = toolExamples
 		if (finalize) entry.finalize = finalize
 		if (generic) entry.genericWords = generic
 		if (fastPath) entry.fastPath = fastPath

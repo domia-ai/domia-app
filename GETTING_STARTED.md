@@ -7,10 +7,13 @@ How to run the Console locally against a Domia fleet.
 - **Node 24** (see [`.nvmrc`](./.nvmrc) — `nvm use`).
 - An **MQTT broker** the fleet and the collector both reach (dev: a local Mosquitto on
   `localhost:1883`).
-- A **Domia fleet** emitting heartbeats on that broker — in dev, two `domia-core`
-  instances launched by env file: `DOMIA_ENV=.env npm run dev` (hub) and
-  `DOMIA_ENV=.env.edge npm run dev` (edge), or the `npm run dev:hub` / `dev:edge`
-  wrappers. Each Domia boots neutral and gets its role from a config template.
+- A **Domia fleet** emitting heartbeats on that broker: at least one running
+  [`domia-core`](https://github.com/domia-ai/domia-core) node (in its checkout,
+  `npm run dev`; `npm run dev:b` starts a second one). Each Domia boots neutral and gets
+  its role from a config template.
+- A **`domia-core` checkout next to this one** (`../domia-core`) if you will run
+  `npm run validate` or sync templates: the template check reads the core's `templates/`
+  folder. Running the console does not need it.
 
 ## Quick start (one command)
 
@@ -53,7 +56,12 @@ Each app reads a zod-validated `.env`. Copy the examples and adjust if needed:
 
 ```bash
 cp apps/collector/.env.example apps/collector/.env
+cp apps/web/.env.example apps/web/.env
 ```
+
+Both need the same `DOMIA_MESH_SECRET` as the fleet (it authenticates the console to each
+device). The collector and the web app must point at the same `DATABASE_URL`; the examples
+and the defaults agree on `data/db/domia-app.db`.
 
 Key collector vars: `DATABASE_URL` (defaults to the shared `data/db/domia-app.db`),
 `DOMIA_APP_AUDIO_DIR`, `MQTT_URL` / `MQTT_USERNAME` / `MQTT_PASSWORD`,

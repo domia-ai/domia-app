@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose something the console should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The situation
+      description: What are you trying to see or change, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+    validations:
+      required: true
+  - type: textarea
+    id: core
+    attributes:
+      label: Does the device already expose it?
+      description: The console can only show and change what a device's API offers. If this needs something new in domia-core, say so.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

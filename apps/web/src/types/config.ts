@@ -239,8 +239,8 @@ export type SkillFinalizeRule = {
 
 export type SkillRoutingDescriptor = {
 	aliases?: Record<string, string[]>
-	exampleUtterances?: string[]
-	keywords?: string[]
+	toolExamples?: Record<string, string[]>
+	toolLabels?: Record<string, string>
 }
 
 export type SkillToolHintMap = Record<string, Record<string, unknown>>
@@ -278,8 +278,7 @@ export type SkillExecutionDescriptor = {
 
 export type SkillDescriptorI18n = {
 	aliases?: Record<string, string[]>
-	exampleUtterances?: string[]
-	keywords?: string[]
+	toolExamples?: Record<string, string[]>
 	finalize?: Record<string, SkillFinalizeRule>
 	genericWords?: string[]
 	fastPath?: SkillFastPathBlock
@@ -506,6 +505,16 @@ export type KeyValueMapFieldProps = Omit<
 > & {
 	value?: Record<string, string[]>
 	onChange: (v: Record<string, string[]>) => void
+}
+
+export type KeyTextMapFieldProps = {
+	label: string
+	addLabel: string
+	value?: Record<string, string>
+	onChange: (v: Record<string, string>) => void
+	keyLabel: string
+	valueLabel: string
+	hint?: string
 }
 
 export type StringListFieldProps = {

@@ -9,6 +9,7 @@ import { useKeyedRows } from "@/components/ui/keyed-rows"
 import {
 	DescriptorField,
 	DuplicateKeyIssue,
+	KeyTextMapField,
 	KeyValueMapField,
 } from "@/components/domia/config/descriptor-fields"
 import {
@@ -259,23 +260,20 @@ function LocaleOverrides({
 				{m.config_desc_locale_overrides({ locale })}
 			</p>
 			<KeyValueMapField
+				label={m.config_desc_tool_examples()}
+				addLabel={m.config_desc_add_tool()}
+				value={entry.toolExamples}
+				onChange={(toolExamples) => patch({ toolExamples })}
+				keyLabel={m.config_desc_tool_key()}
+				valuesLabel={m.config_desc_tool_example_values()}
+			/>
+			<KeyValueMapField
 				label={m.config_desc_aliases()}
 				addLabel={m.config_desc_add_alias()}
 				value={entry.aliases}
 				onChange={(aliases) => patch({ aliases })}
 				keyLabel={m.config_desc_alias_key()}
 				valuesLabel={m.config_desc_alias_values()}
-			/>
-			<StringListField
-				label={m.config_desc_examples()}
-				value={entry.exampleUtterances}
-				onChange={(exampleUtterances) => patch({ exampleUtterances })}
-				multiline
-			/>
-			<StringListField
-				label={m.config_desc_keywords()}
-				value={entry.keywords}
-				onChange={(keywords) => patch({ keywords })}
 			/>
 			<StringListField
 				label={m.config_desc_generic_words()}
@@ -454,23 +452,29 @@ export function ConfigSkillDescriptor({
 					{m.config_desc_routing()}
 				</p>
 				<KeyValueMapField
+					label={m.config_desc_tool_examples()}
+					addLabel={m.config_desc_add_tool()}
+					value={routing.toolExamples}
+					onChange={(toolExamples) => setRouting({ toolExamples })}
+					keyLabel={m.config_desc_tool_key()}
+					valuesLabel={m.config_desc_tool_example_values()}
+				/>
+				<KeyTextMapField
+					label={m.config_desc_tool_labels()}
+					addLabel={m.config_desc_add_tool()}
+					value={routing.toolLabels}
+					onChange={(toolLabels) => setRouting({ toolLabels })}
+					keyLabel={m.config_desc_tool_key()}
+					valueLabel={m.config_desc_tool_label_value()}
+					hint={m.config_desc_tool_labels_hint()}
+				/>
+				<KeyValueMapField
 					label={m.config_desc_aliases()}
 					addLabel={m.config_desc_add_alias()}
 					value={routing.aliases}
 					onChange={(aliases) => setRouting({ aliases })}
 					keyLabel={m.config_desc_alias_key()}
 					valuesLabel={m.config_desc_alias_values()}
-				/>
-				<StringListField
-					label={m.config_desc_examples()}
-					value={routing.exampleUtterances}
-					onChange={(exampleUtterances) => setRouting({ exampleUtterances })}
-					multiline
-				/>
-				<StringListField
-					label={m.config_desc_keywords()}
-					value={routing.keywords}
-					onChange={(keywords) => setRouting({ keywords })}
 				/>
 			</div>
 
